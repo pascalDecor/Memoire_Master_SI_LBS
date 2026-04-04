@@ -1,0 +1,389 @@
+\documentclass[12pt,a4paper]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+\usepackage{graphicx}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.misc, shapes.geometric}
+
+\usepackage{enumitem}
+\setlist[itemize]{topsep=0.4em, itemsep=0.2em, leftmargin=1.5em}
+
+\usepackage{fancyhdr}
+\fancypagestyle{main}{
+  \fancyhf{}
+  \fancyhead[L]{\nouppercase{\leftmark}}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+
+% Réduit les risques de lignes trop longues (overfull boxes)
+\setlength{\emergencystretch}{2em}
+
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=blue,
+  citecolor=blue
+}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{black!20},
+  backgroundcolor=\color{black!2},
+  tabsize=2
+}
+
+% ---------------------------------------------------------------------------
+% Métadonnées (à adapter si besoin)
+% ---------------------------------------------------------------------------
+\newcommand{\rapportTitre}{Conception et réalisation d’un système d’archivage documentaire intelligent (on-premise)}
+\newcommand{\auteurNom}{KOEVI Komi Pascal}
+\newcommand{\formation}{Master Systèmes d’Information}
+\newcommand{\universite}{LBS}
+\newcommand{\anneeAcademique}{2025--2026}
+\newcommand{\nomMinistere}{Ministère de l'Efficacité des Services Publique et de Transformation Numérique (MESPTN)}
+\newcommand{\directeurMemoire}{Directeur de mémoire : \textit{M. KONAN}}
+\newcommand{\structureAccueil}{Structure d’accueil : \textit{\nomMinistere}}
+\newcommand{\tuteurStage}{Tuteur de stage : \textit{M. Songuimpale Koumbogle}}
+
+\title{\rapportTitre}
+\author{\parbox{0.95\textwidth}{\centering
+  \auteurNom\\
+  \formation --- \universite\\
+  \directeurMemoire\\
+  \structureAccueil\\
+  \tuteurStage
+}}
+\date{Avril 2026}
+
+\begin{document}
+% Page de garde (mise en page contrôlée, évite les débordements)
+\begin{titlepage}
+  \thispagestyle{empty}
+  \centering
+  \vspace*{2.5cm}
+  {\LARGE \rapportTitre\par}
+  \vspace{2.2cm}
+
+  {\large \auteurNom\par}
+  \vspace{0.3cm}
+  {\formation\ --- \universite\par}
+  \vspace{0.8cm}
+
+  {\directeurMemoire\par}
+  {\structureAccueil\par}
+  {\tuteurStage\par}
+
+  \vfill
+  {Avril 2026\par}
+\end{titlepage}
+
+% Préliminaires (numérotation romaine)
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+% \listoffigures
+% \listoftables
+
+\clearpage
+\tableofcontents
+\clearpage
+
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+Un document scanné n’est pas encore une archive. Dans les administrations publiques, la gestion documentaire repose encore largement sur des supports papier et des pratiques de classement hétérogènes, rendant l’accès à l’information difficile et peu fiable. Au \nomMinistere{}, des milliers de documents anciens, datant de plus de dix ans, devaient être numérisés dans un délai contraint tout en restant exploitables au quotidien.
+
+Le principal enjeu était donc de transformer un flux important de documents numérisés en archives structurées, correctement nommées, classées et facilement retrouvables.
+
+Ce rapport présente la conception et la réalisation d’un système d’archivage numérique déployé en environnement \textit{on-premise}. La solution proposée permet l’ingestion automatique des documents depuis plusieurs scanners via des dossiers partagés, puis déclenche une chaîne de traitement basée sur des techniques d’intelligence artificielle : reconnaissance de texte (OCR), extraction d’informations, structuration des données et génération de métadonnées. Ces traitements permettent de proposer automatiquement un renommage et un classement conformes aux règles définies par le ministère, tout en laissant à l’utilisateur la possibilité de valider ou corriger les résultats via une interface web dédiée.
+
+L’architecture du système repose sur une approche microservices, garantissant la scalabilité, la résilience et la modularité de la solution. L’intégration de mécanismes de recherche avancée, incluant la recherche sémantique, améliore significativement l’accès à l’information.
+
+Ainsi, la solution mise en place permet d’industrialiser le processus d’archivage numérique, en réduisant les tâches manuelles, en améliorant la qualité et la cohérence du classement, et en garantissant la traçabilité des opérations, tout en respectant les contraintes de sécurité et de souveraineté liées à un déploiement interne.
+
+% Corps du document (numérotation arabe + en-têtes/pieds de page)
+\pagenumbering{arabic}
+\pagestyle{main}
+
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+Dans les administrations publiques, la gestion documentaire repose encore largement sur des supports papier et des pratiques de classement souvent hétérogènes. Cette situation complique l’accès à l’information, augmente les risques de perte de documents et limite l’efficacité des services.
+
+Dans le cadre étudié, le \nomMinistere{} faisait face à la nécessité de numériser et d’archiver un volume important de documents anciens, datant de plus de dix ans, dans un délai contraint. Cependant, la simple numérisation ne suffit pas : un document scanné mais mal nommé, mal classé ou difficilement retrouvable perd rapidement sa valeur. À grande échelle, les opérations manuelles telles que le tri, le renommage ou la recherche deviennent coûteuses, sources d’erreurs et difficilement maintenables.
+
+Dès lors, la problématique suivante se pose : comment mettre en place une chaîne d’archivage numérique capable de traiter efficacement un grand volume de documents numérisés, tout en réduisant les manipulations manuelles, en améliorant la qualité du classement, en garantissant la traçabilité des opérations et en permettant une recherche rapide et fiable, le tout dans un environnement sécurisé et déployé en local (\textit{on-premise}) ?
+
+Pour répondre à cette problématique, le projet \textbf{Document Archiving System} a pour objectif de concevoir et de mettre en place une solution d’archivage numérique automatisée. Cette solution vise notamment à assurer l’ingestion automatique des documents depuis les scanners, l’extraction des informations via des techniques d’OCR, l’assistance au classement et au renommage selon des règles définies, ainsi que la mise à disposition d’une interface web permettant la consultation, la recherche et la validation des documents. Elle intègre également des mécanismes de suivi et de traçabilité afin de garantir une exploitation fiable dans le temps, tout en respectant les contraintes de souveraineté et de sécurité liées à un déploiement interne.
+
+Enfin, ce rapport est structuré en trois parties. La première présente le contexte et une vue d’ensemble de l’architecture et des flux de traitement. La deuxième décrit la conception et la mise en œuvre de la solution (modèle de données, services, stockage et déploiement \textit{on-premise}). La troisième expose les aspects d’exploitation (observabilité), de sécurité, ainsi que le bilan et les perspectives d’amélioration.
+
+\chapter{Vue d’ensemble du système}
+\section{Architecture générale}
+Le système proposé repose sur une architecture orientée \textbf{microservices}, développée principalement avec \textbf{Python/FastAPI} pour le backend et \textbf{Next.js} pour le frontend. Ce choix permet de structurer l’application en composants indépendants, chacun responsable d’une fonctionnalité spécifique.
+
+Les échanges entre les services de traitement sont assurés de manière \textbf{asynchrone} à l’aide de \textbf{RabbitMQ}. Cette approche améliore la résilience globale du système et facilite la gestion de la charge, notamment pour des opérations intensives comme l’OCR et l’extraction d’informations.
+
+Enfin, cette architecture favorise la \textbf{scalabilité}, en permettant de dimensionner indépendamment les services les plus sollicités.
+
+\begin{figure}[h!]
+\centering
+\input{images/fig_architecture_ch1.tex}
+\caption{Architecture générale de la solution d’archivage documentaire intelligente (\textit{on-premise}).}
+\label{fig:archi-generale}
+\end{figure}
+
+\subsection{Microservices métier}
+Le système est composé de plusieurs microservices spécialisés :
+\begin{itemize}
+  \item \textbf{Upload Service} : assure la réception des documents, leur stockage initial dans MinIO et la publication d’un message dans le système de messagerie pour déclencher le traitement.
+  \item \textbf{OCR Service} : réalise la reconnaissance de texte à partir des documents numérisés en s’appuyant sur Tesseract.
+  \item \textbf{Extraction Service} : extrait les informations pertinentes, effectue un découpage en segments (\textit{chunking}), génère des \textit{embeddings} et indexe les données dans PostgreSQL via l’extension pgvector.
+  \item \textbf{Routing Service} : constitue l’API principale exposée au frontend. Il permet la consultation, la recherche de documents et l’intégration d’une recherche avancée basée sur le paradigme RAG (\textit{Retrieval-Augmented Generation}).
+  \item \textbf{Language Model Service} : gère les interactions avec un \textbf{modèle de langage local}, notamment pour la classification automatique, le renommage intelligent et les fonctionnalités de chat.
+  \item \textbf{Scan Listener Service} : surveille un dossier de dépôt de scans et déclenche automatiquement leur envoi vers le service d’upload.
+  \item \textbf{MinIO Manager} : fournit des opérations de gestion des fichiers (déplacement, suppression, génération de liens sécurisés, organisation et fusion de documents PDF).
+\end{itemize}
+
+\subsection{Infrastructure}
+L’infrastructure du système repose sur plusieurs composants clés :
+\begin{itemize}
+  \item \textbf{PostgreSQL} (avec pgvector) : utilisé pour le stockage des métadonnées, la gestion des droits d’accès (RBAC), l’organisation des documents ainsi que l’indexation vectorielle.
+  \item \textbf{MinIO} : assure le stockage objet des fichiers numérisés.
+  \item \textbf{RabbitMQ} : joue le rôle de bus de messages pour orchestrer les différentes étapes du pipeline de traitement.
+  \item \textbf{Redis} : utilisé comme composant applicatif pour la gestion du cache et de certains états côté application.
+  \item \textbf{Outils d’observabilité} (Prometheus, Grafana, Loki, Vector) : permettent de superviser le système, collecter des métriques et analyser les logs.
+\end{itemize}
+
+\section{Flux de traitement d’un document}
+Le traitement d’un document suit une chaîne bien définie. Dans un premier temps, les documents numérisés sont déposés dans un dossier surveillé ou envoyés directement via l’API d’upload. Le \textbf{Scan Listener Service} (optionnel) détecte automatiquement les nouveaux fichiers et les transmet au \textbf{Upload Service}.
+
+Une fois le document reçu, celui-ci est stocké dans \textbf{MinIO} et un message est publié dans \textbf{RabbitMQ} pour signaler l’arrivée d’un nouveau document. Le \textbf{OCR Service} consomme ce message, effectue la reconnaissance de texte, puis publie un nouvel événement indiquant la fin de cette étape.
+
+Le \textbf{Extraction Service} prend ensuite le relais pour analyser le contenu du document, extraire les informations pertinentes, générer des \textit{embeddings} et indexer les données dans \textbf{PostgreSQL}. Parallèlement, les fichiers sont organisés et conservés dans MinIO. Le flux nominal peut être résumé comme suit :
+
+\begin{figure}[h!]
+\centering
+\input{images/fig_flux_ch1.tex}
+\caption{Flux de traitement d’un document, de l’ingestion à la recherche et à la validation.}
+\label{fig:flux-traitement}
+\end{figure}
+
+\begin{lstlisting}
+Scanner
+  |
+  v
+Scan Listener (optionnel) -> Upload Service (/upload)
+  |
+  v
+RabbitMQ (document.uploaded)
+  |
+  v
+OCR Service (Tesseract) -> RabbitMQ (ocr.completed)
+  |
+  v
+Extraction Service (Docling + chunking + embeddings)
+  |
+  +--> LLM Service (classification, renommage, ajout de métadonnées)
+  +--> PostgreSQL (documents, chunks, RBAC, events, nodes...)
+  +--> MinIO (fichiers et réorganisation)
+  |
+  v
+Routing Service + Frontend Next.js (consultation, recherche, validation)
+\end{lstlisting}
+
+Enfin, le \textbf{Routing Service}, couplé au frontend \textbf{Next.js}, permet aux utilisateurs d’accéder aux documents, d’effectuer des recherches avancées et de valider les opérations réalisées.
+
+\section{Justification du choix microservices}
+Les principaux avantages observés dans ce projet :
+\begin{itemize}
+  \item \textbf{Scalabilité ciblée} : les services lourds (OCR/extraction) peuvent être répliqués indépendamment.
+  \item \textbf{Résilience} : le traitement est asynchrone ; une indisponibilité temporaire d’un service n’interrompt pas l’ingestion.
+  \item \textbf{Séparation des responsabilités} : ingestion, OCR, extraction, API, IA et stockage sont découplés.
+  \item \textbf{Évolutivité} : ajout futur de nouveaux traitements (signature, versioning avancé, nouveaux modèles IA).
+\end{itemize}
+
+\chapter{Modèle de données et stockage}
+\section{Stockage des fichiers (MinIO)}
+Les fichiers sont stockés dans MinIO (bucket \texttt{documents}). L’ingestion écrit d’abord dans un préfixe tampon (ex. \texttt{buffer/}), puis d’autres services peuvent déplacer/renommer les objets pour refléter l’organisation logique et les règles de classement. Des URLs \textbf{pré-signées} peuvent être générées pour un accès navigateur contrôlé.
+
+\section{Base PostgreSQL (métadonnées, index sémantique et GED)}
+La base relationnelle centralise :
+\begin{itemize}
+  \item \textbf{documents} : métadonnées (nom, type, expéditeur/destinataire, tags, statut de traitement, etc.) ;
+  \item \textbf{document\_chunks} : passages chunkés avec embeddings (dimension 384) pour la recherche sémantique ;
+  \item \textbf{nodes} et \textbf{node\_versions} : arborescence GED (dossiers/fichiers) et versioning ;
+  \item \textbf{users/roles/permissions} : RBAC normalisé ;
+  \item \textbf{document\_events} : journalisation des actions (audit).
+\end{itemize}
+
+\section{Indexation sémantique (pgvector)}
+L’extraction service réalise un pipeline d’indexation :
+\begin{itemize}
+  \item \textbf{Chunking} : découpe du texte OCR en segments de taille paramétrable avec recouvrement.
+  \item \textbf{Embedding} : transformation de chaque chunk en vecteur sémantique (sentence-transformers).
+  \item \textbf{Recherche} : la requête est vectorisée et comparée aux chunks via une similarité cosinus (opérateurs pgvector).
+\end{itemize}
+
+\chapter{Implémentation des services}
+\section{Upload service}
+Responsabilités :
+\begin{itemize}
+  \item réception d’un document via \texttt{POST /upload} (multipart) ;
+  \item stockage dans MinIO, puis publication d’un message \texttt{document.uploaded} dans RabbitMQ ;
+  \item initialisation du document dans PostgreSQL avec un \textbf{statut} (\texttt{processing\_status}) et une \textbf{progression} (\texttt{progress\_percent}).
+\end{itemize}
+
+\section{OCR service}
+Responsabilités :
+\begin{itemize}
+  \item consommation de la queue \texttt{document.uploaded} ;
+  \item téléchargement depuis MinIO ;
+  \item OCR Tesseract (fra+eng) ; conversion PDF$\rightarrow$image si nécessaire ;
+  \item publication \texttt{ocr.completed} avec le texte OCR.
+\end{itemize}
+
+\section{Extraction service}
+Responsabilités :
+\begin{itemize}
+  \item consommation de \texttt{ocr.completed} ;
+  \item extraction structurée Docling (export Markdown) ;
+  \item mise à jour de \texttt{documents} ; indexation sémantique (chunks + embeddings) si activée ;
+  \item exposition d’un endpoint \texttt{GET /search} pour la recherche sémantique.
+\end{itemize}
+
+\section{Routing service (API principale)}
+Le routing service joue le rôle de \textbf{façade} pour le frontend :
+\begin{itemize}
+  \item listing et détail documents (\texttt{GET /api/documents}, \texttt{GET /api/documents/\{id\}}) ;
+  \item recherche sémantique en proxy (\texttt{GET /api/search}) ;
+  \item chat RAG (\texttt{POST /api/chat}) qui injecte un contexte issu de la recherche avant d’appeler le service LLM ;
+  \item exposition \texttt{/metrics} pour Prometheus.
+\end{itemize}
+
+\section{Language model service (IA)}
+Le mémoire retient un fonctionnement \textbf{100\% local} (déploiement \textit{on-premise}) : le service s’appuie sur un serveur HTTP \textbf{compatible OpenAI} (\texttt{/chat/completions}). Les appels à des API cloud n’ont été utilisés que ponctuellement durant les tests de développement.
+Fonctionnalités principales :
+\begin{itemize}
+  \item \texttt{POST /classify-and-rename} : extraction de métadonnées (expéditeur, objet, numéros, sensibilité, tags), proposition de renommage et catégorisation ;
+  \item \texttt{POST /chat} : génération de réponses en français, avec injection d’un \textbf{contexte} (extraits RAG).
+\end{itemize}
+
+\section{Scan listener service}
+Ce service surveille un dossier (\texttt{WATCH\_DIR}) et soumet automatiquement les nouveaux fichiers vers l’upload service. En cas d’échec, les fichiers sont déplacés dans un sous-dossier \texttt{error}, avec une copie de sauvegarde dans \texttt{output}.
+
+\section{MinIO manager}
+API de gestion MinIO (opérations nécessaires à l’explorateur web) :
+\begin{itemize}
+  \item déplacement (\texttt{/move-object}) et suppression (\texttt{/delete-object}) d’objets ;
+  \item création de dossier logique (\texttt{/create-folder}) ;
+  \item fusion PDF (\texttt{/merge-pdf}) ;
+  \item génération d’URL pré-signée (\texttt{/presign-get}) pour affichage navigateur.
+\end{itemize}
+
+\chapter{Déploiement}
+\section{Déploiement on-premise avec Docker Compose}
+Le déploiement est conçu pour être reproductible sur un serveur interne. Les composants applicatifs et l’infrastructure sont décrits dans \texttt{docker-compose.yml}. Un fichier \texttt{docker-compose.override.yml} facilite le développement (volumes montés + ports exposés).
+
+\subsection{Variables d’environnement}
+La configuration est centralisée dans un fichier \texttt{.env} (identifiants, ports, URLs). En production, les valeurs par défaut doivent être remplacées par des secrets robustes et gérés selon les politiques internes (vault, gestionnaire de secrets, etc.).
+
+\subsection{Démarrage}
+Commande de base :
+
+\begin{lstlisting}
+docker compose up -d --build
+\end{lstlisting}
+
+Démarrage avec la stack d’observabilité (Prometheus/Grafana/Loki/Vector) :
+
+\begin{lstlisting}
+docker compose -f docker-compose.yml -f observability/docker-compose.observability.yml up -d --build
+\end{lstlisting}
+
+\subsection{Ports et accès}
+Exemples d’accès en local :
+\begin{itemize}
+  \item Frontend Next.js : \texttt{http://localhost:3001}
+  \item API (routing-service) : \texttt{http://localhost:8000}
+  \item MinIO console : \texttt{http://localhost:9001}
+  \item RabbitMQ console : \texttt{http://localhost:15672}
+\end{itemize}
+
+\subsection{Initialisation de la base}
+Au premier démarrage, les scripts SQL montés dans \texttt{/docker-entrypoint-initdb.d} créent l’extension \texttt{vector} et les tables principales (documents, chunks, RBAC, nodes, events).
+
+\chapter{Observabilité et exploitation}
+\section{Objectifs}
+L’observabilité vise à donner une visibilité sur :
+\begin{itemize}
+  \item la santé des services ;
+  \item les erreurs (OCR/extraction, erreurs HTTP) ;
+  \item la latence et les volumes de requêtes ;
+  \item les logs applicatifs (corrélation par service/conteneur).
+\end{itemize}
+
+\section{Stack mise en place}
+Une stack séparée est fournie :
+\begin{itemize}
+  \item \textbf{Prometheus} : collecte des métriques sur \texttt{/metrics} (FastAPI) et \texttt{/api/metrics} (Next.js) ;
+  \item \textbf{Grafana} : dashboards et alerting, avec provisioning automatique ;
+  \item \textbf{Loki} : stockage des logs ;
+  \item \textbf{Vector} : collecte des logs Docker et expédition vers Loki.
+\end{itemize}
+
+\section{Alertes}
+Des règles Prometheus détectent :
+\begin{itemize}
+  \item un taux d’erreurs HTTP 5xx supérieur à 5\% sur 10 minutes ;
+  \item une latence p95 supérieure à 2s sur 10 minutes ;
+  \item la présence d’erreurs OCR/extraction via des compteurs dédiés.
+\end{itemize}
+
+\chapter{Sécurité}
+\section{Principes}
+Le projet cible un déploiement \textbf{on-premise} :
+\begin{itemize}
+  \item exposition minimale via reverse proxy (TLS) ;
+  \item segmentation réseau (services internes non exposés) ;
+  \item séparation stockage fichiers (MinIO) / métadonnées (PostgreSQL) ;
+  \item journalisation des actions et RBAC.
+\end{itemize}
+
+\section{Points d’attention}
+\begin{itemize}
+  \item En production, \textbf{tous les mots de passe} du \texttt{.env} doivent être remplacés.
+  \item Les URLs pré-signées MinIO doivent être limitées dans le temps.
+  \item Les endpoints d’administration (ex. RabbitMQ, MinIO console, Grafana) doivent être restreints (IP/VPN).
+\end{itemize}
+
+\chapter{Conclusion et perspectives}
+\section{Bilan}
+Le système livré apporte une chaîne d’archivage numérique complète, depuis la collecte automatique des scans jusqu’à la consultation et la recherche. En réduisant fortement les opérations manuelles (tri, renommage, saisie) et en proposant un classement plus homogène, la solution améliore la qualité de l’archivage et diminue les délais de traitement. Le déploiement \textbf{on-premise} répond aux contraintes de sécurité et de souveraineté de l’administration, tandis que la supervision facilite l’exploitation au quotidien.
+
+\section{Perspectives}
+Axes envisagés :
+\begin{itemize}
+  \item amélioration des règles métier de classement (référentiels, modèles de nommage, gestion des exceptions) ;
+  \item renforcement des workflows de validation et de la gouvernance documentaire (droits, circuit de traitement, versioning) ;
+  \item amélioration de la recherche et de l’assistance documentaire (RAG, citations, permissions) ;
+  \item intégration progressive de fonctionnalités complémentaires (signature, politiques de conservation, tableaux de bord).
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,58 @@
+\resizebox{0.98\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\small,
+  x=1cm, y=1cm,
+  service/.style={rounded corners=2pt, draw=black!45, fill=blue!8, align=center, text width=3.2cm, inner xsep=7pt, inner ysep=6pt},
+  bus/.style={rounded corners=2pt, draw=black!45, fill=orange!12, align=center, text width=3.2cm, inner xsep=7pt, inner ysep=6pt},
+  serviceSmall/.style={rounded corners=2pt, draw=black!45, fill=blue!8, align=center, text width=2.8cm, inner xsep=7pt, inner ysep=6pt},
+  infra/.style={rounded corners=2pt, draw=black!45, fill=green!10, align=center, text width=4.0cm, inner xsep=7pt, inner ysep=6pt},
+  obs/.style={rounded corners=2pt, draw=black!45, fill=gray!10, align=center, text width=4.8cm, inner xsep=7pt, inner ysep=6pt},
+  main/.style={-Latex, draw=black!70, line width=0.9pt},
+  aux/.style={-Latex, draw=black!45, line width=0.55pt},
+  dottedline/.style={-Latex, draw=black!40, line width=0.55pt, dashed}
+]
+% Rangée 1 (ingestion) — plus d’espace vertical
+\node[service] (scan)   at (0, 3.6) {Scanners\\(dossiers partagés)};
+\node[service] (listen) at (4, 3.6) {Scan Listener\\(optionnel)};
+\node[service] (upload) at (8, 3.6) {Upload Service\\\texttt{POST /upload}};
+\node[bus]     (mq)     at (12,3.6) {RabbitMQ\\(événements)};
+
+% Rangée 2 (traitement + accès)
+\node[service] (ocr)     at (0, 1.4) {OCR Service\\(Tesseract)};
+\node[service] (extract) at (4, 1.4) {Extraction Service\\(Docling + chunking\\+ embeddings)};
+\node[service] (llm)     at (8, 1.4) {LLM Service\\(classification\\\& renommage)};
+\node[service] (route)   at (12,1.4) {Routing Service\\(API / UI)};
+\node[serviceSmall] (minioMgr) at (12,0.1) {MinIO Manager};
+
+% Infrastructure (en dessous) — plus d’espace vertical
+\node[infra] (minio) at (6, -1.3) {MinIO\\(stockage objets)};
+\node[infra] (pg)    at (2, -1.3) {PostgreSQL + pgvector\\(métadonnées, RBAC,\\index vectoriel)};
+\node[infra] (redis) at (12,-1.3) {Redis\\(cache/état)};
+\node[obs]   (obs)   at (6, -3.3) {Observabilité\\Prometheus • Grafana\\Loki • Vector};
+
+% Flèche d’évolution (process) — simple, gauche→droite, puis seconde rangée
+\draw[main] (scan) -- (listen);
+\draw[main] (listen) -- (upload);
+\draw[main] (upload) -- (mq);
+\draw[main] (mq.south) -- (ocr.north);
+\draw[main] (ocr) -- (extract);
+\draw[main] (extract) -- (llm);
+\draw[main] (llm) -- (route);
+
+% Liens secondaires (courts, sans croisement)
+\draw[aux] (upload.south) -- ++(0,-0.45) -| (minio.north);
+\draw[aux] (ocr.south) -- ++(0,-0.45) -| (minio.north);
+\draw[aux] (extract.south) -- (pg.north);
+\draw[aux] (extract.south) -- ++(0,-0.45) -| (minio.north);
+\draw[aux] (route.south) -- (redis.north);
+\draw[aux] (minioMgr.west) -- ++(-0.5,0) |- (minio.east);
+
+% Observabilité (pointillé) — quelques liens seulement
+\draw[dottedline] (obs.north) -- (minio.south);
+\draw[dottedline] (obs.north west) -- ++(-1.0,1.0) |- (upload.south);
+\draw[dottedline] (obs.north east) -- ++(1.0,1.0) |- (route.south);
+\end{tikzpicture}%
+}
+\vspace{0.2em}
+\footnotesize \textbf{Légende :} bleu = microservices,\; vert = infrastructure,\; pointillé = supervision.
+
