@@ -40,6 +40,7 @@
   urlcolor=blue,
   citecolor=blue
 }
+\usepackage{csquotes}
 \usepackage{listings}
 \lstset{
   basicstyle=\ttfamily\small,
@@ -53,15 +54,15 @@
 % ---------------------------------------------------------------------------
 % Métadonnées (à adapter si besoin)
 % ---------------------------------------------------------------------------
-\newcommand{\rapportTitre}{Conception et réalisation d’un système d’archivage documentaire intelligent (on-premise)}
+\newcommand{\rapportTitre}{Conception et réalisation d’un système d’archivage documentaire intelligent}
 \newcommand{\auteurNom}{KOEVI Komi Pascal}
 \newcommand{\formation}{Master Systèmes d’Information}
 \newcommand{\universite}{LBS}
 \newcommand{\anneeAcademique}{2025--2026}
 \newcommand{\nomMinistere}{Ministère de l'Efficacité des Services Publique et de Transformation Numérique (MESPTN)}
-\newcommand{\directeurMemoire}{Directeur de mémoire : \textit{M. KONAN}}
+\newcommand{\directeurMemoire}{Encadrant académique : \textit{M. KONAN}}
 \newcommand{\structureAccueil}{Structure d’accueil : \textit{\nomMinistere}}
-\newcommand{\tuteurStage}{Tuteur de stage : \textit{M. Morlé KOUDEKA}}
+\newcommand{\tuteurStage}{Référent professionnel : \textit{M. Morlé KOUDEKA}}
 
 \title{\rapportTitre}
 \author{\parbox{0.95\textwidth}{\centering
@@ -99,8 +100,8 @@
 \pagenumbering{roman}
 \setcounter{page}{1}
 
-% \listoffigures
-% \listoftables
+\listoffigures
+% \listoftables % à activer si des tableaux sont ajoutés
 
 \clearpage
 \tableofcontents
@@ -108,15 +109,31 @@
 
 \chapter*{Résumé}
 \addcontentsline{toc}{chapter}{Résumé}
-Un document scanné n’est pas encore une archive. Dans les administrations publiques, la gestion documentaire repose encore largement sur des supports papier et des pratiques de classement hétérogènes, rendant l’accès à l’information difficile et peu fiable. Au \nomMinistere{}, des milliers de documents anciens, datant de plus de dix ans, devaient être numérisés dans un délai contraint tout en restant exploitables au quotidien.
+Un document scanné n’est pas encore une archive. Dans les administrations publiques, la gestion documentaire repose encore largement sur des supports papier et sur des pratiques de classement hétérogènes, rendant l’accès à l’information difficile, lent et peu fiable. Au \nomMinistere{}, des milliers de documents anciens, datant de plus de dix ans, devaient être numérisés dans un délai contraint, tout en restant exploitables au quotidien.
 
-Le principal enjeu était donc de transformer un flux important de documents numérisés en archives structurées, correctement nommées, classées et facilement retrouvables.
+L’enjeu principal consistait ainsi à transformer un volume important de documents numérisés en archives structurées, correctement nommées, classées et facilement retrouvables.
 
-Ce rapport présente la conception et la réalisation d’un système d’archivage numérique déployé en environnement \textit{on-premise}. La solution proposée permet l’ingestion automatique des documents depuis plusieurs scanners via des dossiers partagés, puis déclenche une chaîne de traitement basée sur des techniques d’intelligence artificielle : reconnaissance de texte (OCR), extraction d’informations, structuration des données et génération de métadonnées. Ces traitements permettent de proposer automatiquement un renommage et un classement conformes aux règles définies par le ministère, tout en laissant à l’utilisateur la possibilité de valider ou corriger les résultats via une interface web dédiée.
+Ce rapport présente la conception et la réalisation d’un système d’archivage numérique déployé en environnement \textit{on-premise}. La solution proposée permet l’ingestion automatique des documents depuis plusieurs scanners via des dossiers partagés, puis déclenche une chaîne de traitement basée sur des techniques d’intelligence artificielle : reconnaissance optique de caractères (OCR), extraction d’informations, structuration des données et génération de métadonnées. Ces traitements permettent de proposer automatiquement un renommage et un classement conformes aux règles définies par le ministère, tout en laissant à l’utilisateur la possibilité de valider ou corriger les résultats via une interface web dédiée.
 
-L’architecture du système repose sur une approche microservices, garantissant la scalabilité, la résilience et la modularité de la solution. L’intégration de mécanismes de recherche avancée, incluant la recherche sémantique, améliore significativement l’accès à l’information.
+L’architecture du système repose sur une approche microservices, garantissant la scalabilité, la résilience et la modularité de la solution. En complément, un assistant conversationnel permet d’interroger le contenu documentaire en langage naturel. Les réponses sont générées à partir d’un contexte extrait des documents archivés, selon une approche de recherche sémantique couplée à la génération augmentée par récupération (\textit{RAG}), améliorant significativement l’accès à l’information.
 
-Ainsi, la solution mise en place permet d’industrialiser le processus d’archivage numérique, en réduisant les tâches manuelles, en améliorant la qualité et la cohérence du classement, et en garantissant la traçabilité des opérations, tout en respectant les contraintes de sécurité et de souveraineté liées à un déploiement interne.
+Ainsi, la solution mise en place permet d’industrialiser le processus d’archivage numérique en réduisant les tâches manuelles, en améliorant la qualité et la cohérence du classement, et en garantissant la traçabilité des opérations. Elle répond également aux exigences de sécurité et de souveraineté grâce à un déploiement en environnement interne.
+
+\chapter*{Liste des acronymes}
+\addcontentsline{toc}{chapter}{Liste des acronymes}
+\begin{description}[leftmargin=2.5cm, style=nextline]
+  \item[API] \textit{Application Programming Interface}
+  \item[GED] Gestion Électronique des Documents
+  \item[IA] Intelligence Artificielle
+  \item[IAM] \textit{Identity and Access Management}
+  \item[LLM] \textit{Large Language Model}
+  \item[MFA] \textit{Multi-Factor Authentication}
+  \item[OCR] \textit{Optical Character Recognition}
+  \item[RBAC] \textit{Role-Based Access Control}
+  \item[RAG] \textit{Retrieval-Augmented Generation}
+  \item[SSO] \textit{Single Sign-On}
+  \item[TLS] \textit{Transport Layer Security}
+\end{description}
 
 % Corps du document (numérotation arabe + en-têtes/pieds de page)
 \pagenumbering{arabic}
@@ -124,15 +141,171 @@ Ainsi, la solution mise en place permet d’industrialiser le processus d’arch
 
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
-Dans les administrations publiques, la gestion documentaire repose encore largement sur des supports papier et des pratiques de classement souvent hétérogènes. Cette situation complique l’accès à l’information, augmente les risques de perte de documents et limite l’efficacité des services.
+Dans les administrations publiques, la gestion documentaire repose encore largement sur des supports papier et sur des pratiques de classement souvent hétérogènes. Cette situation complique l’accès à l’information, accroît les risques de perte ou de dégradation des documents, et limite l’efficacité opérationnelle des services.
 
-Dans le cadre étudié, le \nomMinistere{} faisait face à la nécessité de numériser et d’archiver un volume important de documents anciens, datant de plus de dix ans, dans un délai contraint. Cependant, la simple numérisation ne suffit pas : un document scanné mais mal nommé, mal classé ou difficilement retrouvable perd rapidement sa valeur. À grande échelle, les opérations manuelles telles que le tri, le renommage ou la recherche deviennent coûteuses, sources d’erreurs et difficilement maintenables.
+Dans ce contexte, le \nomMinistere{} est confronté à un enjeu majeur : numériser et archiver un volume important de documents anciens, datant de plus de dix ans, dans un délai contraint, tout en garantissant leur exploitation à long terme. Toutefois, la simple numérisation ne constitue pas une solution suffisante. Un document scanné mais mal nommé, mal classé ou difficilement retrouvable perd rapidement sa valeur informationnelle. À grande échelle, les opérations manuelles de tri, de renommage et de recherche deviennent coûteuses, sources d’erreurs et difficilement maintenables.
 
-Dès lors, la problématique suivante se pose : comment mettre en place une chaîne d’archivage numérique capable de traiter efficacement un grand volume de documents numérisés, tout en réduisant les manipulations manuelles, en améliorant la qualité du classement, en garantissant la traçabilité des opérations et en permettant une recherche rapide et fiable, le tout dans un environnement sécurisé et déployé en local (\textit{on-premise}) ?
+Dès lors, la problématique suivante se pose : comment concevoir une chaîne d’archivage numérique capable de traiter efficacement un volume important de documents numérisés, tout en réduisant les interventions manuelles, en améliorant la qualité du classement, en garantissant la traçabilité des opérations et en permettant une recherche rapide et fiable, dans un environnement sécurisé et déployé en local (\textit{on-premise}) ?
 
-Pour répondre à cette problématique, le projet \textbf{Document Archiving System} a pour objectif de concevoir et de mettre en place une solution d’archivage numérique automatisée. Cette solution vise notamment à assurer l’ingestion automatique des documents depuis les scanners, l’extraction des informations via des techniques d’OCR, l’assistance au classement et au renommage selon des règles définies, ainsi que la mise à disposition d’une interface web permettant la consultation, la recherche et la validation des documents. Elle intègre également des mécanismes de suivi et de traçabilité afin de garantir une exploitation fiable dans le temps, tout en respectant les contraintes de souveraineté et de sécurité liées à un déploiement interne.
+Pour répondre à cette problématique, le projet \textbf{Document Archiving System} vise à concevoir et à mettre en œuvre une solution d’archivage numérique automatisée. Cette solution permet notamment l’ingestion automatique des documents depuis les scanners, l’extraction d’informations via des techniques d’OCR, ainsi que l’assistance au classement et au renommage selon des règles définies. Elle propose également une interface web facilitant la consultation, la recherche et la validation des documents. Par ailleurs, des mécanismes de suivi et de traçabilité sont intégrés afin d’assurer une exploitation fiable dans la durée, tout en respectant les exigences de souveraineté et de sécurité propres à un déploiement interne.
 
-Enfin, ce rapport est structuré en trois parties. La première présente le contexte et une vue d’ensemble de l’architecture et des flux de traitement. La deuxième décrit la conception et la mise en œuvre de la solution (modèle de données, services, stockage et déploiement \textit{on-premise}). La troisième expose les aspects d’exploitation (observabilité), de sécurité, ainsi que le bilan et les perspectives d’amélioration.
+En complément, la solution intègre un assistant conversationnel permettant d’interroger le contenu documentaire et d’obtenir des réponses contextualisées, en s’appuyant sur une approche de recherche sémantique couplée à des techniques de génération augmentée par récupération (\textit{RAG}).
+
+Enfin, ce rapport est structuré en trois parties. La première présente le cadre de la mission (structure d’accueil, contexte, existant et analyse des besoins). La deuxième détaille la conception et la réalisation de la solution (architecture, modèle de données, implémentation et déploiement). La troisième aborde les aspects d’exploitation, de sécurité et d’évaluation, avant de conclure sur le bilan du projet et les perspectives d’évolution.
+
+\part{Cadre de la mission et expression des besoins}
+\chapter{Présentation de la structure d’accueil}
+Ce chapitre présente la structure d’accueil de la mission, le \nomMinistere{}, ainsi que le contexte dans lequel s’inscrit le projet. Il décrit les missions du ministère, son organisation générale, le rôle du service d’accueil dans la gestion documentaire, et les responsabilités confiées dans le cadre de la mission.
+
+\section{Missions et organisation}
+Le \nomMinistere{} est une administration publique dont la mission principale est d’améliorer la qualité et l’efficacité des services rendus aux usagers, tout en accompagnant la transformation numérique des processus administratifs internes.
+
+Dans ce cadre, la production, la circulation et la conservation des documents administratifs (courriers, notes, arrêtés, pièces justificatives, dossiers ou comptes rendus) occupent une place centrale dans le fonctionnement quotidien des services.
+
+La mission s’est déroulée au sein d’une équipe en charge des outils numériques et de la gestion documentaire. Cette équipe intervient notamment sur :
+\begin{itemize}
+  \item la mise à disposition d’outils dédiés à la numérisation et à l’archivage des documents ;
+  \item la structuration de l’information (classement, métadonnées, organisation documentaire) ;
+  \item l’accompagnement des utilisateurs, en particulier les secrétariats et les services métier ;
+  \item la sécurisation et la conformité des solutions déployées dans l’environnement interne.
+\end{itemize}
+
+\section{Contexte de la mission}
+La mission s’inscrit dans un projet de numérisation et d’archivage massif de documents anciens, datant de plus de dix ans, avec un double objectif :
+\begin{itemize}
+  \item absorber un volume important de documents dans un délai contraint ;
+  \item mettre en place un dispositif pérenne, exploitable au quotidien par les utilisateurs.
+\end{itemize}
+
+Compte tenu de la sensibilité des informations traitées et des exigences de souveraineté, la solution devait être déployée en environnement local (\textit{on-premise}). Elle devait également s’intégrer aux pratiques existantes des services, caractérisées par :
+\begin{itemize}
+  \item l’utilisation de plusieurs scanners ;
+  \item le recours à des dossiers partagés sur le réseau interne ;
+  \item la nécessité d’un fonctionnement basé sur un principe de validation humaine (\og proposer puis valider \fg{}) afin de garantir la fiabilité du classement.
+\end{itemize}
+
+\section{Rôle et responsabilités}
+En tant que développeur fullstack, j’ai été chargé de la conception et de la mise en œuvre de la solution, en collaboration avec l’équipe technique et les utilisateurs finaux.
+
+Les principales responsabilités ont porté sur :
+\begin{itemize}
+  \item la conception de l’architecture applicative et du pipeline de traitement (ingestion, OCR, extraction, indexation) ;
+  \item le développement des services backend (API, orchestration asynchrone) ainsi que des interfaces web dédiées à la validation et à la consultation ;
+  \item la mise en place du déploiement en environnement \textit{on-premise} (Docker Compose) et des premiers éléments d’exploitabilité (journalisation, métriques, tableaux de bord) ;
+  \item l’intégration des contraintes métier, notamment les règles de nommage et de classement, en tenant compte des retours utilisateurs.
+\end{itemize}
+
+\chapter{État de l’existant et problématique terrain}
+\section{Processus d’archivage avant projet}
+Avant le projet, l’archivage reposait majoritairement sur un enchaînement d’actions manuelles : réception d’un document papier, scan, renommage du fichier, classement dans une arborescence partagée, puis transmission au service concerné. La recherche d’un document s’effectuait principalement par navigation dans des dossiers et par mémoire des utilisateurs.
+
+Ce fonctionnement, acceptable à faible volume, montre rapidement ses limites lorsque le nombre de documents augmente :
+\begin{itemize}
+  \item incohérences de nommage (fichiers difficiles à identifier) ;
+  \item classement variable selon les personnes et les services ;
+  \item doublons et pertes de documents lors des transferts ;
+  \item absence de traçabilité complète des actions (qui a classé, modifié, validé) ;
+  \item recherche lente, surtout lorsque le contenu du document n’est pas indexé.
+\end{itemize}
+
+\section{Contraintes et enjeux}
+Le contexte ministériel impose plusieurs contraintes fortes :
+\begin{itemize}
+  \item \textbf{Volumétrie} : plusieurs milliers de documents à traiter, avec des pics de charge ;
+  \item \textbf{Hétérogénéité} : formats et qualités de scan variables (PDF, images, documents bruités) ;
+  \item \textbf{Confidentialité} : documents potentiellement sensibles (données personnelles, décisions, actes) ;
+  \item \textbf{Délais} : nécessité d’un traitement rapide et industrialisé ;
+  \item \textbf{Disponibilité des utilisateurs} : les secrétariats doivent pouvoir utiliser l’outil sans complexité technique.
+\end{itemize}
+
+Les enjeux associés sont : garantir un archivage \textbf{fiable} et \textbf{traçable}, améliorer l’accès à l’information (recherche par contenu), et réduire durablement la charge manuelle (tri/renommage/classement), tout en respectant un déploiement \textit{on-premise}.
+
+\chapter{Besoins et cahier des charges}
+Ce chapitre présente les besoins identifiés pour la mise en place du système, ainsi que les critères permettant d’évaluer l’adéquation de la solution proposée. Il distingue les besoins fonctionnels, les exigences non fonctionnelles et les critères d’acceptation.
+
+\section{Besoins fonctionnels}
+Les besoins fonctionnels définissent les fonctionnalités attendues du système. Ils ont été identifiés en collaboration avec les utilisateurs métiers et l’équipe technique.
+\begin{itemize}
+  \item \textbf{Ingestion multi-scanners} : récupération automatique des documents numérisés via des dossiers partagés réseau et/ou via une API d’upload.
+  \item \textbf{Reconnaissance optique de caractères (OCR)} : extraction du texte à partir des documents scannés afin de rendre leur contenu exploitable.
+  \item \textbf{Extraction et structuration des données} : identification des informations pertinentes (objet, expéditeur/destinataire, numéros, dates, type de document).
+  \item \textbf{Renommage et classement assistés} : proposition automatique d’un nom de fichier et d’un emplacement de classement conformes aux règles définies par le ministère.
+  \item \textbf{Validation utilisateur} : possibilité pour les secrétariats de valider, modifier ou corriger les propositions avant archivage définitif.
+  \item \textbf{Recherche documentaire} : recherche plein texte et recherche sémantique permettant de retrouver rapidement un document à partir de son contenu.
+  \item \textbf{Gestion documentaire (GED)} : gestion d’une arborescence de dossiers et fichiers, avec fonctionnalités de consultation, téléchargement et éventuellement gestion de versions.
+  \item \textbf{Audit et traçabilité} : journalisation des actions et des changements d’état (création, validation, modification, déplacement, suppression).
+\end{itemize}
+
+\section{Besoins non fonctionnels}
+Les besoins non fonctionnels décrivent les contraintes techniques et qualitatives auxquelles le système doit répondre.
+\begin{itemize}
+  \item \textbf{Sécurité} : déploiement en environnement \textit{on-premise}, limitation de la surface d’exposition, contrôle des accès et traçabilité des actions.
+  \item \textbf{Performance} : capacité à absorber des volumes importants de documents et à traiter les flux de manière asynchrone.
+  \item \textbf{Disponibilité} : continuité de service malgré l’indisponibilité temporaire de certains composants, grâce à une architecture basée sur des messages.
+  \item \textbf{Maintenabilité} : architecture modulaire reposant sur des composants découplés, facilitant les évolutions et la maintenance.
+  \item \textbf{Exploitabilité} : mise en place de mécanismes de supervision incluant logs centralisés, métriques, alertes et tableaux de bord opérationnels.
+\end{itemize}
+
+\section{Critères d’acceptation}
+Afin de valider la conformité de la solution aux besoins exprimés, plusieurs critères d’acceptation ont été définis :
+\begin{itemize}
+  \item \textbf{Automatisation du flux} : tout document déposé via un scanner ou une API est pris en charge automatiquement, sans intervention technique.
+  \item \textbf{Délai de traitement} : un document standard est traité (de l’ingestion à la proposition de validation) dans un délai compatible avec l’usage opérationnel (objectif indicatif : quelques minutes).
+  \item \textbf{Qualité des propositions} : les suggestions de classification et de renommage sont suffisamment pertinentes pour réduire significativement les corrections manuelles.
+  \item \textbf{Efficacité de la recherche} : il est possible de retrouver rapidement un document à partir de mots-clés ou de son contenu.
+  \item \textbf{Traçabilité des actions} : les opérations critiques (création, validation, modification, déplacement, suppression) sont systématiquement journalisées.
+  \item \textbf{Exploitabilité technique} : l’équipe dispose d’indicateurs fiables (état du pipeline, erreurs, latences) ainsi que de mécanismes de supervision et de reprise en cas d’incident.
+\end{itemize}
+
+\chapter{Méthodologie et organisation du projet}
+\section{Démarche}
+Ce chapitre présente la démarche méthodologique adoptée pour la conduite du projet, ainsi que son organisation, depuis le cadrage initial jusqu’à la mise en production progressive de la solution.
+
+Une approche itérative et incrémentale, inspirée des méthodes agiles (Scrum), a été retenue afin de livrer rapidement une première version fonctionnelle du système, puis d’enrichir progressivement ses fonctionnalités en fonction des retours des utilisateurs.
+
+Cette démarche a permis de réduire les risques, d’améliorer l’adéquation aux besoins métiers et de favoriser une validation continue des choix techniques.
+
+Les principales étapes ont été les suivantes :
+\begin{itemize}
+  \item \textbf{Cadrage fonctionnel} : recueil des besoins auprès des parties prenantes (secrétariats, équipe technique), identification des contraintes métier et définition des cas d’usage prioritaires ;
+  \item \textbf{Prototypage initial} : mise en place d’un premier pipeline minimal (ingestion $\rightarrow$ OCR $\rightarrow$ stockage) afin de valider les choix techniques ;
+  \item \textbf{Itérations successives} : ajout progressif des modules d’extraction, d’assistance intelligente (classification, renommage) et de recherche documentaire ;
+  \item \textbf{Intégration des interfaces utilisateur} : développement des interfaces de consultation et de validation, avec prise en compte des retours terrain ;
+  \item \textbf{Stabilisation et mise en production} : amélioration de la robustesse, mise en place de l’observabilité (logs, métriques, alertes) et préparation au déploiement en environnement \textit{on-premise}.
+\end{itemize}
+
+L’implication des parties prenantes a été un élément clé de la démarche. Des échanges réguliers avec les utilisateurs finaux ont permis d’ajuster les fonctionnalités, notamment sur les règles de classement et les interfaces de validation.
+
+Les principaux risques identifiés concernaient :
+\begin{itemize}
+  \item la qualité et la variabilité des documents scannés (impact sur l’OCR) ;
+  \item l’hétérogénéité des formats documentaires ;
+  \item la nécessité de garantir un contrôle humain sur les décisions automatisées.
+\end{itemize}
+
+Ces risques ont été atténués par :
+\begin{itemize}
+  \item une architecture asynchrone basée sur un système de messagerie (RabbitMQ), permettant de fiabiliser le traitement ;
+  \item la mise en place d’un workflow de validation utilisateur (\og proposer puis valider \fg{}) ;
+  \item une approche progressive permettant d’ajuster les traitements en fonction des résultats observés.
+\end{itemize}
+
+\section{Organisation et planification}
+Le projet a été structuré selon une logique d’itérations courtes (\textit{sprints}), avec des livraisons incrémentales permettant de valider rapidement les fonctionnalités développées.
+
+Les principaux livrables ont été organisés comme suit :
+\begin{itemize}
+  \item (i) ingestion automatique des documents ;
+  \item (ii) OCR et stockage ;
+  \item (iii) extraction des informations et gestion des métadonnées ;
+  \item (iv) assistance au classement et au renommage ;
+  \item (v) interface utilisateur et moteur de recherche ;
+  \item (vi) observabilité, supervision et durcissement du système.
+\end{itemize}
+
+Chaque itération donnait lieu à une démonstration auprès des utilisateurs et de l’équipe technique, permettant de recueillir des retours et d’ajuster les développements suivants. Cette boucle de feedback a contribué à améliorer progressivement la pertinence fonctionnelle et l’ergonomie du système.
+
+\part{Conception et réalisation de la solution}
 
 \chapter{Vue d’ensemble du système}
 \section{Architecture générale}
@@ -185,6 +358,13 @@ Le \textbf{Extraction Service} prend ensuite le relais pour analyser le contenu 
 \label{fig:flux-traitement}
 \end{figure}
 
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.98\textwidth]{images/screens/Traitement_documents.png}
+\caption{Interface de suivi des documents en cours de traitement et de validation.}
+\label{fig:ui-traitement-docs}
+\end{figure}
+
 Enfin, le \textbf{Routing Service}, couplé au frontend \textbf{Next.js}, permet aux utilisateurs d’accéder aux documents, d’effectuer des recherches avancées et de valider les opérations réalisées.
 
 \section{Justification du choix microservices}
@@ -197,18 +377,28 @@ Les principaux avantages observés dans ce projet :
 \end{itemize}
 
 \chapter{Modèle de données et stockage}
+Ce chapitre décrit les choix réalisés en matière de stockage des données et de structuration des informations. Il présente l’organisation du stockage des fichiers, le modèle relationnel utilisé pour les métadonnées, ainsi que le mécanisme d’indexation sémantique permettant la recherche avancée.
+
 \section{Stockage des fichiers (MinIO)}
-Les fichiers sont stockés dans MinIO (bucket \texttt{documents}). L’ingestion écrit d’abord dans un préfixe tampon (ex. \texttt{buffer/}), puis d’autres services peuvent déplacer/renommer les objets pour refléter l’organisation logique et les règles de classement. Des URLs \textbf{pré-signées} peuvent être générées pour un accès navigateur contrôlé.
+Les fichiers sont stockés dans un système de stockage objet basé sur MinIO, au sein d’un bucket dédié (\texttt{documents}). Ce choix permet de garantir une gestion efficace des fichiers volumineux, tout en assurant une bonne scalabilité et une compatibilité avec les standards S3.
+
+Lors de l’ingestion, les documents sont initialement stockés dans un préfixe tampon (par exemple \texttt{buffer/}). Ce stockage intermédiaire permet de séparer les fichiers en cours de traitement des documents validés. Une fois les traitements effectués (OCR, extraction, classification), les fichiers peuvent être déplacés et renommés afin de refléter leur organisation logique dans l’arborescence documentaire.
+
+Par ailleurs, des URLs pré-signées peuvent être générées dynamiquement afin de permettre un accès temporaire et sécurisé aux documents depuis une interface web, sans exposer directement le stockage.
 
 \section{Base PostgreSQL}
-La base de données relationnelle centralise :
+La base de données relationnelle PostgreSQL centralise l’ensemble des métadonnées et des informations nécessaires à la gestion documentaire. Elle constitue le cœur du système en assurant la cohérence, la traçabilité et la structuration des données.
+
+Les principales entités du modèle sont les suivantes :
 \begin{itemize}
-  \item \textbf{documents} : métadonnées (nom, type, expéditeur/destinataire, tags, statut de traitement, etc.) ;
-  \item \textbf{document\_chunks} : passages chunkés avec embeddings (dimension 384) pour la recherche sémantique ;
-  \item \textbf{nodes} et \textbf{node\_versions} : arborescence GED (dossiers/fichiers) et versioning ;
-  \item \textbf{users/roles/permissions} : RBAC normalisé ;
-  \item \textbf{document\_events} : journalisation des actions (audit).
+  \item \textbf{documents} : contient les métadonnées principales (nom, type, expéditeur/destinataire, tags, statut de traitement, dates, etc.) ;
+  \item \textbf{document\_chunks} : stocke les segments de texte issus du découpage (\textit{chunking}), associés à leurs embeddings vectoriels (dimension 384) pour la recherche sémantique ;
+  \item \textbf{nodes} / \textbf{node\_versions} : représentent l’arborescence documentaire (dossiers et fichiers) ainsi que les mécanismes de versioning ;
+  \item \textbf{users} / \textbf{roles} / \textbf{permissions} : implémentent un modèle de contrôle d’accès basé sur les rôles (RBAC) ;
+  \item \textbf{document\_events} : assure la journalisation des actions (création, modification, validation, suppression), garantissant la traçabilité du système.
 \end{itemize}
+
+Ce modèle permet de dissocier clairement le stockage des fichiers (MinIO) et la gestion des métadonnées (PostgreSQL), facilitant ainsi la maintenabilité et l’évolutivité du système.
 
 Le schéma ci-dessous synthétise les principales entités et relations du modèle de données.
 \begin{figure}[h!]
@@ -219,91 +409,142 @@ Le schéma ci-dessous synthétise les principales entités et relations du modè
 \end{figure}
 
 \section{Indexation sémantique (pgvector)}
-L’extraction service réalise un pipeline d’indexation :
+Afin de permettre une recherche avancée sur le contenu des documents, un mécanisme d’indexation sémantique a été mis en place à l’aide de l’extension pgvector intégrée à PostgreSQL.
+
+Le pipeline d’indexation, réalisé par le service d’extraction, repose sur les étapes suivantes :
 \begin{itemize}
-  \item \textbf{Chunking} : découpe du texte OCR en segments de taille paramétrable avec recouvrement.
-  \item \textbf{Embedding} : transformation de chaque chunk en vecteur sémantique (sentence-transformers).
-  \item \textbf{Recherche} : la requête est vectorisée et comparée aux chunks via une similarité cosinus (opérateurs pgvector).
+  \item \textbf{Chunking} : le texte issu de l’OCR est découpé en segments de taille paramétrable, avec un chevauchement (\textit{overlap}) permettant de préserver le contexte entre les segments ;
+  \item \textbf{Embedding} : chaque segment est transformé en vecteur sémantique à l’aide de modèles de type \textit{sentence-transformers} ;
+  \item \textbf{Recherche vectorielle} : lors d’une requête, le texte utilisateur est vectorisé puis comparé aux embeddings stockés via une mesure de similarité (cosinus), permettant d’identifier les passages les plus pertinents.
 \end{itemize}
 
+Cette approche permet d’aller au-delà de la recherche par mots-clés, en prenant en compte le sens des requêtes et des documents, et constitue la base du système de recherche sémantique et du mécanisme \textit{RAG} intégré à la solution.
+
 \chapter{Implémentation des services}
+\noindent Ce chapitre décrit l’implémentation des différents services constituant l’architecture microservices du système. Chaque service est conçu pour remplir une responsabilité spécifique au sein du pipeline de traitement, avec une communication asynchrone via un système de messagerie (RabbitMQ).
+
 \section{Upload service}
-Responsabilités :
+Le service d’upload constitue le point d’entrée principal du système pour l’ingestion des documents.
+
+\textbf{Responsabilités :}
 \begin{itemize}
-  \item réception d’un document via \texttt{POST /upload} (multipart) ;
-  \item stockage dans MinIO, puis publication d’un message \texttt{document.uploaded} dans RabbitMQ ;
-  \item initialisation du document dans PostgreSQL avec un \textbf{statut} (\texttt{processing\_status}) et une \textbf{progression} (\texttt{progress\_percent}).
+  \item réception des documents via l’endpoint \texttt{POST /upload} (\textit{multipart}) ;
+  \item stockage initial des fichiers dans MinIO ;
+  \item publication d’un message \texttt{document.uploaded} dans RabbitMQ afin de déclencher le pipeline de traitement ;
+  \item initialisation de l’entrée correspondante dans PostgreSQL, avec un statut (\texttt{processing\_status}) et un indicateur de progression (\texttt{progress\_percent}).
 \end{itemize}
 
 \section{OCR service}
-Responsabilités :
+Le service OCR est chargé d’extraire le contenu textuel des documents scannés.
+
+\textbf{Responsabilités :}
 \begin{itemize}
-  \item consommation de la queue \texttt{document.uploaded} ;
-  \item téléchargement depuis MinIO ;
-  \item OCR Tesseract (fra+eng) ; conversion PDF$\rightarrow$image si nécessaire ;
-  \item publication \texttt{ocr.completed} avec le texte OCR.
+  \item consommation des messages de la file \texttt{document.uploaded} ;
+  \item récupération des fichiers depuis MinIO ;
+  \item application d’un traitement OCR via Tesseract (langues : français et anglais), avec conversion préalable des PDF en images si nécessaire ;
+  \item publication d’un message \texttt{ocr.completed} contenant le texte extrait.
 \end{itemize}
 
 \section{Extraction service}
-Responsabilités :
+Le service d’extraction enrichit les documents en structurant les informations et en préparant la recherche sémantique.
+
+\textbf{Responsabilités :}
 \begin{itemize}
-  \item consommation de \texttt{ocr.completed} ;
-  \item extraction structurée Docling (export Markdown) ;
-  \item mise à jour de \texttt{documents} ; indexation sémantique (chunks + embeddings) si activée ;
-  \item exposition d’un endpoint \texttt{GET /search} pour la recherche sémantique.
+  \item consommation des messages \texttt{ocr.completed} ;
+  \item extraction structurée du contenu via Docling (export au format Markdown) ;
+  \item mise à jour des métadonnées dans PostgreSQL ;
+  \item indexation sémantique (\textit{chunking} et génération d’\textit{embeddings}) si activée ;
+  \item exposition d’un endpoint \texttt{GET /search} permettant la recherche sémantique.
 \end{itemize}
 
 \section{Routing service (API principale)}
-Le routing service joue le rôle de \textbf{façade} pour le frontend :
+Le routing service joue le rôle de façade entre le frontend et les différents services backend. Il centralise les accès et simplifie les interactions côté client.
+
+\textbf{Fonctionnalités principales :}
 \begin{itemize}
-  \item listing et détail documents (\texttt{GET /api/documents}, \texttt{GET /api/documents/\{id\}}) ;
-  \item recherche sémantique en proxy (\texttt{GET /api/search}) ;
-  \item chat RAG (\texttt{POST /api/chat}) qui injecte un contexte issu de la recherche avant d’appeler le service LLM ;
-  \item exposition \texttt{/metrics} pour Prometheus.
+  \item consultation des documents (\texttt{GET /api/documents}, \texttt{GET /api/documents/\{id\}}) ;
+  \item recherche sémantique via un endpoint proxy (\texttt{GET /api/search}) ;
+  \item gestion du chat documentaire (\texttt{POST /api/chat}), incluant l’injection d’un contexte issu de la recherche (approche \textit{RAG}) avant appel au service de modèle de langage ;
+  \item exposition des métriques (\texttt{/metrics}) pour l’intégration avec Prometheus.
 \end{itemize}
 
 \section{Language model service (IA)}
-Le mémoire retient un fonctionnement \textbf{100\% local} (déploiement \textit{on-premise}) : le service s’appuie sur un serveur HTTP \textbf{compatible OpenAI} (\texttt{/chat/completions}). Les appels à des API cloud n’ont été utilisés que ponctuellement durant les tests de développement.
-Fonctionnalités principales :
+Ce service regroupe les fonctionnalités d’intelligence artificielle du système, notamment la classification documentaire et l’assistance à la recherche via un mécanisme de génération augmentée par récupération (\textit{RAG}).
+
+Le choix d’un fonctionnement entièrement local (\textit{on-premise}) a été retenu afin de garantir la confidentialité des données sensibles. Le service s’appuie sur un serveur HTTP compatible OpenAI (\texttt{/chat/completions}), permettant une intégration flexible des modèles de langage. Les appels à des API cloud ont été limités aux phases de test.
+
+\subsection*{Fonctionnalités principales}
 \begin{itemize}
-  \item \texttt{POST /classify-and-rename} : extraction de métadonnées (expéditeur, objet, numéros, sensibilité, tags), proposition de renommage et catégorisation ;
-  \item \texttt{POST /chat} : génération de réponses en français, avec injection d’un \textbf{contexte} (extraits RAG).
+  \item \texttt{POST /classify-and-rename} : extraction automatique de métadonnées (expéditeur, objet, numéros, niveau de sensibilité, tags), accompagnée d’une proposition de renommage et de catégorisation conforme aux règles métier ;
+  \item \texttt{POST /chat} : génération de réponses en langage naturel à partir des documents archivés, en s’appuyant sur une approche \textit{RAG} (\textit{Retrieval-Augmented Generation}).
 \end{itemize}
 
+\subsection*{Mécanisme \textit{RAG}}
+Le fonctionnement du système \textit{RAG} repose sur une chaîne en plusieurs étapes :
+\begin{enumerate}
+  \item \textbf{Requête utilisateur} : l’utilisateur formule une question en langage naturel via l’interface ;
+  \item \textbf{Recherche sémantique} : la requête est vectorisée puis comparée aux embeddings stockés dans PostgreSQL (pgvector) afin d’identifier les passages les plus pertinents ;
+  \item \textbf{Construction du contexte} : les extraits les plus pertinents (\textit{chunks}) sont sélectionnés et agrégés pour former un contexte documentaire ;
+  \item \textbf{Génération de réponse} : ce contexte est injecté dans le prompt du modèle de langage, qui génère une réponse contextualisée, en lien direct avec les documents.
+\end{enumerate}
+
+Cette approche permet de limiter les hallucinations du modèle et d’ancrer les réponses dans des données réelles issues du système documentaire.
+
+\subsection*{Optimisations et points d’attention}
+\begin{itemize}
+  \item qualité des embeddings et du \textit{chunking} influençant directement la pertinence des résultats ;
+  \item sélection et taille du contexte injecté (compromis entre précision et coût de génération) ;
+  \item prise en compte des permissions utilisateurs pour filtrer les documents accessibles ;
+  \item possibilité d’ajouter des citations ou références aux documents sources pour renforcer la confiance dans les réponses.
+\end{itemize}
+
+\textbf{Ainsi, le système ne se limite plus à stocker des documents : il devient un véritable assistant documentaire intelligent, capable d’exploiter le contenu informationnel pour répondre directement aux besoins des utilisateurs.}
+
 \section{Scan listener service}
-Ce service surveille un dossier (\texttt{WATCH\_DIR}) et soumet automatiquement les nouveaux fichiers vers l’upload service. En cas d’échec, les fichiers sont déplacés dans un sous-dossier \texttt{error}, avec une copie de sauvegarde dans \texttt{output}.
+Le service de surveillance permet d’automatiser l’ingestion des documents issus des scanners.
+
+\textbf{Responsabilités :}
+\begin{itemize}
+  \item surveillance d’un répertoire (\texttt{WATCH\_DIR}) sur le système de fichiers ;
+  \item détection des nouveaux fichiers et soumission automatique au service d’upload ;
+  \item gestion des erreurs : en cas d’échec, les fichiers sont déplacés dans un répertoire \texttt{error}, avec une copie de sauvegarde conservée dans \texttt{output}.
+\end{itemize}
 
 \section{MinIO manager}
-API de gestion MinIO (opérations nécessaires à l’explorateur web) :
+Ce service fournit une API dédiée à la gestion des objets stockés dans MinIO, utilisée notamment par l’interface web.
+
+\textbf{Fonctionnalités principales :}
 \begin{itemize}
-  \item déplacement (\texttt{/move-object}) et suppression (\texttt{/delete-object}) d’objets ;
-  \item création de dossier logique (\texttt{/create-folder}) ;
-  \item fusion PDF (\texttt{/merge-pdf}) ;
-  \item génération d’URL pré-signée (\texttt{/presign-get}) pour affichage navigateur.
+  \item déplacement (\texttt{/move-object}) et suppression (\texttt{/delete-object}) de fichiers ;
+  \item création de dossiers logiques (\texttt{/create-folder}) ;
+  \item fusion de documents PDF (\texttt{/merge-pdf}) ;
+  \item génération d’URLs pré-signées (\texttt{/presign-get}) pour un accès sécurisé depuis le navigateur.
 \end{itemize}
 
 \chapter{Déploiement}
 \section{Déploiement on-premise avec Docker Compose}
-Le déploiement est conçu pour être reproductible sur un serveur interne. Les composants applicatifs et l’infrastructure sont décrits dans \texttt{docker-compose.yml}. Un fichier \texttt{docker-compose.override.yml} facilite le développement (volumes montés + ports exposés).
+Ce chapitre présente le mode de déploiement retenu pour la solution, avec un objectif de \textbf{reproductibilité} et de \textbf{maîtrise} en environnement interne. Le déploiement est réalisé en \textit{on-premise} à l’aide de \textbf{Docker Compose}, ce qui permet de décrire l’infrastructure et les services applicatifs de manière cohérente et versionnée.
+
+Les composants applicatifs et l’infrastructure sont décrits dans \texttt{docker-compose.yml}. Un fichier \texttt{docker-compose.override.yml} facilite le développement (volumes montés, ports exposés) sans impacter la configuration cible.
 
 \subsection{Variables d’environnement}
-La configuration est centralisée dans un fichier \texttt{.env} (identifiants, ports, URLs). En production, les valeurs par défaut sont remplacées par des secrets robustes et gérés selon les politiques internes (vault, gestionnaire de secrets, etc.).
+La configuration est centralisée dans un fichier \texttt{.env} (identifiants, ports, URLs). En environnement de production, les valeurs par défaut doivent être remplacées par des secrets robustes et gérés selon les politiques internes (gestionnaire de secrets, Vault, etc.), conformément aux exigences de sécurité.
 
 \subsection{Démarrage}
-Commande de base :
+Le démarrage standard s’effectue avec la commande suivante :
 
 \begin{lstlisting}
 docker compose up -d --build
 \end{lstlisting}
 
-Démarrage avec la stack d’observabilité (Prometheus/Grafana/Loki/Vector) :
+Lorsque la supervision est activée, la stack d’observabilité (Prometheus/Grafana/Loki/Vector) est ajoutée via un fichier Compose dédié :
 
 \begin{lstlisting}
 docker compose -f docker-compose.yml -f observability/docker-compose.observability.yml up -d --build
 \end{lstlisting}
 
 \subsection{Ports et accès}
-Exemples d’accès en local :
+En environnement local (développement), les accès typiques sont les suivants :
 \begin{itemize}
   \item Frontend Next.js : \texttt{http://localhost:3001}
   \item API (routing-service) : \texttt{http://localhost:8000}
@@ -312,8 +553,9 @@ Exemples d’accès en local :
 \end{itemize}
 
 \subsection{Initialisation de la base}
-Au premier démarrage, les scripts SQL montés dans \texttt{/docker-entrypoint-initdb.d} créent l’extension \texttt{vector} et les tables principales (documents, chunks, RBAC, nodes, events).
+Au premier démarrage, les scripts SQL montés dans \texttt{/docker-entrypoint-initdb.d} créent l’extension \texttt{vector} et les tables principales (documents, chunks, RBAC, nodes, events). Cette initialisation garantit un environnement prêt à l’emploi et cohérent pour l’ensemble du pipeline (traitement, recherche sémantique et audit).
 
+\part{Exploitation, sécurité, évaluation et bilan}
 \chapter{Observabilité et exploitation}
 \section{Objectifs}
 L’observabilité vise à donner une visibilité sur :
@@ -323,6 +565,17 @@ L’observabilité vise à donner une visibilité sur :
   \item la latence et les volumes de requêtes ;
   \item les logs applicatifs (corrélation par service/conteneur).
 \end{itemize}
+
+\section{Tableaux de bord applicatifs}
+En complément de la supervision technique (métriques et logs), l’application propose des tableaux de bord destinés au suivi opérationnel : volumes de documents, répartition par statuts, indicateurs de traitement et journaux d’actions.
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.98\textwidth]{images/screens/dashboard_1.png}
+\par\vspace{0.6em}
+\includegraphics[width=0.98\textwidth]{images/screens/dashboard_2.png}
+\caption{Tableaux de bord applicatifs : indicateurs de volumétrie, statuts, types de documents et temps moyen de traitement.}
+\label{fig:dashboards-app}
+\end{figure}
 
 \section{Stack mise en place}
 Une stack séparée est fournie :
@@ -419,10 +672,102 @@ L’intégration de RAGAS permettra d’automatiser l’analyse des performances
   \item de garantir une meilleure adéquation aux besoins des utilisateurs métiers.
 \end{itemize}
 
+\chapter{Bilan de la mission et recommandations}
+\section{Livrables et résultats}
+Ce chapitre dresse un bilan global de la mission, en présentant les réalisations concrètes, les limites rencontrées, ainsi que les recommandations pour une mise en production et les enseignements tirés sur le plan personnel.
+
+Au cours de la mission, une solution complète d’archivage numérique a été conçue et implémentée. Les principaux livrables incluent :
+\begin{itemize}
+  \item un pipeline de traitement automatisé couvrant l’ingestion des documents, l’OCR, l’extraction d’informations et l’indexation ;
+  \item une architecture microservices assurant la modularité et la scalabilité du système ;
+  \item une interface web permettant la consultation, la recherche et la validation des documents ;
+  \item un système de recherche combinant recherche plein texte et recherche sémantique ;
+  \item un assistant conversationnel basé sur une approche \textit{RAG} pour faciliter l’accès à l’information ;
+  \item un déploiement en environnement \textit{on-premise} via Docker Compose ;
+  \item une première couche d’observabilité incluant logs, métriques et tableaux de bord.
+\end{itemize}
+
+Les résultats observés sur un échantillon représentatif montrent :
+\begin{itemize}
+  \item une réduction significative des tâches manuelles liées au tri et au renommage ;
+  \item une amélioration de la cohérence et de la qualité du classement documentaire ;
+  \item une meilleure traçabilité des opérations grâce à la journalisation ;
+  \item un accès plus rapide à l’information via la recherche et le chat documentaire.
+\end{itemize}
+
+\section{Limites et difficultés rencontrées}
+Malgré les résultats obtenus, plusieurs limites et difficultés ont été identifiées.
+
+\textbf{Sur le plan technique :}
+\begin{itemize}
+  \item la qualité variable des scans a un impact direct sur les performances de l’OCR ;
+  \item l’hétérogénéité des formats documentaires complique l’extraction et la structuration des données ;
+  \item certains traitements (OCR, extraction, embeddings) peuvent être coûteux en temps et en ressources.
+\end{itemize}
+
+\textbf{Sur le plan opérationnel :}
+\begin{itemize}
+  \item l’intégration dans un environnement contraint (réseau interne, sécurité) a nécessité des ajustements ;
+  \item la gestion des volumes importants de documents impose une optimisation continue des performances ;
+  \item la nécessité de conserver une validation humaine limite l’automatisation complète du processus.
+\end{itemize}
+
+Ces contraintes ont conduit à des arbitrages, notamment :
+\begin{itemize}
+  \item le choix d’un traitement asynchrone pour améliorer la robustesse ;
+  \item la mise en place d’un workflow de validation utilisateur pour garantir la fiabilité ;
+  \item une approche progressive privilégiant la qualité des résultats plutôt que l’automatisation totale.
+\end{itemize}
+
+\section{Bilan personnel}
+Cette mission m’a permis de développer des compétences techniques et méthodologiques significatives dans la conception et la mise en œuvre de systèmes distribués orientés traitement documentaire.
+
+\textbf{Sur le plan technique,} j’ai approfondi :
+\begin{itemize}
+  \item le développement d’architectures microservices (API, communication asynchrone) ;
+  \item l’intégration de briques d’intelligence artificielle (OCR, extraction, \textit{RAG}) ;
+  \item le déploiement et l’exploitation de solutions en environnement \textit{on-premise} (Docker, supervision).
+\end{itemize}
+
+\textbf{Sur le plan méthodologique,} cette expérience m’a permis de :
+\begin{itemize}
+  \item adopter une démarche itérative inspirée des méthodes agiles ;
+  \item collaborer étroitement avec des utilisateurs métiers afin de mieux comprendre leurs besoins ;
+  \item intégrer des contraintes réelles (performance, sécurité, exploitation) dans la conception.
+\end{itemize}
+
+Enfin, cette mission a également mis en évidence des axes d’amélioration, notamment :
+\begin{itemize}
+  \item approfondir les aspects liés à la sécurité des systèmes distribués ;
+  \item améliorer l’optimisation des performances sur des volumes importants ;
+  \item renforcer les pratiques de pilotage de projet et de formalisation des besoins.
+\end{itemize}
+
 \chapter*{Conclusion et perspectives}
 \addcontentsline{toc}{chapter}{Conclusion et perspectives}
-Le système livré apporte une chaîne d’archivage numérique complète, depuis la collecte automatique des scans jusqu’à la consultation et la recherche. En réduisant fortement les opérations manuelles (tri, renommage, saisie) et en proposant un classement plus homogène, la solution améliore la qualité de l’archivage et diminue les délais de traitement. Le déploiement \textbf{on-premise} répond aux contraintes de sécurité et de souveraineté de l’administration, tandis que la supervision facilite l’exploitation au quotidien.
+Le système développé constitue une chaîne d’archivage numérique complète, couvrant l’ensemble du cycle de vie du document, depuis la collecte automatique des scans jusqu’à leur consultation et leur recherche. En réduisant significativement les opérations manuelles (tri, renommage, saisie) et en proposant un classement plus homogène, la solution améliore à la fois la qualité de l’archivage et les délais de traitement.
 
-Les principaux axes d’évolution envisagés portent sur l’amélioration des règles métier de classement (référentiels, modèles de nommage, gestion des exceptions), le renforcement des workflows de validation et de la gouvernance documentaire (droits, circuit de traitement, versioning), l’amélioration de la recherche et de l’assistance documentaire (RAG, citations, permissions), ainsi que l’intégration progressive de fonctionnalités complémentaires (signature, politiques de conservation, tableaux de bord).
+Le choix d’un déploiement en environnement \textit{on-premise} permet de répondre aux exigences de sécurité et de souveraineté propres au contexte administratif, tandis que l’intégration de mécanismes d’observabilité contribue à une exploitation fiable et maîtrisée du système au quotidien. Par ailleurs, l’apport de techniques d’intelligence artificielle, notamment pour l’extraction d’informations et la recherche sémantique, renforce l’accessibilité et la valorisation du patrimoine documentaire.
+
+Néanmoins, ce projet constitue une première étape vers un système d’archivage pleinement industrialisé. Plusieurs axes d’évolution peuvent être envisagés afin d’en améliorer la robustesse, la pertinence et l’intégration métier.
+
+Les perspectives principales concernent :
+\begin{itemize}
+  \item l’amélioration des règles métier de classement, à travers la formalisation de référentiels documentaires, de modèles de nommage et la gestion des cas particuliers ;
+  \item le renforcement des workflows de validation et de la gouvernance documentaire (gestion des droits, circuits de traitement, versioning) ;
+  \item l’amélioration des capacités de recherche et d’assistance documentaire, notamment par l’optimisation des approches \textit{RAG} (qualité des contextes, citations, gestion des permissions) ;
+  \item l’intégration de fonctionnalités complémentaires telles que la signature électronique, les politiques de conservation ou encore des tableaux de bord décisionnels.
+\end{itemize}
+
+À terme, l’évolution de ce système pourrait s’inscrire dans une démarche plus large de transformation numérique, visant à faire de la gestion documentaire un levier stratégique d’efficacité et de valorisation de l’information au sein de l’administration.
+
+\chapter*{Références}
+\addcontentsline{toc}{chapter}{Références}
+\begin{itemize}
+  \item RAGAS (\textit{Retrieval-Augmented Generation Assessment}) : cadre d’évaluation des systèmes RAG.
+  \item PostgreSQL et extension pgvector : indexation vectorielle et recherche sémantique.
+  \item Keycloak : gestion des identités et des accès (IAM) / SSO.
+  \item HashiCorp Vault : gestion sécurisée des secrets.
+\end{itemize}
 
 \end{document}
