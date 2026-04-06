@@ -61,7 +61,7 @@
 \newcommand{\nomMinistere}{Ministère de l'Efficacité des Services Publique et de Transformation Numérique (MESPTN)}
 \newcommand{\directeurMemoire}{Directeur de mémoire : \textit{M. KONAN}}
 \newcommand{\structureAccueil}{Structure d’accueil : \textit{\nomMinistere}}
-\newcommand{\tuteurStage}{Tuteur de stage : \textit{M. Songuimpale Koumbogle}}
+\newcommand{\tuteurStage}{Tuteur de stage : \textit{M. Morlé KOUDEKA}}
 
 \title{\rapportTitre}
 \author{\parbox{0.95\textwidth}{\centering
@@ -185,29 +185,6 @@ Le \textbf{Extraction Service} prend ensuite le relais pour analyser le contenu 
 \label{fig:flux-traitement}
 \end{figure}
 
-\begin{lstlisting}
-Scanner
-  |
-  v
-Scan Listener (optionnel) -> Upload Service (/upload)
-  |
-  v
-RabbitMQ (document.uploaded)
-  |
-  v
-OCR Service (Tesseract) -> RabbitMQ (ocr.completed)
-  |
-  v
-Extraction Service (Docling + chunking + embeddings)
-  |
-  +--> LLM Service (classification, renommage, ajout de métadonnées)
-  +--> PostgreSQL (documents, chunks, RBAC, events, nodes...)
-  +--> MinIO (fichiers et réorganisation)
-  |
-  v
-Routing Service + Frontend Next.js (consultation, recherche, validation)
-\end{lstlisting}
-
 Enfin, le \textbf{Routing Service}, couplé au frontend \textbf{Next.js}, permet aux utilisateurs d’accéder aux documents, d’effectuer des recherches avancées et de valider les opérations réalisées.
 
 \section{Justification du choix microservices}
@@ -223,8 +200,8 @@ Les principaux avantages observés dans ce projet :
 \section{Stockage des fichiers (MinIO)}
 Les fichiers sont stockés dans MinIO (bucket \texttt{documents}). L’ingestion écrit d’abord dans un préfixe tampon (ex. \texttt{buffer/}), puis d’autres services peuvent déplacer/renommer les objets pour refléter l’organisation logique et les règles de classement. Des URLs \textbf{pré-signées} peuvent être générées pour un accès navigateur contrôlé.
 
-\section{Base PostgreSQL (métadonnées, index sémantique et GED)}
-La base relationnelle centralise :
+\section{Base PostgreSQL}
+La base de données relationnelle centralise :
 \begin{itemize}
   \item \textbf{documents} : métadonnées (nom, type, expéditeur/destinataire, tags, statut de traitement, etc.) ;
   \item \textbf{document\_chunks} : passages chunkés avec embeddings (dimension 384) pour la recherche sémantique ;
@@ -232,6 +209,14 @@ La base relationnelle centralise :
   \item \textbf{users/roles/permissions} : RBAC normalisé ;
   \item \textbf{document\_events} : journalisation des actions (audit).
 \end{itemize}
+
+Le schéma ci-dessous synthétise les principales entités et relations du modèle de données.
+\begin{figure}[h!]
+\centering
+\input{images/fig_db_schema_postgres.tex}
+\caption{Schéma simplifié de la base PostgreSQL (tables et relations principales).}
+\label{fig:db-schema-postgres}
+\end{figure}
 
 \section{Indexation sémantique (pgvector)}
 L’extraction service réalise un pipeline d’indexation :
@@ -302,7 +287,7 @@ API de gestion MinIO (opérations nécessaires à l’explorateur web) :
 Le déploiement est conçu pour être reproductible sur un serveur interne. Les composants applicatifs et l’infrastructure sont décrits dans \texttt{docker-compose.yml}. Un fichier \texttt{docker-compose.override.yml} facilite le développement (volumes montés + ports exposés).
 
 \subsection{Variables d’environnement}
-La configuration est centralisée dans un fichier \texttt{.env} (identifiants, ports, URLs). En production, les valeurs par défaut doivent être remplacées par des secrets robustes et gérés selon les politiques internes (vault, gestionnaire de secrets, etc.).
+La configuration est centralisée dans un fichier \texttt{.env} (identifiants, ports, URLs). En production, les valeurs par défaut sont remplacées par des secrets robustes et gérés selon les politiques internes (vault, gestionnaire de secrets, etc.).
 
 \subsection{Démarrage}
 Commande de base :
@@ -357,33 +342,87 @@ Des règles Prometheus détectent :
 \end{itemize}
 
 \chapter{Sécurité}
-\section{Principes}
-Le projet cible un déploiement \textbf{on-premise} :
+\section{Approche générale}
+Le système est déployé \textbf{on-premise} afin de respecter les contraintes de souveraineté et de confidentialité propres à une administration publique. Dans ce contexte, l’architecture de sécurité s’inspire d’une approche \textbf{Zero Trust} : ne pas supposer qu’un réseau interne est sûr par défaut, limiter la surface exposée, vérifier systématiquement l’identité et appliquer des contrôles d’accès stricts.
+
+\section{Exposition, réseau et segmentation}
+L’exposition des composants est volontairement minimisée. Les accès externes sont concentrés sur un point d’entrée unique (reverse proxy), configuré en \textbf{TLS} afin de protéger les échanges. Les services internes (OCR, extraction, bus de messages, bases) restent non exposés et accessibles uniquement sur le réseau interne.
+
+La segmentation réseau sépare les composants selon leur rôle (API/Frontend, traitements, stockage, observabilité, consoles). En production, les interfaces d’administration (RabbitMQ, MinIO, Grafana) sont restreintes (VPN, filtrage IP, comptes dédiés) afin d’éviter toute exposition accidentelle.
+
+\section{Gestion des identités et des accès (IAM)}
+La gestion des identités et des accès est un élément central pour sécuriser l’usage quotidien (secrétariats, administrateurs, services métier). Une intégration IAM est prévue via un fournisseur dédié (\textbf{Keycloak}) afin de :
 \begin{itemize}
-  \item exposition minimale via reverse proxy (TLS) ;
-  \item segmentation réseau (services internes non exposés) ;
-  \item séparation stockage fichiers (MinIO) / métadonnées (PostgreSQL) ;
-  \item journalisation des actions et RBAC.
+  \item centraliser l’authentification (\textbf{SSO}) et réduire la multiplication des comptes applicatifs ;
+  \item gérer les rôles et groupes, et appliquer des politiques d’accès homogènes ;
+  \item renforcer l’authentification (ex. \textbf{MFA}) selon la sensibilité des profils.
+\end{itemize}
+Cette approche facilite également la gestion du cycle de vie des comptes (création, révocation) et l’audit des connexions.
+
+\section{Contrôle d’accès, RBAC et moindre privilège}
+Le contrôle d’accès repose sur le principe du \textbf{moindre privilège} : chaque utilisateur et chaque service ne dispose que des droits strictement nécessaires. Le modèle RBAC (rôles et permissions) permet de limiter la consultation, la recherche et l’administration selon les profils, et de tracer les actions sensibles.
+
+Au niveau des services, les permissions d’accès aux ressources (buckets MinIO, tables, files RabbitMQ) sont séparées et attribuées de manière fine, afin de réduire l’impact d’un éventuel compromis d’un composant.
+
+\section{Gestion des secrets et configuration}
+La configuration applicative est aujourd’hui centralisée via un fichier \texttt{.env} (développement). Pour une mise en production robuste, l’externalisation et la sécurisation des secrets est prévue avec \textbf{Vault} (HashiCorp Vault). L’objectif est d’éviter tout stockage en clair de mots de passe, clés API et tokens, et de permettre :
+\begin{itemize}
+  \item la rotation et la révocation des secrets ;
+  \item la distribution contrôlée des secrets aux services autorisés ;
+  \item la réduction du risque de fuite via les dépôts, logs ou sauvegardes.
 \end{itemize}
 
-\section{Points d’attention}
+\section{Traçabilité et journalisation}
+La traçabilité est essentielle pour un environnement sensible : journalisation des actions (audit), suivi des traitements et corrélation des événements. Le système s’appuie sur :
 \begin{itemize}
-  \item En production, \textbf{tous les mots de passe} du \texttt{.env} doivent être remplacés.
-  \item Les URLs pré-signées MinIO doivent être limitées dans le temps.
-  \item Les endpoints d’administration (ex. RabbitMQ, MinIO console, Grafana) doivent être restreints (IP/VPN).
+  \item un journal d’événements applicatifs (actions et changements d’état) ;
+  \item des logs centralisés (Loki/Vector) et des métriques (Prometheus) pour détecter les anomalies ;
+  \item des alertes (erreurs, latences, indisponibilités) afin de réduire le temps de réaction.
+\end{itemize}
+Ces mécanismes contribuent à la détection d’incidents, à l’analyse post-mortem et au respect des exigences d’audit.
+
+\chapter{Évaluation du système RAG}
+\section{Objectifs de l’évaluation}
+L’intégration d’un mécanisme de recherche augmentée par génération (\textit{RAG}) vise à améliorer l’accès à l’information contenue dans les documents archivés. L’évaluation de ce système est essentielle afin de mesurer :
+\begin{itemize}
+  \item la pertinence des documents récupérés (\textit{retrieval}) ;
+  \item la qualité des réponses générées (\textit{generation}) ;
+  \item la cohérence entre les sources et les réponses fournies.
 \end{itemize}
 
-\chapter{Conclusion et perspectives}
-\section{Bilan}
-Le système livré apporte une chaîne d’archivage numérique complète, depuis la collecte automatique des scans jusqu’à la consultation et la recherche. En réduisant fortement les opérations manuelles (tri, renommage, saisie) et en proposant un classement plus homogène, la solution améliore la qualité de l’archivage et diminue les délais de traitement. Le déploiement \textbf{on-premise} répond aux contraintes de sécurité et de souveraineté de l’administration, tandis que la supervision facilite l’exploitation au quotidien.
+\section{Méthodologie envisagée}
+L’évaluation du système RAG reposera sur la méthode \textbf{RAGAS} (\textit{Retrieval-Augmented Generation Assessment}), qui propose un cadre structuré pour mesurer les performances des systèmes RAG sans nécessiter de jeux de données annotés exhaustifs.
+
+Les métriques envisagées incluent :
+\begin{itemize}
+  \item \textbf{Faithfulness} : cohérence entre la réponse générée et les documents sources ;
+  \item \textbf{Answer Relevance} : pertinence de la réponse par rapport à la question ;
+  \item \textbf{Context Precision} : qualité des documents récupérés ;
+  \item \textbf{Context Recall} : capacité à récupérer les informations nécessaires.
+\end{itemize}
+
+\section{État d’avancement}
+Les travaux d’évaluation sont actuellement en cours. Une première phase consiste à constituer un ensemble de requêtes représentatives des usages métier (recherche documentaire, consultation, assistance).
+
+L’intégration de RAGAS permettra d’automatiser l’analyse des performances et d’identifier les axes d’amélioration, notamment :
+\begin{itemize}
+  \item la qualité des embeddings ;
+  \item la stratégie de chunking ;
+  \item le paramétrage des modèles de langage.
+\end{itemize}
 
 \section{Perspectives}
-Axes envisagés :
+À terme, cette évaluation permettra :
 \begin{itemize}
-  \item amélioration des règles métier de classement (référentiels, modèles de nommage, gestion des exceptions) ;
-  \item renforcement des workflows de validation et de la gouvernance documentaire (droits, circuit de traitement, versioning) ;
-  \item amélioration de la recherche et de l’assistance documentaire (RAG, citations, permissions) ;
-  \item intégration progressive de fonctionnalités complémentaires (signature, politiques de conservation, tableaux de bord).
+  \item d’optimiser la précision du système de recherche ;
+  \item d’améliorer la fiabilité des réponses générées ;
+  \item de garantir une meilleure adéquation aux besoins des utilisateurs métiers.
 \end{itemize}
+
+\chapter*{Conclusion et perspectives}
+\addcontentsline{toc}{chapter}{Conclusion et perspectives}
+Le système livré apporte une chaîne d’archivage numérique complète, depuis la collecte automatique des scans jusqu’à la consultation et la recherche. En réduisant fortement les opérations manuelles (tri, renommage, saisie) et en proposant un classement plus homogène, la solution améliore la qualité de l’archivage et diminue les délais de traitement. Le déploiement \textbf{on-premise} répond aux contraintes de sécurité et de souveraineté de l’administration, tandis que la supervision facilite l’exploitation au quotidien.
+
+Les principaux axes d’évolution envisagés portent sur l’amélioration des règles métier de classement (référentiels, modèles de nommage, gestion des exceptions), le renforcement des workflows de validation et de la gouvernance documentaire (droits, circuit de traitement, versioning), l’amélioration de la recherche et de l’assistance documentaire (RAG, citations, permissions), ainsi que l’intégration progressive de fonctionnalités complémentaires (signature, politiques de conservation, tableaux de bord).
 
 \end{document}

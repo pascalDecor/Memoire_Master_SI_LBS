@@ -1,0 +1,126 @@
+\resizebox{0.98\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\footnotesize,
+  x=1cm, y=1cm,
+  entity/.style={rounded corners=2pt, draw=black!55, fill=blue!6, align=left, text width=5.6cm, inner xsep=8pt, inner ysep=7pt},
+  assoc/.style={rounded corners=2pt, draw=black!55, fill=orange!10, align=left, text width=5.6cm, inner xsep=8pt, inner ysep=7pt},
+  ref/.style={rounded corners=2pt, draw=black!55, fill=green!8, align=left, text width=5.6cm, inner xsep=8pt, inner ysep=7pt},
+  rbac/.style={rounded corners=2pt, draw=black!55, fill=violet!10, align=left, text width=5.6cm, inner xsep=8pt, inner ysep=7pt},
+  line/.style={-Latex, draw=black!55, line width=0.55pt, shorten >=2pt, shorten <=2pt},
+  faint/.style={-Latex, draw=black!35, line width=0.45pt, shorten >=2pt, shorten <=2pt}
+]
+
+% --- Bloc Documents / RAG (centre-gauche)
+\node[entity] (documents) at (0, 3.6) {\textbf{documents}\\[-2pt]\scriptsize
+PK id\\
+filename, storage\_path\\
+metadata (jsonb)\\
+document\_type\_id (FK)\\
+processing\_status, progress\_percent\\
+embedding (vector)
+};
+
+\node[entity] (chunks) at (0, 0.9) {\textbf{document\_chunks}\\[-2pt]\scriptsize
+PK id\\
+document\_id (FK)\\
+chunk\_index (unique/doc)\\
+text\\
+embedding (vector)
+};
+
+% --- Référentiels (haut-gauche)
+\node[ref] (docTypes) at (-8.0, 4.6) {\textbf{document\_types}\\[-2pt]\scriptsize
+PK id\\
+code (unique), label\\
+is\_active
+};
+
+\node[ref] (exp) at (-8.0, 2.2) {\textbf{expediteurs}\\[-2pt]\scriptsize
+PK id\\
+label (unique)
+};
+\node[ref] (dest) at (-8.0, -0.2) {\textbf{destinataires}\\[-2pt]\scriptsize
+PK id\\
+label (unique)
+};
+
+\node[assoc] (docExp) at (-8.0, 1.0) {\textbf{document\_expediteurs}\\[-2pt]\scriptsize
+PK (document\_id, expediteur\_id)\\
+is\_primary
+};
+\node[assoc] (docDest) at (-8.0, -1.4) {\textbf{document\_destinataires}\\[-2pt]\scriptsize
+PK (document\_id, destinataire\_id)\\
+is\_primary
+};
+
+% --- GED (droite)
+\node[entity] (nodes) at (8.0, 3.6) {\textbf{nodes}\\[-2pt]\scriptsize
+PK id\\
+type (FOLDER/FILE)\\
+parent\_id (FK self)\\
+document\_id (FK, unique)\\
+status (DRAFT/VALIDATED/ARCHIVED)
+};
+
+\node[entity] (versions) at (8.0, 1.2) {\textbf{node\_versions}\\[-2pt]\scriptsize
+PK id\\
+node\_id (FK)\\
+version (unique/node)\\
+status, metadata
+};
+
+\node[entity] (events) at (8.0, -1.2) {\textbf{document\_events}\\[-2pt]\scriptsize
+PK id\\
+document\_id (FK)\\
+node\_id (FK)\\
+user\_id (FK)\\
+action, created\_at
+};
+
+% --- Utilisateurs / RBAC (bas-gauche)
+\node[rbac] (users) at (0, -3.6) {\textbf{users}\\[-2pt]\scriptsize
+PK id\\
+external\_id (optional)\\
+email (unique)\\
+is\_active, last\_login\_at
+};
+
+\node[rbac] (roles) at (-8.0, -3.9) {\textbf{roles}\\[-2pt]\scriptsize
+PK id\\
+name (unique)
+};
+\node[rbac] (perms) at (-8.0, -6.1) {\textbf{permissions}\\[-2pt]\scriptsize
+PK id\\
+name (unique)
+};
+
+\node[assoc] (userRoles) at (0, -6.0) {\textbf{user\_roles}\\[-2pt]\scriptsize
+PK (user\_id, role\_id)
+};
+\node[assoc] (rolePerms) at (-8.0, -5.0) {\textbf{role\_permissions}\\[-2pt]\scriptsize
+PK (role\_id, permission\_id)
+};
+
+% --- Flèches (FK)
+\draw[line] (documents.west) -- (docTypes.east);
+\draw[line] (chunks.north) -- (documents.south);
+
+\draw[faint] (docExp.east) .. controls + (1.2,0.4) and +(-1.2,0.6) .. (documents.west);
+\draw[faint] (docExp.west) -- (exp.east);
+\draw[faint] (docDest.east) .. controls + (1.2,0.2) and +(-1.2,-0.6) .. (documents.west);
+\draw[faint] (docDest.west) -- (dest.east);
+
+\draw[line] (nodes.west) -- (documents.east);
+\draw[line] (versions.north) -- (nodes.south);
+\draw[line] (events.north) -- (versions.south);
+\draw[line] (events.west) -- (documents.east);
+\draw[line] (events.south) -- (users.north);
+
+\draw[line] (userRoles.north) -- (users.south);
+\draw[line] (userRoles.west) -- (roles.east);
+\draw[line] (rolePerms.north) -- (roles.south);
+\draw[line] (rolePerms.south) -- (perms.north);
+
+\end{tikzpicture}%
+}
+
