@@ -59,7 +59,7 @@
 \newcommand{\formation}{Master Systèmes d’Information}
 \newcommand{\universite}{LBS}
 \newcommand{\anneeAcademique}{2025--2026}
-\newcommand{\nomMinistere}{Ministère de l'Efficacité des Services Publique et de Transformation Numérique (MESPTN)}
+\newcommand{\nomMinistere}{Ministère de l'Efficacité du Service Public et de Transformation Numérique (MESPTN)}
 \newcommand{\directeurMemoire}{Encadrant académique : \textit{M. KONAN}}
 \newcommand{\structureAccueil}{Structure d’accueil : \textit{\nomMinistere}}
 \newcommand{\tuteurStage}{Référent professionnel : \textit{M. Morlé KOUDEKA}}
@@ -131,6 +131,7 @@ Ainsi, la solution mise en place permet d’industrialiser le processus d’arch
   \item[OCR] \textit{Optical Character Recognition}
   \item[RBAC] \textit{Role-Based Access Control}
   \item[RAG] \textit{Retrieval-Augmented Generation}
+  \item[RAGAS] \textit{Retrieval-Augmented Generation Assessment}
   \item[SSO] \textit{Single Sign-On}
   \item[TLS] \textit{Transport Layer Security}
 \end{description}
@@ -143,15 +144,15 @@ Ainsi, la solution mise en place permet d’industrialiser le processus d’arch
 \addcontentsline{toc}{chapter}{Introduction}
 Dans les administrations publiques, la gestion documentaire repose encore largement sur des supports papier et sur des pratiques de classement souvent hétérogènes. Cette situation complique l’accès à l’information, accroît les risques de perte ou de dégradation des documents, et limite l’efficacité opérationnelle des services.
 
-Dans ce contexte, le \nomMinistere{} est confronté à un enjeu majeur : numériser et archiver un volume important de documents anciens, datant de plus de dix ans, dans un délai contraint, tout en garantissant leur exploitation à long terme. Toutefois, la simple numérisation ne constitue pas une solution suffisante. Un document scanné mais mal nommé, mal classé ou difficilement retrouvable perd rapidement sa valeur informationnelle. À grande échelle, les opérations manuelles de tri, de renommage et de recherche deviennent coûteuses, sources d’erreurs et difficilement maintenables.
+Dans ce contexte, le \nomMinistere{} est confronté à un enjeu majeur : numériser et archiver un volume important de documents anciens, datant de plus de dix ans, dans un délai contraint, en garantissant leur exploitation à long terme. Toutefois, la simple numérisation ne constitue pas une solution suffisante. Un document scanné mais mal nommé, mal classé ou difficilement retrouvable perd rapidement sa valeur informationnelle. À grande échelle, les opérations manuelles de tri, de renommage et de recherche deviennent coûteuses, sources d’erreurs et difficilement maintenables.
 
-Dès lors, la problématique suivante se pose : comment concevoir une chaîne d’archivage numérique capable de traiter efficacement un volume important de documents numérisés, tout en réduisant les interventions manuelles, en améliorant la qualité du classement, en garantissant la traçabilité des opérations et en permettant une recherche rapide et fiable, dans un environnement sécurisé et déployé en local (\textit{on-premise}) ?
+Dès lors, la problématique suivante se pose : comment concevoir une chaîne d’archivage numérique capable de traiter efficacement un volume important de documents numérisés, en réduisant les interventions manuelles, en améliorant la qualité du classement, en garantissant la traçabilité des opérations et en permettant une recherche rapide et fiable, dans un environnement sécurisé et déployé en local (\textit{on-premise}) ?
 
-Pour répondre à cette problématique, le projet \textbf{Document Archiving System} vise à concevoir et à mettre en œuvre une solution d’archivage numérique automatisée. Cette solution permet notamment l’ingestion automatique des documents depuis les scanners, l’extraction d’informations via des techniques d’OCR, ainsi que l’assistance au classement et au renommage selon des règles définies. Elle propose également une interface web facilitant la consultation, la recherche et la validation des documents. Par ailleurs, des mécanismes de suivi et de traçabilité sont intégrés afin d’assurer une exploitation fiable dans la durée, tout en respectant les exigences de souveraineté et de sécurité propres à un déploiement interne.
+Pour répondre à cette problématique, le projet \textbf{Document Archiving System (DAS)} vise à concevoir et à mettre en œuvre une solution d’archivage numérique automatisée. Cette solution permet notamment l’ingestion automatique des documents depuis les scanners, l’extraction d’informations via des techniques d’OCR, ainsi que l’assistance au classement et au renommage selon des règles définies. Elle propose également une interface web facilitant la consultation, la recherche et la validation des documents. Par ailleurs, des mécanismes de suivi et de traçabilité sont intégrés afin d’assurer une exploitation fiable dans la durée, tout en respectant les exigences de souveraineté et de sécurité propres à un déploiement interne.
 
 En complément, la solution intègre un assistant conversationnel permettant d’interroger le contenu documentaire et d’obtenir des réponses contextualisées, en s’appuyant sur une approche de recherche sémantique couplée à des techniques de génération augmentée par récupération (\textit{RAG}).
 
-Enfin, ce rapport est structuré en trois parties. La première présente le cadre de la mission (structure d’accueil, contexte, existant et analyse des besoins). La deuxième détaille la conception et la réalisation de la solution (architecture, modèle de données, implémentation et déploiement). La troisième aborde les aspects d’exploitation, de sécurité et d’évaluation, avant de conclure sur le bilan du projet et les perspectives d’évolution.
+Ce rapport est structuré en trois parties. La première présente le cadre de la mission (structure d’accueil, contexte, existant et analyse des besoins). La deuxième détaille la conception et la réalisation de la solution (architecture, modèle de données, implémentation et déploiement). La troisième aborde les aspects d’exploitation, de sécurité et d’évaluation.
 
 \part{Cadre de la mission et expression des besoins}
 \chapter{Présentation de la structure d’accueil}
@@ -177,7 +178,7 @@ La mission s’inscrit dans un projet de numérisation et d’archivage massif d
   \item mettre en place un dispositif pérenne, exploitable au quotidien par les utilisateurs.
 \end{itemize}
 
-Compte tenu de la sensibilité des informations traitées et des exigences de souveraineté, la solution devait être déployée en environnement local (\textit{on-premise}). Elle devait également s’intégrer aux pratiques existantes des services, caractérisées par :
+Compte tenu de la sensibilité des informations traitées et des exigences de souveraineté, la solution doit être déployée en environnement local (\textit{on-premise}). Elle doit également s’intégrer aux pratiques existantes des services, caractérisées par :
 \begin{itemize}
   \item l’utilisation de plusieurs scanners ;
   \item le recours à des dossiers partagés sur le réseau interne ;
@@ -218,7 +219,7 @@ Le contexte ministériel impose plusieurs contraintes fortes :
   \item \textbf{Disponibilité des utilisateurs} : les secrétariats doivent pouvoir utiliser l’outil sans complexité technique.
 \end{itemize}
 
-Les enjeux associés sont : garantir un archivage \textbf{fiable} et \textbf{traçable}, améliorer l’accès à l’information (recherche par contenu), et réduire durablement la charge manuelle (tri/renommage/classement), tout en respectant un déploiement \textit{on-premise}.
+Les enjeux associés sont : garantir un archivage \textbf{fiable} et \textbf{traçable}, améliorer l’accès à l’information (recherche par contenu) et réduire durablement la charge manuelle (tri/renommage/classement), tout en respectant un déploiement \textit{on-premise}.
 
 \chapter{Besoins et cahier des charges}
 Ce chapitre présente les besoins identifiés pour la mise en place du système, ainsi que les critères permettant d’évaluer l’adéquation de la solution proposée. Il distingue les besoins fonctionnels, les exigences non fonctionnelles et les critères d’acceptation.
@@ -763,11 +764,5 @@ Les perspectives principales concernent :
 
 \chapter*{Références}
 \addcontentsline{toc}{chapter}{Références}
-\begin{itemize}
-  \item RAGAS (\textit{Retrieval-Augmented Generation Assessment}) : cadre d’évaluation des systèmes RAG.
-  \item PostgreSQL et extension pgvector : indexation vectorielle et recherche sémantique.
-  \item Keycloak : gestion des identités et des accès (IAM) / SSO.
-  \item HashiCorp Vault : gestion sécurisée des secrets.
-\end{itemize}
 
 \end{document}
