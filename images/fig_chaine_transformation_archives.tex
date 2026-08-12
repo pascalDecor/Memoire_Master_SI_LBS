@@ -1,0 +1,55 @@
+\begin{tikzpicture}[
+  font=\sffamily\footnotesize,
+  node distance=0.55cm and 0.45cm,
+  etape/.style={
+    draw=black!55,
+    line width=0.7pt,
+    rounded corners=2.5pt,
+    align=center,
+    minimum height=1.55cm,
+    minimum width=2.45cm,
+    inner xsep=2pt,
+    inner ysep=5pt,
+    fill=black!3,
+    text=black!90
+  },
+  fleche/.style={
+    -{Stealth[length=2.4mm, width=1.8mm]},
+    line width=0.8pt,
+    draw=black!50
+  },
+  badge/.style={
+    circle,
+    fill=black!78,
+    text=white,
+    font=\sffamily\bfseries\tiny,
+    inner sep=0.6pt,
+    minimum size=4.2mm
+  }
+]
+  % Ligne supérieure
+  \node[etape] (p1) {Document\\papier};
+  \node[etape, right=of p1] (p2) {Capture\\numérique};
+  \node[etape, right=of p2] (p3) {Extraction des\\informations};
+  \node[etape, right=of p3] (p4) {Description};
+
+  % Ligne inférieure
+  \node[etape, below=1.2cm of p1] (p5) {Classement};
+  \node[etape, right=of p5] (p6) {Conservation};
+  \node[etape, right=of p6] (p7) {Recherche et\\exploitation};
+
+  % Badges numérotés
+  \foreach \n/\lab in {p1/1, p2/2, p3/3, p4/4, p5/5, p6/6, p7/7} {
+    \node[badge] at (\n.north west) {\lab};
+  }
+
+  % Flèches horizontales
+  \draw[fleche] (p1) -- (p2);
+  \draw[fleche] (p2) -- (p3);
+  \draw[fleche] (p3) -- (p4);
+  \draw[fleche] (p5) -- (p6);
+  \draw[fleche] (p6) -- (p7);
+
+  % Passage de la ligne 1 à la ligne 2
+  \draw[fleche] (p4.south) -- ++(0,-0.35) -| (p5.north);
+\end{tikzpicture}

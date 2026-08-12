@@ -12,7 +12,7 @@
 \node[proc, right=of s3] (s4) {OCR Service\\(Tesseract)};
 \node[proc, right=of s4] (s5) {RabbitMQ\\\footnotesize ocr.completed};
 \node[proc, right=of s5] (s6) {Extraction Service\\(chunking +\\ embeddings)};
-\node[proc, right=of s6] (s7) {LLM\\(classification\\& renommage)};
+\node[proc, right=of s6] (s7) {LLM\\(classification\\\& renommage)};
 \node[proc, below=10mm of s6] (s8) {Routing + Frontend\\(recherche/validation)};
 
 \node[store, below=10mm of s2] (minio) {MinIO\\(fichiers)};
