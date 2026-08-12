@@ -1,0 +1,52 @@
+\begin{tikzpicture}[
+  font=\sffamily\footnotesize,
+  source/.style={
+    draw=black!45, line width=0.65pt, rounded corners=2.5pt,
+    align=center, minimum height=1.15cm, text width=3.35cm,
+    inner xsep=3pt, inner ysep=3pt, fill=black!2, text=black!90
+  },
+  etape/.style={
+    draw=black!55, line width=0.7pt, rounded corners=2.5pt,
+    align=center, minimum height=1.25cm, minimum width=1.95cm,
+    inner xsep=2pt, inner ysep=3pt, fill=black!3, text=black!90
+  },
+  humain/.style={
+    draw=black!55, line width=0.7pt, rounded corners=2.5pt,
+    align=center, minimum height=1.25cm, minimum width=1.95cm,
+    inner xsep=2pt, inner ysep=3pt, fill=orange!12, text=black!90
+  },
+  fleche/.style={
+    -{Stealth[length=2.4mm, width=1.8mm]},
+    line width=0.8pt, draw=black!50
+  },
+  badge/.style={
+    circle, fill=black!78, text=white,
+    font=\sffamily\bfseries\tiny, inner sep=0.6pt, minimum size=4.2mm
+  },
+  note/.style={font=\sffamily\tiny, text=black!55, align=center}
+]
+  % Sources (convergent vers acquisition)
+  \node[source] (papier) at (0,0.85) {Fichier papier\\{\scriptsize scanner}};
+  \node[source] (num) at (0,-0.85) {Fichier numérique\\{\scriptsize PDF, image, vidéo,\\audio, Excel, CSV\ldots}};
+
+  % Pipeline
+  \node[etape] (a1) at (4.0,0) {Acquisition};
+  \node[etape] (a2) at (6.35,0) {OCR /\\extraction};
+  \node[etape] (a3) at (8.7,0) {Analyse IA\\métadonnées};
+  \node[etape] (a4) at (11.05,0) {Classement\\renommage};
+  \node[humain] (a5) at (13.4,0) {Validation\\humaine};
+  \node[etape] (a6) at (15.75,0) {Archivage};
+
+  \foreach \n/\lab in {a1/1, a2/2, a3/3, a4/4, a5/5, a6/6} {
+    \node[badge] at (\n.north west) {\lab};
+  }
+
+  \draw[fleche] (papier.east) -- (a1.west);
+  \draw[fleche] (num.east) -- (a1.west);
+  \draw[fleche] (a1) -- (a2);
+  \draw[fleche] (a2) -- (a3);
+  \draw[fleche] (a3) -- (a4);
+  \draw[fleche] (a4) -- (a5);
+  \draw[fleche] (a5) -- (a6);
+
+\end{tikzpicture}

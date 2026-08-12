@@ -1,0 +1,97 @@
+\begin{tikzpicture}[
+  font=\sffamily\footnotesize,
+  x=2.35cm,
+  y=1.55cm,
+  header/.style={
+    font=\sffamily\bfseries\small,
+    text=black!85,
+    anchor=south
+  },
+  dossier/.style={
+    draw=orange!70!black,
+    line width=0.7pt,
+    rounded corners=2pt,
+    fill=orange!18,
+    align=center,
+    minimum width=2.15cm,
+    minimum height=0.95cm,
+    inner xsep=3pt,
+    inner ysep=4pt,
+    font=\sffamily\itshape\footnotesize,
+    text=black!80
+  },
+  fichier/.style={
+    draw=blue!55!black,
+    line width=0.7pt,
+    rounded corners=2pt,
+    fill=blue!10,
+    align=center,
+    minimum width=2.15cm,
+    minimum height=0.95cm,
+    inner xsep=3pt,
+    inner ysep=4pt,
+    font=\sffamily\itshape\footnotesize,
+    text=black!80
+  },
+  badgepdf/.style={
+    fill=blue!70!black,
+    text=white,
+    font=\sffamily\bfseries\tiny,
+    inner xsep=2.5pt,
+    inner ysep=1pt,
+    rounded corners=1pt
+  },
+  fleche/.style={
+    -{Stealth[length=2.2mm, width=1.7mm]},
+    line width=0.85pt,
+    draw=black!45
+  },
+  souslib/.style={
+    font=\sffamily\tiny,
+    text=black!55,
+    align=center
+  }
+]
+  % En-têtes de colonnes
+  \node[header] at (0, 1.55) {Expéditeur};
+  \node[header] at (1, 1.55) {Type de doc.};
+  \node[header] at (2, 1.55) {Année};
+  \node[header] at (3, 1.55) {Mois};
+  \node[header] at (4, 1.55) {Fichier};
+
+  % Colonne 1 : un seul dossier, centré verticalement
+  \node[dossier] (e1) at (0, 0.5) {Ex: Entreprise ABC};
+  \node[souslib, below=0.12cm of e1] {Ex: Entreprise ABC};
+
+  % Branche haute
+  \node[dossier] (t1) at (1, 1.0) {Ex: Factures};
+  \node[souslib, below=0.12cm of t1] {Ex: Factures};
+  \node[dossier] (a1) at (2, 1.0) {Ex: 2024};
+  \node[souslib, below=0.12cm of a1] {Ex: 2024};
+  \node[dossier] (m1) at (3, 1.0) {Ex: Juillet};
+  \node[souslib, below=0.12cm of m1] {Ex: Juillet};
+  \node[fichier] (f1) at (4, 1.0) {Ex: Facture\_01.pdf};
+  \node[badgepdf] at (f1.north west) {PDF};
+  \node[souslib, below=0.12cm of f1] {Ex: Facture\_01.pdf};
+
+  % Branche basse
+  \node[dossier] (t2) at (1, 0.0) {Ex: Contrats};
+  \node[souslib, below=0.12cm of t2] {Ex: Contrats};
+  \node[dossier] (a2) at (2, 0.0) {Ex: 2023};
+  \node[souslib, below=0.12cm of a2] {Ex: 2023};
+  \node[dossier] (m2) at (3, 0.0) {Ex: Décembre};
+  \node[souslib, below=0.12cm of m2] {Ex: Décembre};
+  \node[fichier] (f2) at (4, 0.0) {Ex: Contrat\_SérieA.pdf};
+  \node[badgepdf] at (f2.north west) {PDF};
+  \node[souslib, below=0.12cm of f2] {Ex: Contrat\_SérieA.pdf};
+
+  % Flèches
+  \draw[fleche] (e1.east) -- ++(0.18,0) |- (t1.west);
+  \draw[fleche] (e1.east) -- ++(0.18,0) |- (t2.west);
+  \draw[fleche] (t1) -- (a1);
+  \draw[fleche] (a1) -- (m1);
+  \draw[fleche] (m1) -- (f1);
+  \draw[fleche] (t2) -- (a2);
+  \draw[fleche] (a2) -- (m2);
+  \draw[fleche] (m2) -- (f2);
+\end{tikzpicture}

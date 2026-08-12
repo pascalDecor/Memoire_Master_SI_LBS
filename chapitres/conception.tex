@@ -1,0 +1,211 @@
+\chapter{Conception de la solution d'archivage intelligent}
+
+Au \nomMinistere{}, le chapitre précédent a montré qu'une part importante du travail documentaire repose encore sur des gestes manuels répétés : identifier l'expéditeur, saisir l'objet, choisir le bon dossier, renseigner l'index, puis retrouver plus tard une pièce parmi des milliers d'autres. Les besoins qui en découlent -- automatiser sans perdre le contrôle, fiabiliser le classement, faciliter la recherche, sécuriser et tracer -- orientent désormais les choix de la plateforme. Ce chapitre ne reprend pas le diagnostic de l'existant ; il explique comment y répondre, en partant des principes, puis du modèle documentaire, du pipeline d'archivage, de la recherche intelligente, de l'architecture, de la sécurité et des interfaces.
+
+\section{Principes directeurs de la conception}
+
+Plusieurs principes guident les arbitrages techniques, chacun ancré dans une difficulté déjà observée sur le terrain.
+
+Le premier est celui de l'\textbf{assistance contrôlée}. Les secrétaires ne manquent pas de compétence métier ; ce qui pèse, c'est le volume et la répétitivité des opérations. L'intelligence artificielle peut donc proposer une description et un classement, mais elle ne doit pas clore seule le traitement. Une validation humaine précède la confirmation de l'archivage, précisément parce qu'une erreur d'expéditeur, de type ou de période suffit, dans la pratique actuelle, à rendre un document difficile à retrouver.
+
+Le deuxième principe est la \textbf{séparation des responsabilités}. Lorsque acquisition, analyse, stockage, droits et interfaces sont trop imbriqués, toute évolution devient coûteuse et toute panne locale se propage. Séparer ces responsabilités facilite l'évolution du système et prépare un déploiement dans un environnement ministériel où disponibilité et maîtrise technique restent des contraintes fortes.
+
+Le troisième principe concerne la \textbf{structure documentaire}. Les agents du ministère s'orientent déjà selon une logique de dossiers (expéditeur, type, année, mois), désormais précisée par la distinction entrants / sortants / internes. Plutôt que de laisser un modèle inventer librement un chemin, la plateforme fait produire des métadonnées par l'IA, puis applique une structure explicite. Le classement reste ainsi compréhensible pour les secrétaires et indépendant du modèle linguistique utilisé.
+
+Le quatrième principe est la \textbf{représentation multi-composante du document}. Dans l'existant, le fichier sur le serveur et la ligne Excel pouvaient diverger. Ici, le fichier, ses métadonnées, son emplacement logique et sa représentation pour la recherche sémantique restent attachés au même objet métier, afin d'éviter cette rupture entre conservation et description.
+
+Enfin, la \textbf{sécurité et la traçabilité} ne viennent pas en fin de parcours. Dans une administration, l'accès aux archives et la possibilité de reconstituer qui a validé ou modifié quoi conditionnent l'acceptabilité même de la solution ; elles orientent donc l'architecture dès le départ.
+
+\section{Correspondance entre besoins et choix de conception}
+
+Ces principes se traduisent en réponses concrètes aux besoins formulés au chapitre précédent (tableau~\ref{tab:besoins-conception-ch4}). La matrice ci-dessous rend visible le fil qui relie l'analyse de l'existant aux choix retenus.
+
+\begin{table}[htbp]
+\centering
+\caption{Correspondance entre les besoins du chapitre~3 et les choix de conception}
+\label{tab:besoins-conception-ch4}
+\small
+\renewcommand{\arraystretch}{1.55}
+\begingroup
+\rowcolors{2}{black!3}{white}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}Y Y@{}}
+\toprule
+\rowcolor{black!12}
+\tableheader{Besoin (chapitre~3)} &
+\tableheader{Réponse de conception} \\
+\midrule
+Réduire le traitement manuel &
+Extraction et proposition automatique des métadonnées \\
+Fiabiliser le classement &
+Règles déterministes de construction du chemin \\
+Conserver le contrôle humain &
+Validation avant confirmation de l'archivage \\
+Faciliter la recherche &
+Indexation textuelle et vectorielle, assistance RAG \\
+Adapter la structure documentaire &
+Arborescence Entrants/Sortants/Internes et référentiels configurables \\
+Sécuriser les archives &
+RBAC, ACL et contrôle de sensibilité \\
+Assurer la traçabilité &
+Journalisation des opérations critiques \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table}
+
+\section{Acteurs et responsabilités}
+
+Sur le terrain, ce sont surtout les secrétaires qui traitent les dossiers au quotidien. La plateforme s'organise donc autour de trois \textbf{profils de base}, déjà prévus dans la spécification des besoins, tout en laissant la possibilité d'en définir d'autres selon l'organisation du ministère.
+
+Le \textbf{validateur} correspond à ces agents de traitement. Il suit la file des documents, consulte le contenu et les propositions automatiques, corrige si nécessaire l'expéditeur, l'objet ou la source (entrant, sortant ou interne), valide le classement, puis confirme l'archivage. C'est sur lui que repose concrètement l'assistance contrôlée.
+
+L'\textbf{administrateur} gère les comptes, les rôles et les permissions, ainsi que les référentiels dont dépend le classement : types documentaires, expéditeurs, destinataires. Il peut ainsi faire évoluer le vocabulaire métier -- par exemple ajouter un type ou un organisme partenaire -- sans attendre une modification logicielle lourde.
+
+Le \textbf{lecteur} consulte et recherche les archives selon les droits qui lui sont attribués. Il n'intervient pas dans la validation, mais doit pouvoir retrouver une pièce par navigation ou par recherche, comme un cadre ou un collaborateur qui interroge le fonds.
+
+Ces trois profils ne ferment pas le modèle d'accès. Les rôles et permissions restent configurables : on peut créer un profil intermédiaire, ajuster un périmètre ou retirer un droit, afin d'accompagner les évolutions organisationnelles du \nomMinistere{} sans redéploiement.
+
+\section{Conception du modèle documentaire}
+
+\subsection{Représentation multi-composante du document}
+
+Pour répondre à la séparation constatée entre fichiers et index, un document est conçu comme un ensemble de composantes liées (figure~\ref{fig:modele-documentaire}) : le fichier lui-même, l'enregistrement descriptif, le nœud qui le place dans l'arborescence, et une représentation vectorielle du contenu destinée à la recherche.
+
+\begin{figure}[htbp]
+\centering
+\input{images/fig_modele_documentaire}
+\caption{Représentation multi-composante d'un document : fichier, métadonnées, nœud d'exploration et index vectoriel.}
+\label{fig:modele-documentaire}
+\end{figure}
+
+Le fichier est conservé en stockage objet. L'enregistrement en base porte les informations techniques et métier. Le nœud d'exploration porte le statut du traitement : tant que la validation n'est pas confirmée, le document reste en \texttt{DRAFT} (non validé, en attente de validation). Il demeure accessible dans le flux de travail des validateurs, mais n'est pas encore un classement confirmé. Ce n'est qu'après validation (\texttt{VALIDATED}) qu'il intègre le corpus d'archives confirmées destiné à la consultation générale et à la recherche assistée.
+
+La représentation vectorielle, elle, ne sert pas au classement dans les dossiers. Elle prépare la recherche par le sens et l'assistance conversationnelle, présentées plus loin comme un dispositif distinct du pipeline d'archivage.
+
+\subsection{Métadonnées métier et référentiels}
+
+Les champs descriptifs prolongent ceux que les secrétaires renseignent déjà dans l'index quotidien : expéditeur, destinataire, numéro interne, numéro d'enregistrement, objet, description, mots-clés, type documentaire, source (entrant, sortant ou interne) et niveau de sensibilité. Plusieurs dates sont distinguées, car elles ne jouent pas le même rôle métier : la date du document, la date de création dans le système -- souvent celle du scan ou de l'import -- et la date de validation, qui matérialise l'archivage confirmé. Un espace extensible permet d'ajouter des attributs sans reconstruire tout le modèle lorsque de nouvelles familles documentaires apparaissent.
+
+Types, expéditeurs et destinataires sont gérés comme référentiels administrables, afin que le vocabulaire du \nomMinistere{} (courriel, note de service, arrêté, décret, etc.) reste homogène et évolutif. Un même document peut être associé à plusieurs expéditeurs ou destinataires lorsque la réalité administrative l'exige.
+
+\subsection{Organisation hiérarchique et construction du chemin}
+
+L'arborescence proposée prolonge celle déjà utilisée sur le serveur (figure~\ref{fig:arborescence-existante}), en la clarifiant par une racine de sens du flux : \texttt{Entrants}, \texttt{Sortants} ou \texttt{Internes}. Le chemin suit alors :
+
+\begin{center}
+\texttt{Entrants|Sortants|Internes / \{expéditeur\} / \{type\} / \{année\} / \{mois\} / \{fichier\}}
+\end{center}
+
+Par exemple, un courrier de la Présidence classé comme courriel en mars 2026 pourra aboutir à :
+\begin{center}
+\small\texttt{Entrants/presidence-republique/courriel/2026/03/[PRESIDENCE] - [0000] - [Objet].pdf}
+\end{center}
+
+Le nom de fichier reprend la nomenclature déjà attendue : \texttt{[Expéditeur] - [Numéro] - [Objet]}.
+
+Ce choix répond directement au besoin de fiabiliser le classement. L'IA propose les valeurs ; le système calcule ensuite l'emplacement selon des règles explicites. Les secrétaires retrouvent ainsi une organisation proche de leurs habitudes, sans dépendre d'un chemin librement inventé par le modèle. Seules les métadonnées structurantes (source, expéditeur, type, année, mois) déterminent la position ; un résumé ou des mots-clés restent descriptifs.
+
+\section{Conception du pipeline de traitement documentaire}
+
+Pour réduire la charge manuelle sans rompre avec les pratiques du ministère, le traitement suit une chaîne allant de l'acquisition à la confirmation après validation (figure~\ref{fig:pipeline-conception}). Deux origines convergent vers la même entrée, comme dans le quotidien des services : le papier numérisé au scanner, et les fichiers déjà numériques (PDF, image, vidéo, audio, tableurs, CSV, etc.). Ce pipeline \textbf{archive et organise} ; retrouver autrement qu'en parcourant les dossiers relève ensuite de la recherche intelligente.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{\input{images/fig_pipeline_conception}}
+\caption{Pipeline de traitement documentaire : convergence papier et numérique vers l'acquisition, puis confirmation après validation.}
+\label{fig:pipeline-conception}
+\end{figure}
+
+\subsection{Acquisition et reconnaissance du contenu}
+
+Selon le cas, le document arrive par scan ou par import. Une fois reçu, il est placé en zone tampon et la suite du traitement démarre de façon asynchrone, afin que l'interface reste utilisable pendant des opérations longues -- OCR ou analyse -- qui, sur un volume annuel élevé, ne peuvent pas bloquer les agents.
+
+La reconnaissance du contenu s'adapte au support : OCR pour les images et PDF scannés, extracteurs natifs lorsque le texte est déjà disponible, traitements complémentaires pour d'autres formats. Sans texte exploitable, impossible de proposer des métadonnées ou d'assister le classement.
+
+\subsection{Analyse, métadonnées et classement}
+
+À partir du texte et des référentiels du ministère, un modèle de langage propose les informations utiles au classement : expéditeur, numéros, objet, type, destinataire, sensibilité, date et source. Ces propositions alimentent le renommage et le calcul du chemin. L'IA accélère ainsi l'identification que les secrétaires effectuaient manuellement ; elle ne décide pas seule de l'emplacement final, conformément au principe d'assistance contrôlée.
+
+\subsection{Validation humaine}
+
+Avant confirmation, le validateur peut accepter, corriger ou compléter les propositions, ajuster la source et valider le classement. Sans cette étape, le document reste en \texttt{DRAFT} : accessible dans le flux de traitement, mais pas encore un classement confirmé. Les filtres de statut appliqués à la consultation et à la recherche assistée font que ces pièces en attente n'entrent pas, par défaut, dans le corpus d'archives confirmées. Ce verrou répond au besoin, déjà souligné au chapitre précédent, de conserver un contrôle humain sur les opérations qui structurent durablement le fonds. Pour les archives anciennes -- fonds de plus de quinze ans -- cinq agents ont été recrutés spécialement afin de valider les traitements proposés par l'IA, compte tenu de la sensibilité et de la difficulté particulières de ce corpus.
+
+Le contenu peut ensuite être préparé pour l'indexation destinée à la recherche. Cette préparation appartient toutefois à l'assistance intelligente, et non au cœur du pipeline d'archivage.
+
+\section{Conception de la recherche et de l'assistance intelligente}
+
+L'analyse de l'existant a montré que la recherche dépend encore trop souvent du parcours des dossiers ou de la mémoire des agents. Une fois les documents décrits et classés, la plateforme doit donc permettre de les retrouver autrement. L'indexation textuelle et vectorielle, puis une assistance fondée sur la génération augmentée par récupération (\textit{Retrieval-Augmented Generation}, RAG), répondent à ce besoin. Le pipeline d'archivage constitue le corpus ; le RAG l'interroge ensuite de manière ancrée.
+
+\subsection{Architecture du pipeline RAG}
+
+Le fonctionnement prévu enchaîne des responsabilités distinctes (figure~\ref{fig:rag-pipeline}). L'utilisateur pose une question depuis l'interface ; le système tient compte de ses droits, prépare la recherche, récupère des passages pertinents, les fusionne et les compresse, puis les fournit à un modèle de langage pour produire une réponse accompagnée de ses sources. L'objectif n'est pas d'obtenir une réponse « générique », mais une réponse rattachée aux archives du ministère et traçable jusqu'aux documents mobilisés.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{\input{images/fig_rag_pipeline}}
+\caption{Architecture logique du pipeline RAG : de la requête filtrée à la génération contextualisée.}
+\label{fig:rag-pipeline}
+\end{figure}
+
+\subsection{Indexation vectorielle, chunking et embeddings}
+
+Pour qu'une question formulée en langage naturel puisse rejoindre le bon passage, le contenu doit être découpé et représenté de façon adaptée. Les documents sont donc segmentés en unités de taille maîtrisée, avec un chevauchement destiné à préserver le contexte local. Certains éléments métier (objet, expéditeur) peuvent former des segments distincts, utiles lorsque l'utilisateur cherche précisément ces informations.
+
+Chaque segment reçoit une représentation vectorielle stockée en base. Le modèle d'embedding peut être local ou cloud selon l'environnement : ce qui change alors, c'est le calcul des vecteurs et éventuellement la réindexation ; le reste du dispositif -- récupération, filtres de sécurité, génération -- demeure stable. Cette souplesse compte dans un contexte ministériel où les contraintes de souveraineté peuvent évoluer.
+
+\subsection{Récupération hybride}
+
+Les agents ne formulent pas toujours leurs besoins avec les mêmes mots que le document original. Une recherche uniquement sémantique, ou uniquement par mots-clés, resterait donc partielle. La récupération \textbf{hybride} combine similarité vectorielle, correspondances lexicales dans les segments et recherche plein texte / métadonnées au niveau document, puis fusionne ces signaux (approche de type Reciprocal Rank Fusion). On limite ainsi le risque de manquer une pièce parce que la formulation de la requête diffère de celle de l'archive.
+
+D'autres mécanismes renforcent cette robustesse : reformulation ou expansion de la requête, réordonnancement léger, diversité des sources pour éviter qu'un seul document monopolise le contexte, \textbf{récupération itérative} lorsque les premiers résultats sont insuffisants, et compression des passages avant génération. Les paramètres associés (nombre de passages retenus, seuils de similarité, nombre d'itérations, etc.) restent configurables ; leur réglage fin relève de l'évaluation expérimentale.
+
+\subsection{Filtrage de sécurité avant récupération}
+
+Dans une administration, faciliter la recherche ne doit pas contourner les règles d'accès. Les filtres de sensibilité, d'ACL et de statut s'appliquent donc \textbf{avant} la récupération des passages, et non après la génération d'une réponse. Un contenu hors périmètre -- y compris, par défaut, un document encore en \texttt{DRAFT} -- n'entre pas dans le contexte du modèle. L'assistance intelligente prolonge ainsi le besoin de sécurité déjà identifié, au lieu de le mettre entre parenthèses.
+
+\subsection{Génération contextualisée}
+
+Le modèle de langage reçoit l'historique de conversation et les extraits retenus. La génération est guidée par ce contexte, et le système invite le modèle à ne pas inventer une réponse lorsque les informations disponibles sont insuffisantes. On cherche ainsi à limiter les réponses non étayées, sans prétendre supprimer tout risque d'hallucination. On distingue ainsi l'assistant documentaire d'un modèle généraliste.
+
+Selon l'environnement, la génération peut s'appuyer sur un modèle local ou cloud. Dans les deux cas, l'orchestration lui fournit le même type d'entrée. Changer de fournisseur n'oblige pas à reconcevoir la récupération ni le filtrage de sécurité -- point important lorsque le déploiement doit rester maîtrisé au sein du ministère.
+
+\section{Architecture de la solution}
+
+\subsection{Organisation générale et justification des choix}
+
+Pour tenir ces exigences dans un environnement interne, la plateforme s'organise de manière modulaire (figure~\ref{fig:archi-generale-conception}). Ce choix découle du principe de séparation : les traitements lourds (OCR, extraction, embeddings) ne doivent pas freiner les interfaces utilisées par les secrétaires, et chaque composant doit pouvoir évoluer sans tout reconstruire.
+
+Nous avons donc choisi un stockage objet (MinIO) pour les fichiers, afin de ne plus confondre conservation binaire et description métier, et de conserver un déploiement maîtrisable en interne. Une base relationnelle PostgreSQL, enrichie de pgvector, regroupe métadonnées, droits, nœuds d'exploration et index vectoriel, pour que description, gouvernance et recherche restent liées sans multiplier les silos. Un bus de messages asynchrone (RabbitMQ) découple l'ingestion des étapes longues, ce qui répond à la contrainte de volume déjà soulignée. Keycloak assure l'authentification technique entre services ; Vault isole les secrets de configuration du code. Le monitoring (métriques, tableaux de bord, logs) complète ce cadre pour une exploitation continue en conditions ministérielles. Les modalités concrètes de déploiement seront précisées lors de la réalisation.
+
+\begin{figure}[htbp]
+\centering
+\input{images/fig_architecture_generale}
+\caption{Architecture générale de la plateforme en déploiement \textit{on-premise}.}
+\label{fig:archi-generale-conception}
+\end{figure}
+
+\subsection{Communication asynchrone}
+
+L'asynchronisme n'est pas un détail d'implémentation. Tant que l'OCR ou l'analyse n'est pas terminé, l'agent doit pouvoir continuer à travailler ; le système doit aussi pouvoir reprendre après une interruption. La file d'attente absorbe les pics et isole les défaillances locales, ce qui répond directement au besoin de traiter un volume annuel élevé sans bloquer les interfaces. Les modalités concrètes des files et des services seront précisées lors de la réalisation.
+
+\section{Conception de la sécurité et de la gouvernance documentaire}
+
+Les archives du \nomMinistere{} ne sont pas un dépôt ouvert. Cette exigence se traduit par une authentification applicative et un contrôle par rôles et permissions, avec des profils de base différenciés mais configurables. Au-delà de ces rôles, des contrôles plus fins sur l'arborescence et sur le niveau de sensibilité limitent la circulation des pièces confidentielles. Les échanges entre services s'appuient sur des jetons techniques (Keycloak), afin de ne pas confondre l'identité d'un utilisateur et l'authentification machine à machine.
+
+Le stockage objet n'équivaut pas à un partage de fichiers. Les services y accèdent avec des comptes techniques à droits réduits ; l'utilisateur passe par les interfaces applicatives, qui vérifient ses permissions. Les secrets de configuration sont séparés du code et gérés dans un coffre dédié (Vault), pour éviter qu'identifiants et clés ne circulent en clair dans l'environnement applicatif.
+
+Enfin, les opérations importantes -- validation, modification de métadonnées, changements de droits, administration -- sont journalisées. On peut ainsi distinguer ce que le pipeline a proposé automatiquement de ce qu'un agent a décidé, ce qui répond au besoin de traçabilité administrative déjà formulé.
+
+\section{Conception des interfaces}
+
+Les interfaces suivent les gestes du travail documentaire plutôt qu'un catalogue figé de rôles. Traitement et validation, exploration, recherche et administration forment les grands espaces ; l'affichage des actions dépend des permissions réellement attribuées. Les trois profils de base servent de référence, mais l'administrateur peut en composer d'autres selon l'organisation des services.
+
+L'espace de traitement présente le document, le contenu extrait, les métadonnées proposées et le classement calculé, afin que le validateur puisse corriger un champ sans refaire toute la chaîne à la main. C'est notamment dans cet espace que les cinq agents recrutés pour les archives de plus de quinze ans contrôlent les propositions de l'IA. L'explorateur reprend une navigation par dossiers, familière aux agents. La recherche et l'assistance conversationnelle prolongent le besoin de retrouver une pièce sans dépendre uniquement de la mémoire individuelle ou du parcours exhaustif de l'arborescence.
+
+L'administration concentre utilisateurs, rôles, permissions et référentiels. C'est par ces écrans que le ministère peut faire évoluer le vocabulaire documentaire et la gouvernance des accès, sans remettre en cause la structure Entrants/Sortants/Internes / expéditeur / type / année / mois.
+
+\section{Synthèse de la conception}
+
+Face aux limites observées au \nomMinistere{}, deux temps complémentaires sont retenus. D'une part, un pipeline d'archivage assiste la description et le classement, tout en maintenant la validation humaine avant confirmation. D'autre part, un dispositif de recherche et d'assistance intelligente permet d'interroger le corpus de manière ancrée, sous contraintes de sécurité. Le modèle multi-composante, les règles explicites de classement, l'architecture modulaire et la gouvernance des accès forment le cadre commun de ces deux dispositifs.
+
+Ce cadre guide la réalisation de la plateforme. Le chapitre suivant présente sa mise en œuvre technique, les choix effectués lors du développement ainsi que les expérimentations permettant d'évaluer la solution.

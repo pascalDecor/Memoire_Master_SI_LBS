@@ -1,0 +1,47 @@
+\chapter{Méthodologie et organisation du projet}
+\section{Démarche}
+Ce chapitre rappelle la démarche méthodologique adoptée pour la conduite du projet, depuis le cadrage initial jusqu'à la mise en production progressive de la solution.
+
+Une approche itérative et incrémentale, inspirée des méthodes agiles (Scrum), a été retenue afin de livrer rapidement une première version fonctionnelle du système, puis d'enrichir progressivement ses fonctionnalités en fonction des retours des utilisateurs.
+
+Cette démarche a permis de réduire les risques, d'améliorer l'adéquation aux besoins métiers et de favoriser une validation continue des choix techniques.
+
+Les principales étapes ont été les suivantes :
+\begin{itemize}
+  \item \textbf{Cadrage fonctionnel} : recueil des besoins auprès des parties prenantes (secrétariats, équipe technique), identification des contraintes métier et définition des cas d'usage prioritaires ;
+  \item \textbf{Prototypage initial} : mise en place d'un premier pipeline minimal (ingestion $\rightarrow$ OCR $\rightarrow$ stockage) afin de valider les choix techniques ;
+  \item \textbf{Itérations successives} : ajout progressif des modules d'extraction, d'assistance intelligente (classification, renommage) et de recherche documentaire ;
+  \item \textbf{Intégration des interfaces utilisateur} : développement des interfaces de consultation et de validation, avec prise en compte des retours terrain ;
+  \item \textbf{Stabilisation et mise en production} : amélioration de la robustesse, mise en place de l'observabilité (logs, métriques, alertes) et préparation au déploiement en environnement \textit{on-premise}.
+\end{itemize}
+
+L'implication des parties prenantes a été un élément clé de la démarche. Des échanges réguliers avec les utilisateurs finaux ont permis d'ajuster les fonctionnalités, notamment sur les règles de classement et les interfaces de validation.
+
+Les principaux risques identifiés concernaient :
+\begin{itemize}
+  \item la qualité et la variabilité des documents scannés (impact sur l'OCR) ;
+  \item l'hétérogénéité des formats documentaires ;
+  \item la nécessité de garantir un contrôle humain sur les décisions automatisées.
+\end{itemize}
+
+Ces risques ont été atténués par :
+\begin{itemize}
+  \item une architecture asynchrone basée sur un système de messagerie, permettant de fiabiliser le traitement ;
+  \item la mise en place d'un workflow de validation utilisateur (\og proposer puis valider \fg{}) ;
+  \item une approche progressive permettant d'ajuster les traitements en fonction des résultats observés.
+\end{itemize}
+
+\section{Organisation et planification}
+Le projet a été structuré selon une logique d'itérations courtes (\textit{sprints}), avec des livraisons incrémentales permettant de valider rapidement les fonctionnalités développées.
+
+Les principaux livrables ont été organisés comme suit :
+\begin{itemize}
+  \item (i) ingestion automatique des documents ;
+  \item (ii) OCR et stockage ;
+  \item (iii) extraction des informations et gestion des métadonnées ;
+  \item (iv) assistance au classement et au renommage ;
+  \item (v) interface utilisateur et moteur de recherche ;
+  \item (vi) observabilité, supervision et durcissement du système.
+\end{itemize}
+
+Chaque itération donnait lieu à une démonstration auprès des utilisateurs et de l'équipe technique, permettant de recueillir des retours et d'ajuster les développements suivants. Cette boucle de feedback a contribué à améliorer progressivement la pertinence fonctionnelle et l'ergonomie du système.

@@ -1,3 +1,7 @@
+% Forcer la sortie PDF même si le compilateur Overleaf est réglé sur « LaTeX »
+% (le moteur sous-jacent est pdfTeX ; sans ceci, on reste en mode DVI/dvips).
+\pdfoutput=1
+
 \documentclass[12pt,a4paper]{report}
 
 \usepackage[T1]{fontenc}
@@ -9,7 +13,6 @@
 \setstretch{1.25}
 
 \usepackage{graphicx}
-% Aide à l'inclusion des PNG quel que soit le moteur (évite l'erreur BoundingBox).
 \DeclareGraphicsExtensions{.pdf,.png,.jpg,.jpeg}
 \usepackage{geometry}
 \geometry{margin=2.5cm}
@@ -23,6 +26,7 @@
 \setlist[itemize]{topsep=0.4em, itemsep=0.2em, leftmargin=1.5em}
 
 \usepackage{fancyhdr}
+\setlength{\headheight}{28pt}
 \fancypagestyle{main}{
   \fancyhf{}
   \fancyhead[L]{\nouppercase{\leftmark}}
@@ -534,7 +538,7 @@ Ces objectifs orientent la suite du mémoire vers l'analyse de l'existant, la co
 
 \part{De l'analyse des besoins à la conception de la solution d'archivage intelligent}
 \chapter{Analyse de l'existant et spécification des besoins}
-Au \nomMinistere{}, le traitement des archives repose encore largement sur une chaîne d'opérations manuelles. Environ cinq secrétaires y participent, pour un volume moyen estimé à 3\,000 dossiers par an. Les documents papier sont numérisés, déposés sur un serveur Windows selon une arborescence prédéfinie, puis référencés dans un fichier Excel. Cette organisation assure une conservation et une recherche de base ; elle devient cependant plus difficile à tenir lorsque le volume augmente et que les pièces restent hétérogènes.
+Au \nomMinistere{}, le traitement des archives repose encore largement sur une chaîne d'opérations manuelles. Environ cinq secrétaires y participent, pour un volume moyen estimé à 10\,000 dossiers par an (courriers entrants, sortants et pièces internes). Les documents papier sont numérisés, déposés sur un serveur Windows selon une arborescence prédéfinie, puis référencés dans un fichier Excel. Cette organisation assure une conservation et une recherche de base ; elle devient cependant plus difficile à tenir lorsque le volume augmente et que les pièces restent hétérogènes.
 
 L'observation du processus en place, les échanges avec les agents chargés du traitement et le cahier des charges du projet de numérisation permettent de décrire ce fonctionnement, d'en préciser les limites opérationnelles, puis de formuler les exigences d'une solution plus intégrée.
 
@@ -545,7 +549,7 @@ La capture fournit une représentation numérique du document, mais n'identifie 
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\textwidth,bb=0 0 1024 559]{images/ancienne_architecture_dossier.png}
+\includegraphics[width=\textwidth]{images/ancienne_architecture_dossier.png}
 \caption{Arborescence documentaire existante sur le serveur}
 \label{fig:arborescence-existante}
 \end{figure}
@@ -558,7 +562,7 @@ Date ; numéro interne ; expéditeur ; objet ; destinataire ; instructions ; dat
 \end{quote}
 Le serveur conserve donc les fichiers, tandis qu'Excel conserve leurs métadonnées. Cette séparation facilite la recherche sans parcours systématique de l'arborescence, mais elle crée une dépendance entre le fichier et sa description : un déplacement, un renommage ou une saisie incomplète suffit à rendre le document plus difficile à retrouver.
 
-Dans la pratique, le traitement d'une pièce physique enchaîne ainsi plusieurs opérations : numérisation, récupération du fichier, identification de l'expéditeur et du type, détermination de l'année et du mois, création ou sélection du répertoire, nommage, déplacement, puis saisie des champs Excel. Avec cinq secrétaires et environ 3\,000 dossiers par an, ces gestes répétitifs constituent une charge structurelle. L'ensemble de ce processus est représenté à la figure~\ref{fig:processus-documentaire-existant}.
+Dans la pratique, le traitement d'une pièce physique enchaîne ainsi plusieurs opérations : numérisation, récupération du fichier, identification de l'expéditeur et du type, détermination de l'année et du mois, création ou sélection du répertoire, nommage, déplacement, puis saisie des champs Excel. Avec cinq secrétaires et environ 10\,000 dossiers par an, ces gestes répétitifs constituent une charge structurelle. L'ensemble de ce processus est représenté à la figure~\ref{fig:processus-documentaire-existant}.
 
 \begin{figure}[H]
 \centering
@@ -672,10 +676,10 @@ Ces critères ne quantifient pas encore toutes les performances du système ; il
 \section{Besoins non fonctionnels}
 Au-delà des fonctions, plusieurs exigences conditionnent la qualité du dispositif. Les documents administratifs ne sont accessibles qu'aux utilisateurs autorisés, ce qui implique authentification, gestion des droits et protection des ressources. Les fichiers et leurs métadonnées doivent être conservés de manière fiable, et les propositions automatiques rester suffisamment cohérentes pour être contrôlées. Les actions importantes sont associées à un utilisateur et à un horodatage, afin de reconstituer l'historique du traitement.
 
-La charge observée, de l'ordre de 3\,000 dossiers par an, fixe également une exigence de performance : le traitement et la recherche doivent rester acceptables à cette échelle, notamment lors de la reprise d'un fonds physique volumineux. La solution doit enfin pouvoir accueillir de nouveaux types documentaires, de nouvelles métadonnées et de nouvelles règles de classement sans refonte complète, tout en maintenant une interface simple pour les secrétaires et les validateurs, avec visualisation simultanée du document et des informations associées.
+La charge observée, de l'ordre de 10\,000 dossiers par an, fixe également une exigence de performance : le traitement et la recherche doivent rester acceptables à cette échelle, notamment lors de la reprise d'un fonds physique volumineux. La solution doit enfin pouvoir accueillir de nouveaux types documentaires, de nouvelles métadonnées et de nouvelles règles de classement sans refonte complète, tout en maintenant une interface simple pour les secrétaires et les validateurs, avec visualisation simultanée du document et des informations associées.
 
 \section{Synthèse des besoins}
-Le fonctionnement actuel permet de conserver les documents numériques, mais repose encore sur des interventions manuelles répétées et sur deux supports distincts : le serveur de fichiers et le fichier Excel. L'enjeu n'est donc pas de remplacer uniquement le serveur existant ; il s'agit d'intégrer, dans un même dispositif, les opérations situées entre la capture et l'exploitation. Ces besoins se regroupent en cinq domaines (tableau~\ref{tab:synthese-besoins-ch3}).
+Le fonctionnement actuel permet de conserver les documents numériques, mais repose encore sur des interventions manuelles répétées et sur deux supports distincts : le serveur de fichiers et le fichier Excel. L'enjeu n'est donc pas de remplacer uniquement le serveur existant ; il s'agit d'intégrer, dans un même dispositif, les opérations situées entre la capture et l'exploitation. Ces besoins se regroupent en six domaines (tableau~\ref{tab:synthese-besoins-ch3}).
 
 \begin{table}[htbp]
 \centering
@@ -694,77 +698,36 @@ Le fonctionnement actuel permet de conserver les documents numériques, mais rep
 Acquisition & Récupérer les documents physiques numérisés et les fichiers numériques \\
 Traitement & Extraire et interpréter les informations documentaires \\
 Organisation & Renommer, classifier et appliquer les règles de classement \\
-Gouvernance & Valider, sécuriser et tracer les opérations \\
+Gouvernance & Valider les propositions et tracer les opérations critiques \\
+Sécurité & Authentifier les utilisateurs, contrôler les accès et protéger la confidentialité des archives \\
 Exploitation & Rechercher, consulter et utiliser les archives \\
 \bottomrule
 \end{tabularx}
 \endgroup
 \end{table}
 
-Avec environ cinq secrétaires et 3\,000 dossiers traités par an, l'organisation actuelle reste utilisable, mais devient plus difficile à maintenir dès que le volume et l'hétérogénéité augmentent. Les risques d'erreur de classement et d'indexation, la séparation entre fichiers et métadonnées, ainsi que la faible automatisation du traitement limitent l'efficacité du dispositif. Le cahier des charges et les critères d'acceptation convergent vers une chaîne plus intégrée : récupération des documents, extraction des informations, renommage, classification, gestion des métadonnées, validation humaine, recherche et traçabilité. Ces exigences servent de point de départ à la conception de la solution, abordée après la présentation de la démarche de projet.
+Avec environ cinq secrétaires et 10\,000 dossiers traités par an, l'organisation actuelle reste utilisable, mais devient plus difficile à maintenir dès que le volume et l'hétérogénéité augmentent. Les risques d'erreur de classement et d'indexation, la séparation entre fichiers et métadonnées, ainsi que la faible automatisation du traitement limitent l'efficacité du dispositif. Le cahier des charges et les critères d'acceptation convergent vers une chaîne plus intégrée : récupération des documents, extraction des informations, renommage, classification, gestion des métadonnées, validation humaine, recherche, traçabilité et sécurité d'accès.
 
-\chapter{Méthodologie et organisation du projet}
-\section{Démarche}
-Ce chapitre présente la démarche méthodologique adoptée pour la conduite du projet, ainsi que son organisation, depuis le cadrage initial jusqu’à la mise en production progressive de la solution.
+L'analyse du fonctionnement documentaire existant a ainsi permis de préciser les principales difficultés du dispositif actuel et d'en déduire les besoins auxquels la future plateforme devra répondre. L'enjeu est désormais de traduire ces exigences en une solution cohérente, capable d'intégrer les différentes étapes du traitement documentaire tout en conservant une intervention humaine aux étapes où la vérification et la décision restent nécessaires.
 
-Une approche itérative et incrémentale, inspirée des méthodes agiles (Scrum), a été retenue afin de livrer rapidement une première version fonctionnelle du système, puis d’enrichir progressivement ses fonctionnalités en fonction des retours des utilisateurs.
+Le chapitre suivant présente les choix de conception retenus pour la plateforme : principes directeurs, correspondance avec les besoins, modèle documentaire, pipeline d'archivage, recherche et assistance intelligente, architecture, sécurité et interfaces.
 
-Cette démarche a permis de réduire les risques, d’améliorer l’adéquation aux besoins métiers et de favoriser une validation continue des choix techniques.
+\input{chapitres/conception}
 
-Les principales étapes ont été les suivantes :
-\begin{itemize}
-  \item \textbf{Cadrage fonctionnel} : recueil des besoins auprès des parties prenantes (secrétariats, équipe technique), identification des contraintes métier et définition des cas d’usage prioritaires ;
-  \item \textbf{Prototypage initial} : mise en place d’un premier pipeline minimal (ingestion $\rightarrow$ OCR $\rightarrow$ stockage) afin de valider les choix techniques ;
-  \item \textbf{Itérations successives} : ajout progressif des modules d’extraction, d’assistance intelligente (classification, renommage) et de recherche documentaire ;
-  \item \textbf{Intégration des interfaces utilisateur} : développement des interfaces de consultation et de validation, avec prise en compte des retours terrain ;
-  \item \textbf{Stabilisation et mise en production} : amélioration de la robustesse, mise en place de l’observabilité (logs, métriques, alertes) et préparation au déploiement en environnement \textit{on-premise}.
-\end{itemize}
-
-L’implication des parties prenantes a été un élément clé de la démarche. Des échanges réguliers avec les utilisateurs finaux ont permis d’ajuster les fonctionnalités, notamment sur les règles de classement et les interfaces de validation.
-
-Les principaux risques identifiés concernaient :
-\begin{itemize}
-  \item la qualité et la variabilité des documents scannés (impact sur l’OCR) ;
-  \item l’hétérogénéité des formats documentaires ;
-  \item la nécessité de garantir un contrôle humain sur les décisions automatisées.
-\end{itemize}
-
-Ces risques ont été atténués par :
-\begin{itemize}
-  \item une architecture asynchrone basée sur un système de messagerie (RabbitMQ), permettant de fiabiliser le traitement ;
-  \item la mise en place d’un workflow de validation utilisateur (\og proposer puis valider \fg{}) ;
-  \item une approche progressive permettant d’ajuster les traitements en fonction des résultats observés.
-\end{itemize}
-
-\section{Organisation et planification}
-Le projet a été structuré selon une logique d’itérations courtes (\textit{sprints}), avec des livraisons incrémentales permettant de valider rapidement les fonctionnalités développées.
-
-Les principaux livrables ont été organisés comme suit :
-\begin{itemize}
-  \item (i) ingestion automatique des documents ;
-  \item (ii) OCR et stockage ;
-  \item (iii) extraction des informations et gestion des métadonnées ;
-  \item (iv) assistance au classement et au renommage ;
-  \item (v) interface utilisateur et moteur de recherche ;
-  \item (vi) observabilité, supervision et durcissement du système.
-\end{itemize}
-
-Chaque itération donnait lieu à une démonstration auprès des utilisateurs et de l’équipe technique, permettant de recueillir des retours et d’ajuster les développements suivants. Cette boucle de feedback a contribué à améliorer progressivement la pertinence fonctionnelle et l’ergonomie du système.
-
-\part{Conception et réalisation de la solution}
+\part{Réalisation de la solution}
 
 \chapter{Vue d’ensemble du système}
 \section{Architecture générale}
-Le système proposé repose sur une architecture orientée \textbf{microservices}, développée principalement avec \textbf{Python/FastAPI} pour le backend et \textbf{Next.js} pour le frontend. Ce choix permet de structurer l’application en composants indépendants, chacun responsable d’une fonctionnalité spécifique.
+La conception de la plateforme est mise en œuvre au moyen d’une architecture orientée \textbf{microservices}, développée principalement avec \textbf{Python/FastAPI} pour le backend et \textbf{Next.js} pour le frontend. Ce choix permet de structurer l’application en composants indépendants, chacun responsable d’une fonctionnalité spécifique.
 
 Les échanges entre les services de traitement sont assurés de manière \textbf{asynchrone} à l’aide de \textbf{RabbitMQ}. Cette approche améliore la résilience globale du système et facilite la gestion de la charge, notamment pour des opérations intensives comme l’OCR et l’extraction d’informations.
 
 Enfin, cette architecture favorise la \textbf{scalabilité}, en permettant de dimensionner indépendamment les services les plus sollicités.
 
-\begin{figure}[h!]
+\begin{figure}[htbp]
 \centering
-\input{images/fig_architecture_ch1.tex}
-\caption{Architecture générale de la solution d’archivage documentaire intelligente (\textit{on-premise}).}
+\input{images/fig_architecture_generale}
+\caption{Architecture générale de la solution d'archivage documentaire intelligente (\textit{on-premise}).}
 \label{fig:archi-generale}
 \end{figure}
 
@@ -1000,6 +963,8 @@ En environnement local (développement), les accès typiques sont les suivants :
 
 \subsection{Initialisation de la base}
 Au premier démarrage, les scripts SQL montés dans \texttt{/docker-entrypoint-initdb.d} créent l’extension \texttt{vector} et les tables principales (documents, chunks, RBAC, nodes, events). Cette initialisation garantit un environnement prêt à l’emploi et cohérent pour l’ensemble du pipeline (traitement, recherche sémantique et audit).
+
+\input{chapitres/methodologie}
 
 \part{Exploitation, sécurité, évaluation et bilan}
 \chapter{Observabilité et exploitation}
