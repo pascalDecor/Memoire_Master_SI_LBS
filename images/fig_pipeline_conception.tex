@@ -1,52 +1,90 @@
+\begingroup
+\shorthandoff{:;!?}
+\pgfdeclarelayer{background}
+\pgfsetlayers{background,main}
 \begin{tikzpicture}[
   font=\sffamily\footnotesize,
+  node distance=0.38cm and 0.50cm,
+  boite/.style={
+    rounded corners=2.5pt,
+    align=center,
+    text width=2.48cm,
+    inner xsep=5pt,
+    inner ysep=5pt,
+    minimum height=1.42cm,
+    minimum width=2.48cm,
+    line width=0.65pt
+  },
   source/.style={
-    draw=black!45, line width=0.65pt, rounded corners=2.5pt,
-    align=center, minimum height=1.15cm, text width=3.35cm,
-    inner xsep=3pt, inner ysep=3pt, fill=black!2, text=black!90
+    boite, draw=cyan!55!black!45, fill=cyan!10
   },
   etape/.style={
-    draw=black!55, line width=0.7pt, rounded corners=2.5pt,
-    align=center, minimum height=1.25cm, minimum width=1.95cm,
-    inner xsep=2pt, inner ysep=3pt, fill=black!3, text=black!90
+    boite, draw=blue!50!black!55, fill=blue!8
   },
   humain/.style={
-    draw=black!55, line width=0.7pt, rounded corners=2.5pt,
-    align=center, minimum height=1.25cm, minimum width=1.95cm,
-    inner xsep=2pt, inner ysep=3pt, fill=orange!12, text=black!90
-  },
-  fleche/.style={
-    -{Stealth[length=2.4mm, width=1.8mm]},
-    line width=0.8pt, draw=black!50
+    boite, draw=orange!60!black!45, fill=orange!14
   },
   badge/.style={
-    circle, fill=black!78, text=white,
-    font=\sffamily\bfseries\tiny, inner sep=0.6pt, minimum size=4.2mm
+    circle, fill=blue!60, text=white, font=\sffamily\bfseries\scriptsize,
+    inner sep=0pt, minimum size=0.46cm
   },
-  note/.style={font=\sffamily\tiny, text=black!55, align=center}
-]
-  % Sources (convergent vers acquisition)
-  \node[source] (papier) at (0,0.85) {Fichier papier\\{\scriptsize scanner}};
-  \node[source] (num) at (0,-0.85) {Fichier numérique\\{\scriptsize PDF, image, vidéo,\\audio, Excel, CSV\ldots}};
-
-  % Pipeline
-  \node[etape] (a1) at (4.0,0) {Acquisition};
-  \node[etape] (a2) at (6.35,0) {OCR /\\extraction};
-  \node[etape] (a3) at (8.7,0) {Analyse IA\\métadonnées};
-  \node[etape] (a4) at (11.05,0) {Classement\\renommage};
-  \node[humain] (a5) at (13.4,0) {Validation\\humaine};
-  \node[etape] (a6) at (15.75,0) {Archivage};
-
-  \foreach \n/\lab in {a1/1, a2/2, a3/3, a4/4, a5/5, a6/6} {
-    \node[badge] at (\n.north west) {\lab};
+  titregroup/.style={
+    font=\sffamily\bfseries\footnotesize, inner xsep=4pt, inner ysep=1pt,
+    anchor=west
+  },
+  cadre/.style={
+    rounded corners=4pt, dashed, line width=0.7pt,
+    inner xsep=0.28cm, inner ysep=0.28cm,
+    outer sep=0pt
+  },
+  trait/.style={draw=black!55, line width=0.8pt},
+  fleche/.style={
+    arrows={-Stealth[length=2.2mm, width=1.6mm]},
+    draw=black!55, line width=0.8pt,
+    shorten <=0.5pt, shorten >=0.5pt
   }
+]
 
-  \draw[fleche] (papier.east) -- (a1.west);
-  \draw[fleche] (num.east) -- (a1.west);
-  \draw[fleche] (a1) -- (a2);
-  \draw[fleche] (a2) -- (a3);
-  \draw[fleche] (a3) -- (a4);
-  \draw[fleche] (a4) -- (a5);
-  \draw[fleche] (a5) -- (a6);
+% ----- Boîtes : mêmes dimensions, même padding interne -----
+\node[source] (papier) {Papier\\[-0.4pt]{\scriptsize scanner}};
+\node[source, below=of papier] (num)
+  {Numérique\\[-0.4pt]{\scriptsize PDF, image, audio\ldots}};
+
+\coordinate (vcentre) at ($(papier.center)!0.5!(num.center)$);
+
+\node[etape, anchor=west] (a1) at ([xshift=1.22cm] papier.east |- vcentre)
+  {Acquisition\\[-0.4pt]{\scriptsize zone tampon, asynchrone}};
+\node[etape, right=of a1] (a2)
+  {Reconnaissance\\[-0.4pt]{\scriptsize OCR ou extracteur}};
+\node[etape, right=of a2] (a3)
+  {Analyse\\[-0.4pt]{\scriptsize métadonnées proposées}};
+\node[etape, right=of a3] (a4)
+  {Classement\\[-0.4pt]{\scriptsize nom et chemin calculés}};
+\node[humain, right=of a4] (a5)
+  {Validation\\[-0.4pt]{\scriptsize confirmation humaine}};
+
+% ----- Cadres derrière : mêmes marges -----
+\begin{pgfonlayer}{background}
+  \node[cadre, draw=black!38, fill=cyan!5, fit=(papier) (num)] (orig) {};
+  \node[cadre, draw=black!38, fill=blue!4, fit=(a1) (a5)] (chaine) {};
+\end{pgfonlayer}
+
+\node[badge, fill=cyan!55!black] at ([xshift=0.24cm] orig.north west) {1};
+\node[titregroup, fill=cyan!5] at ([xshift=0.50cm] orig.north west) {Origines};
+
+\node[badge] at ([xshift=0.24cm] chaine.north west) {2};
+\node[titregroup, fill=blue!4] at ([xshift=0.50cm] chaine.north west)
+  {Chaîne d'archivage};
+
+% ----- Convergence, puis gauche vers droite -----
+\coordinate (join) at ($(orig.east)!0.5!(chaine.west)$ |- vcentre);
+\draw[trait] (papier.east) -- (papier.east -| join) -- (join);
+\draw[trait] (num.east) -- (num.east -| join) -- (join);
+\draw[fleche] (join) -- (a1.west);
+\draw[fleche] (a1.east) -- (a2.west);
+\draw[fleche] (a2.east) -- (a3.west);
+\draw[fleche] (a3.east) -- (a4.west);
+\draw[fleche] (a4.east) -- (a5.west);
 
 \end{tikzpicture}
+\endgroup

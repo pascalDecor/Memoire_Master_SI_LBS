@@ -1,0 +1,164 @@
+\begingroup
+\shorthandoff{:;!?}
+\renewcommand{\arraystretch}{1.08}
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  font=\sffamily,
+  uml/.style={
+    draw, line width=0.7pt, rounded corners=2pt,
+    inner sep=2pt, outer sep=1.6pt, font=\sffamily, align=center
+  },
+  umlEntite/.style={uml, draw=blue!60, fill=blue!7},
+  umlRef/.style={uml, draw=green!55!black!65, fill=green!8},
+  umlStruct/.style={uml, draw=orange!70!black!55, fill=orange!12},
+  umlSearch/.style={uml, draw=violet!55, fill=violet!8},
+  umlAssoc/.style={uml, draw=orange!75!black!45, fill=orange!14},
+  umlEnum/.style={uml, draw=black!40, fill=black!4},
+  assoc/.style={draw=black!55, line width=0.7pt, rounded corners=2pt, shorten <=1pt, shorten >=1pt},
+  compose/.style={
+    draw=violet!60, line width=0.7pt, rounded corners=2pt,
+    {Diamond[fill=violet!60, length=2.3mm, width=2.3mm]}-,
+    shorten <=1.5pt, shorten >=1pt
+  },
+  mult/.style={font=\sffamily\tiny, inner sep=1pt, fill=white, text=black!75},
+  role/.style={font=\sffamily\tiny\itshape, inner sep=1pt, fill=white, text=black!55}
+]
+
+\node[umlRef, anchor=north] (type) at (-7.8, 0) {%
+  \begin{tabular}{@{}l@{}}
+  \multicolumn{1}{c}{\textbf{TypeDocumentaire}} \\
+  \hline
+  {\scriptsize + id : UUID} \\
+  {\scriptsize + code : String} \\
+  {\scriptsize + libelle : String} \\
+  {\scriptsize + actif : Boolean} \\
+  \end{tabular}%
+};
+
+\node[umlEntite, anchor=north] (document) at (0, 0) {%
+  \begin{tabular}{@{}l@{}}
+  \multicolumn{1}{c}{\textbf{Document}} \\
+  \hline
+  {\scriptsize + id : UUID} \\
+  {\scriptsize + nomFichier : String} \\
+  {\scriptsize + cheminStockage : String} \\
+  {\scriptsize + empreinteFichier : String} \\
+  {\scriptsize + objet : String} \\
+  {\scriptsize + source : SourceFlux} \\
+  {\scriptsize + sensibilite : String} \\
+  {\scriptsize + metadonnees : Map} \\
+  \end{tabular}%
+};
+
+\node[umlStruct, anchor=north] (noeud) at (7.8, 0) {%
+  \begin{tabular}{@{}l@{}}
+  \multicolumn{1}{c}{\textbf{Noeud}} \\
+  \hline
+  {\scriptsize + id : UUID} \\
+  {\scriptsize + nom : String} \\
+  {\scriptsize + type : TypeNoeud} \\
+  {\scriptsize + chemin : String} \\
+  {\scriptsize + statut : StatutNoeud} \\
+  \end{tabular}%
+};
+
+\node[umlAssoc, below=1.25cm of document] (docDest) {%
+  \begin{tabular}{@{}l@{}}
+  \multicolumn{1}{c}{\scriptsize\texttt{<<association>>}} \\
+  \multicolumn{1}{c}{\textbf{DocumentDestinataire}} \\
+  \hline
+  {\scriptsize + principal : Boolean} \\
+  \end{tabular}%
+};
+
+\node[umlAssoc, anchor=north] (docExp) at (type.north |- docDest.north) {%
+  \begin{tabular}{@{}l@{}}
+  \multicolumn{1}{c}{\scriptsize\texttt{<<association>>}} \\
+  \multicolumn{1}{c}{\textbf{DocumentExpediteur}} \\
+  \hline
+  {\scriptsize + principal : Boolean} \\
+  \end{tabular}%
+};
+
+\node[umlRef, below=1.2cm of docDest] (dest) {%
+  \begin{tabular}{@{}l@{}}
+  \multicolumn{1}{c}{\textbf{Destinataire}} \\
+  \hline
+  {\scriptsize + id : UUID} \\
+  {\scriptsize + libelle : String} \\
+  {\scriptsize + actif : Boolean} \\
+  \end{tabular}%
+};
+
+\node[umlRef, below=1.2cm of docExp] (exp) {%
+  \begin{tabular}{@{}l@{}}
+  \multicolumn{1}{c}{\textbf{Expediteur}} \\
+  \hline
+  {\scriptsize + id : UUID} \\
+  {\scriptsize + libelle : String} \\
+  {\scriptsize + actif : Boolean} \\
+  \end{tabular}%
+};
+
+\node[umlSearch, anchor=north] (segment) at (noeud.north |- dest.north) {%
+  \begin{tabular}{@{}l@{}}
+  \multicolumn{1}{c}{\textbf{Segment}} \\
+  \hline
+  {\scriptsize + id : UUID} \\
+  {\scriptsize + index : Integer} \\
+  {\scriptsize + texte : String} \\
+  {\scriptsize + embedding : Vector} \\
+  \end{tabular}%
+};
+
+\node[umlEnum, below=1.5cm of dest] (enums) {%
+  \begin{tabular}{@{}l@{}}
+  \multicolumn{1}{c}{\textbf{\texttt{<<}enumeration\texttt{>>}}} \\
+  \hline
+  {\scriptsize SourceFlux : ENTRANT, SORTANT, INTERNE} \\
+  {\scriptsize TypeNoeud : FOLDER, FILE} \\
+  {\scriptsize StatutNoeud : DRAFT, VALIDATED, ARCHIVED} \\
+  \end{tabular}%
+};
+
+\draw[assoc]
+  ([yshift=-0.52cm]type.north east) -- ([yshift=-0.52cm]document.north west)
+  node[mult, pos=0.16, above] {1}
+  node[role, pos=0.16, below] {type}
+  node[mult, pos=0.86, above] {*}
+  node[role, pos=0.86, below] {documents};
+
+\draw[assoc]
+  ([yshift=-0.52cm]document.north east) -- ([yshift=-0.52cm]noeud.north west)
+  node[mult, pos=0.16, above] {0..1}
+  node[role, pos=0.16, below] {document}
+  node[mult, pos=0.86, above] {0..1}
+  node[role, pos=0.86, below] {emplacement};
+
+\draw[assoc] ([yshift=3pt]noeud.east) -- ++(1.3,0) -- ++(0,1.85) -| (noeud.north);
+\node[mult] at ([xshift=1.55cm, yshift=4pt]noeud.east) {*};
+\node[role] at ([xshift=2.05cm, yshift=-6pt]noeud.east) {enfants};
+\node[mult] at ([xshift=1.1cm, yshift=0.42cm]noeud.north) {0..1};
+\node[role] at ([xshift=1.85cm, yshift=0.42cm]noeud.north) {parent};
+
+\draw[assoc] (docExp.east) -- ([xshift=-1.15cm]document.south)
+  node[mult, pos=0.22, above] {*}
+  node[mult, pos=0.82, above] {1};
+\draw[assoc] (exp.north) -- (docExp.south)
+  node[mult, pos=0.28, left] {1}
+  node[mult, pos=0.72, left] {*};
+
+\draw[assoc] (document.south) -- (docDest.north)
+  node[mult, pos=0.22, right] {1}
+  node[mult, pos=0.78, right] {*};
+\draw[assoc] (docDest.south) -- (dest.north)
+  node[mult, pos=0.28, right] {*}
+  node[mult, pos=0.72, right] {1};
+
+\draw[compose] ([xshift=2.05cm]document.south) -- ++(0,-0.55) -| (segment.north)
+  node[mult, pos=0.12, right] {1};
+\node[mult] at ([xshift=-1.55cm, yshift=0.55cm]segment.north) {*};
+\node[role] at ([xshift=-1.55cm, yshift=0.22cm]segment.north) {segments};
+\end{tikzpicture}%
+}
+\endgroup

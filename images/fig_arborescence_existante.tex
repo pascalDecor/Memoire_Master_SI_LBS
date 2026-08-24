@@ -1,97 +1,106 @@
+\begingroup
+\shorthandoff{:;!?}
+\resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
-  font=\sffamily\footnotesize,
-  x=2.35cm,
-  y=1.55cm,
+  font=\sffamily,
   header/.style={
     font=\sffamily\bfseries\small,
-    text=black!85,
-    anchor=south
+    text=black!82,
+    anchor=base
   },
-  dossier/.style={
-    draw=orange!70!black,
-    line width=0.7pt,
-    rounded corners=2pt,
-    fill=orange!18,
+  caption/.style={
+    font=\sffamily\itshape\scriptsize,
+    text=black!62,
     align=center,
-    minimum width=2.15cm,
-    minimum height=0.95cm,
-    inner xsep=3pt,
-    inner ysep=4pt,
-    font=\sffamily\itshape\footnotesize,
-    text=black!80
+    anchor=north
   },
-  fichier/.style={
-    draw=blue!55!black,
-    line width=0.7pt,
-    rounded corners=2pt,
-    fill=blue!10,
-    align=center,
-    minimum width=2.15cm,
-    minimum height=0.95cm,
-    inner xsep=3pt,
-    inner ysep=4pt,
-    font=\sffamily\itshape\footnotesize,
-    text=black!80
-  },
-  badgepdf/.style={
-    fill=blue!70!black,
-    text=white,
-    font=\sffamily\bfseries\tiny,
-    inner xsep=2.5pt,
-    inner ysep=1pt,
-    rounded corners=1pt
-  },
-  fleche/.style={
-    -{Stealth[length=2.2mm, width=1.7mm]},
-    line width=0.85pt,
-    draw=black!45
-  },
-  souslib/.style={
-    font=\sffamily\tiny,
-    text=black!55,
-    align=center
+  lien/.style={
+    -{Triangle[length=3.4mm, width=3.0mm, fill=black!38]},
+    line width=2.35pt,
+    draw=black!38,
+    line cap=round,
+    line join=round
   }
 ]
-  % En-têtes de colonnes
-  \node[header] at (0, 1.55) {Expéditeur};
-  \node[header] at (1, 1.55) {Type de doc.};
-  \node[header] at (2, 1.55) {Année};
-  \node[header] at (3, 1.55) {Mois};
-  \node[header] at (4, 1.55) {Fichier};
+\tikzset{
+  pics/classeur/.style={
+    code={
+      \fill[black!10] (0.10,-0.07) rectangle (2.14,0.80);
+      \fill[yellow!60!orange!88] (0,0) rectangle (2.04,0.90);
+      \draw[orange!62!black, line width=0.6pt]
+        (0,0) rectangle (2.04,0.90);
+      \fill[yellow!72!orange]
+        (0.10,0.90) -- (0.10,1.10) -- (0.80,1.10) -- (0.98,0.90) -- cycle;
+      \draw[orange!62!black, line width=0.55pt]
+        (0.10,0.90) -- (0.10,1.10) -- (0.80,1.10) -- (0.98,0.90);
+      \fill[white, opacity=0.18] (0.08,0.58) rectangle (1.96,0.82);
+    }
+  },
+  pics/pdfdoc/.style={
+    code={
+      \fill[black!10] (0.08,-0.06) rectangle (1.24,1.30);
+      \fill[white]
+        (0,0) -- (0,1.34) -- (0.84,1.34) -- (1.16,1.02) -- (1.16,0) -- cycle;
+      \draw[black!48, line width=0.6pt]
+        (0,0) -- (0,1.34) -- (0.84,1.34) -- (1.16,1.02) -- (1.16,0) -- cycle;
+      \fill[black!6]
+        (0.84,1.34) -- (0.84,1.02) -- (1.16,1.02) -- cycle;
+      \draw[black!48, line width=0.5pt]
+        (0.84,1.34) -- (0.84,1.02) -- (1.16,1.02);
+      \fill[blue!64] (0,0.90) rectangle (1.16,1.14);
+      \node[font=\sffamily\bfseries\tiny, text=white, inner sep=0pt]
+        at (0.58,1.02) {PDF};
+      \foreach \y in {0.22,0.38,0.54,0.70}
+        \draw[black!22, line width=0.45pt] (0.16,\y) -- (1.00,\y);
+    }
+  }
+}
 
-  % Colonne 1 : un seul dossier, centré verticalement
-  \node[dossier] (e1) at (0, 0.5) {Ex: Entreprise ABC};
-  \node[souslib, below=0.12cm of e1] {Ex: Entreprise ABC};
+% En-têtes
+\node[header] at (1.12, 4.55) {Expéditeur};
+\node[header] at (4.42, 4.55) {Type de doc.};
+\node[header] at (7.72, 4.55) {Année};
+\node[header] at (11.02, 4.55) {Mois};
+\node[header] at (14.22, 4.55) {Fichier};
 
-  % Branche haute
-  \node[dossier] (t1) at (1, 1.0) {Ex: Factures};
-  \node[souslib, below=0.12cm of t1] {Ex: Factures};
-  \node[dossier] (a1) at (2, 1.0) {Ex: 2024};
-  \node[souslib, below=0.12cm of a1] {Ex: 2024};
-  \node[dossier] (m1) at (3, 1.0) {Ex: Juillet};
-  \node[souslib, below=0.12cm of m1] {Ex: Juillet};
-  \node[fichier] (f1) at (4, 1.0) {Ex: Facture\_01.pdf};
-  \node[badgepdf] at (f1.north west) {PDF};
-  \node[souslib, below=0.12cm of f1] {Ex: Facture\_01.pdf};
+% Colonne 1 : un dossier, entre les deux branches
+\pic[local bounding box=e1] at (0.10, 1.35) {classeur};
+\node[caption] at ([yshift=-0.16cm] e1.south) {Ex: Entreprise ABC};
 
-  % Branche basse
-  \node[dossier] (t2) at (1, 0.0) {Ex: Contrats};
-  \node[souslib, below=0.12cm of t2] {Ex: Contrats};
-  \node[dossier] (a2) at (2, 0.0) {Ex: 2023};
-  \node[souslib, below=0.12cm of a2] {Ex: 2023};
-  \node[dossier] (m2) at (3, 0.0) {Ex: Décembre};
-  \node[souslib, below=0.12cm of m2] {Ex: Décembre};
-  \node[fichier] (f2) at (4, 0.0) {Ex: Contrat\_SérieA.pdf};
-  \node[badgepdf] at (f2.north west) {PDF};
-  \node[souslib, below=0.12cm of f2] {Ex: Contrat\_SérieA.pdf};
+% Branche haute
+\pic[local bounding box=t1] at (3.40, 2.70) {classeur};
+\node[caption] at ([yshift=-0.16cm] t1.south) {Ex: Factures};
+\pic[local bounding box=a1] at (6.70, 2.70) {classeur};
+\node[caption] at ([yshift=-0.16cm] a1.south) {Ex: 2024};
+\pic[local bounding box=m1] at (10.00, 2.70) {classeur};
+\node[caption] at ([yshift=-0.16cm] m1.south) {Ex: Juillet};
+\pic[local bounding box=f1] at (13.64, 2.58) {pdfdoc};
+\node[caption] at ([yshift=-0.16cm] f1.south) {Ex: Facture\_01.pdf};
 
-  % Flèches
-  \draw[fleche] (e1.east) -- ++(0.18,0) |- (t1.west);
-  \draw[fleche] (e1.east) -- ++(0.18,0) |- (t2.west);
-  \draw[fleche] (t1) -- (a1);
-  \draw[fleche] (a1) -- (m1);
-  \draw[fleche] (m1) -- (f1);
-  \draw[fleche] (t2) -- (a2);
-  \draw[fleche] (a2) -- (m2);
-  \draw[fleche] (m2) -- (f2);
-\end{tikzpicture}
+% Branche basse
+\pic[local bounding box=t2] at (3.40, 0.00) {classeur};
+\node[caption] at ([yshift=-0.16cm] t2.south) {Ex: Contrats};
+\pic[local bounding box=a2] at (6.70, 0.00) {classeur};
+\node[caption] at ([yshift=-0.16cm] a2.south) {Ex: 2023};
+\pic[local bounding box=m2] at (10.00, 0.00) {classeur};
+\node[caption] at ([yshift=-0.16cm] m2.south) {Ex: Décembre};
+\pic[local bounding box=f2] at (13.64, -0.12) {pdfdoc};
+\node[caption] at ([yshift=-0.16cm] f2.south) {Ex: Contrat\_SérieA.pdf};
+
+% Fourche depuis l'expéditeur
+\coordinate (split) at ([xshift=0.46cm] e1.east);
+\draw[line width=2.35pt, draw=black!38, line cap=round] (e1.east) -- (split);
+\draw[lien, rounded corners=2.5pt] (split) |- (t1.west);
+\draw[lien, rounded corners=2.5pt] (split) |- (t2.west);
+
+% Liaisons horizontales
+\draw[lien] (t1.east) -- (a1.west);
+\draw[lien] (a1.east) -- (m1.west);
+\draw[lien] (m1.east) -- (f1.west);
+\draw[lien] (t2.east) -- (a2.west);
+\draw[lien] (a2.east) -- (m2.west);
+\draw[lien] (m2.east) -- (f2.west);
+
+\end{tikzpicture}%
+}
+\endgroup

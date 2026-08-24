@@ -1,60 +1,112 @@
-\resizebox{0.98\textwidth}{!}{%
+\begingroup
+\shorthandoff{:;!?}
 \begin{tikzpicture}[
-  font=\small,
+  font=\sffamily,
   x=1cm, y=1cm,
-  service/.style={rounded corners=2pt, draw=black!45, fill=blue!8, align=center, text width=3.2cm, inner xsep=7pt, inner ysep=6pt},
-  bus/.style={rounded corners=2pt, draw=black!45, fill=orange!12, align=center, text width=3.2cm, inner xsep=7pt, inner ysep=6pt},
-  serviceSmall/.style={rounded corners=2pt, draw=black!45, fill=blue!8, align=center, text width=2.8cm, inner xsep=7pt, inner ysep=6pt},
-  infra/.style={rounded corners=2pt, draw=black!45, fill=green!10, align=center, text width=4.0cm, inner xsep=7pt, inner ysep=6pt},
-  obs/.style={rounded corners=2pt, draw=black!45, fill=gray!10, align=center, text width=4.8cm, inner xsep=7pt, inner ysep=6pt},
-  main/.style={-Latex, draw=black!70, line width=0.9pt},
-  aux/.style={-Latex, draw=black!45, line width=0.55pt},
-  dottedline/.style={-Latex, draw=black!40, line width=0.55pt, dashed}
+  svc/.style={
+    rounded corners=2.5pt, draw=blue!50!black!55, fill=blue!8,
+    align=center, text width=2.90cm, inner xsep=6pt, inner ysep=6pt,
+    font=\sffamily\footnotesize, minimum height=1.28cm
+  },
+  infra/.style={
+    rounded corners=2.5pt, draw=green!50!black!50, fill=green!9,
+    align=center, text width=2.90cm, inner xsep=6pt, inner ysep=6pt,
+    font=\sffamily\footnotesize, minimum height=1.28cm
+  },
+  badge/.style={
+    circle, fill=blue!60, text=white, font=\sffamily\bfseries\scriptsize,
+    inner sep=0pt, minimum size=0.46cm
+  },
+  titregroup/.style={
+    font=\sffamily\bfseries\footnotesize, inner xsep=4pt, inner ysep=1pt,
+    anchor=west
+  },
+  cadre/.style={
+    rounded corners=4pt, dashed, line width=0.7pt,
+    inner sep=0pt, outer sep=0pt
+  },
+  main/.style={
+    -{Stealth[length=2.2mm, width=1.7mm]},
+    draw=black!55, line width=0.8pt
+  }
 ]
-% Rangée 1 (ingestion) — plus d’espace vertical
-\node[service] (scan)   at (0, 3.6) {Scanners\\(dossiers partagés)};
-\node[service] (listen) at (4, 3.6) {Scan Listener\\(optionnel)};
-\node[service] (upload) at (8, 3.6) {Upload Service\\\texttt{POST /upload}};
-\node[bus]     (mq)     at (12,3.6) {RabbitMQ\\(événements)};
 
-% Rangée 2 (traitement + accès)
-\node[service] (ocr)     at (0, 1.4) {OCR Service\\(Tesseract)};
-\node[service] (extract) at (4, 1.4) {Extraction Service\\(Docling + chunking\\+ embeddings)};
-\node[service] (llm)     at (8, 1.4) {LLM Service\\(classification\\\& renommage)};
-\node[service] (route)   at (12,1.4) {Routing Service\\(API / UI)};
-\node[serviceSmall] (minioMgr) at (12,0.1) {MinIO Manager};
-
-% Infrastructure (en dessous) — plus d’espace vertical
-\node[infra] (minio) at (6, -1.3) {MinIO\\(stockage objets)};
-\node[infra] (pg)    at (2, -1.3) {PostgreSQL + pgvector\\(métadonnées, RBAC,\\index vectoriel)};
-\node[infra] (redis) at (12,-1.3) {Redis\\(cache/état)};
-\node[infra] (vault) at (2, -3.0) {Vault\\(secrets)};
-\node[infra] (kc)    at (6, -3.0) {Keycloak\\(auth M2M)};
-\node[obs]   (obs)   at (11,-3.0) {Observabilité\\Prometheus • Grafana\\Loki • Vector};
-
-% Flèche d’évolution (process) — simple, gauche→droite, puis seconde rangée
+% ----- 1. Ingestion -----
+\node[cadre, draw=black!38, fill=blue!4, minimum width=11.35cm, minimum height=2.20cm,
+      anchor=south west] at (0.10, 10.55) {};
+\node[badge] at (0.38, 12.57) {1};
+\node[titregroup, fill=blue!4] at (0.66, 12.57) {Ingestion};
+\node[svc] (scan)   at (1.95, 11.45) {Scanners\\[-0.4pt]{\scriptsize dossiers partagés}};
+\node[svc] (listen) at (5.70, 11.45) {Scan Listener\\[-0.4pt]{\scriptsize optionnel}};
+\node[svc] (upload) at (9.45, 11.45) {Upload Service\\[-0.4pt]{\scriptsize \texttt{POST /upload}}};
 \draw[main] (scan) -- (listen);
 \draw[main] (listen) -- (upload);
-\draw[main] (upload) -- (mq);
-\draw[main] (mq.south) -- (ocr.north);
+
+% ----- 2. Bus -----
+\node[cadre, draw=orange!55!black, fill=orange!11, minimum width=11.35cm, minimum height=1.70cm,
+      anchor=south west] (mq) at (0.10, 8.30) {};
+\node[badge, fill=orange!70!black] at (0.38, 9.82) {2};
+\node[titregroup, fill=orange!11, text=orange!55!black] at (0.66, 9.82)
+  {Messagerie asynchrone};
+\node[font=\sffamily\footnotesize\bfseries, text=orange!50!black, align=center] at (5.75, 9.00)
+  {RabbitMQ\\[-0.4pt]{\scriptsize\ttfamily document.uploaded $\cdot$ ocr.completed $\cdot$ vector.reindex}};
+
+% ----- 3. Traitement -----
+\node[cadre, draw=black!38, fill=blue!4, minimum width=11.35cm, minimum height=2.20cm,
+      anchor=south west] at (0.10, 5.55) {};
+\node[badge] at (0.38, 7.57) {3};
+\node[titregroup, fill=blue!4] at (0.66, 7.57) {Traitement};
+\node[svc] (ocr)     at (1.95, 6.45) {OCR Service\\[-0.4pt]{\scriptsize Tesseract}};
+\node[svc] (extract) at (5.70, 6.45) {Extraction Service\\[-0.4pt]{\scriptsize chunking + embeddings}};
+\node[svc] (llm)     at (9.45, 6.45) {LLM Service\\[-0.4pt]{\scriptsize classification, renommage}};
 \draw[main] (ocr) -- (extract);
 \draw[main] (extract) -- (llm);
-\draw[main] (llm) -- (route);
 
-% Liens secondaires (courts, sans croisement)
-\draw[aux] (upload.south) -- ++(0,-0.45) -| (minio.north);
-\draw[aux] (ocr.south) -- ++(0,-0.45) -| (minio.north);
-\draw[aux] (extract.south) -- (pg.north);
-\draw[aux] (extract.south) -- ++(0,-0.45) -| (minio.north);
-\draw[aux] (route.south) -- (redis.north);
-\draw[aux] (minioMgr.west) -- ++(-0.5,0) |- (minio.east);
+% ----- 4. Stockage -----
+\node[cadre, draw=green!50!black!45, fill=green!6, minimum width=11.35cm, minimum height=2.20cm,
+      anchor=south west] (stock) at (0.10, 2.80) {};
+\node[badge, fill=green!50!black] at (0.38, 4.82) {4};
+\node[titregroup, fill=green!6] at (0.66, 4.82) {Stockage};
+\node[infra] (pg)    at (1.95, 3.70) {PostgreSQL + pgvector\\[-0.4pt]{\scriptsize métadonnées, RBAC, index}};
+\node[infra] (minio) at (5.70, 3.70) {MinIO\\[-0.4pt]{\scriptsize stockage objets}};
+\node[infra] (redis) at (9.45, 3.70) {Redis\\[-0.4pt]{\scriptsize cache / état}};
 
-% Sécurité / observabilité
-\draw[dottedline] (kc.north) -- (route.south);
-\draw[dottedline] (vault.north) -- (pg.south);
-\draw[dottedline] (obs.north) -- (redis.south);
-\end{tikzpicture}%
-}
-\vspace{0.2em}
-\footnotesize \textbf{Légende :} bleu = microservices, vert = infrastructure (dont Vault et Keycloak), pointillé = liens transverses (sécurité / supervision).
+% ----- 5. Sécurité -----
+\node[cadre, draw=green!50!black!45, fill=green!6, minimum width=5.45cm, minimum height=2.00cm,
+      anchor=south west] at (0.10, 0.25) {};
+\node[badge, fill=green!50!black] at (0.38, 2.07) {5};
+\node[titregroup, fill=green!6] at (0.66, 2.07) {Sécurité};
+\node[infra, text width=2.30cm] (vault) at (1.55, 1.10) {Vault\\[-0.4pt]{\scriptsize secrets}};
+\node[infra, text width=2.30cm] (kc)    at (4.15, 1.10) {Keycloak\\[-0.4pt]{\scriptsize auth M2M}};
 
+% ----- 6. Observabilité -----
+\node[cadre, draw=black!40, fill=gray!10, minimum width=5.70cm, minimum height=2.00cm,
+      anchor=south west] at (5.75, 0.25) {};
+\node[badge, fill=black!45] at (6.02, 2.07) {6};
+\node[titregroup, fill=gray!10] at (6.30, 2.07) {Observabilité};
+\node[font=\sffamily\footnotesize, align=center, text=black!75] at (8.60, 1.10)
+  {Prometheus $\cdot$ Grafana\\Loki $\cdot$ Vector};
+
+% ----- Accès et fichiers (colonne droite) -----
+\node[cadre, draw=black!38, fill=gray!9, minimum width=4.15cm, minimum height=2.20cm,
+      anchor=south west] at (11.65, 10.55) {};
+\node[badge, fill=black!50] at (11.93, 12.57) {7};
+\node[titregroup, fill=gray!9] at (12.21, 12.57) {Accès};
+\node[svc, text width=3.45cm] (route) at (13.72, 11.45)
+  {Routing Service\\[-0.4pt]{\scriptsize API / UI}};
+
+\node[cadre, draw=black!38, fill=gray!9, minimum width=4.15cm, minimum height=2.20cm,
+      anchor=south west] at (11.65, 5.55) {};
+\node[titregroup, fill=gray!9] at (12.21, 7.57) {Fichiers};
+\node[svc, text width=3.45cm] (minioMgr) at (13.72, 6.45)
+  {MinIO Manager\\[-0.4pt]{\scriptsize fichiers}};
+
+% Flux principal : vertical, aligné sur les colonnes
+\draw[main] (upload.south) -- (upload.south |- mq.north);
+\draw[main] (ocr.north |- mq.south) -- (ocr.north);
+\draw[main] (extract.south) -- (extract.south |- stock.north);
+
+\end{tikzpicture}
+\endgroup
+\vspace{0.15em}
+\footnotesize \textbf{Légende :} bleu = services, vert = infrastructure, gris = accès et supervision. Les traitements longs passent par RabbitMQ ; l'interface (7) reste indépendante.

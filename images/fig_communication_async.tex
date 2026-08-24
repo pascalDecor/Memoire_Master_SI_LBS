@@ -1,0 +1,131 @@
+\begingroup
+\shorthandoff{:;!?}
+\usetikzlibrary{calc}
+\begin{tikzpicture}[
+  font=\sffamily,
+  x=1cm, y=1cm,
+  svc/.style={
+    rounded corners=2.5pt, draw=blue!50!black!55, fill=blue!8,
+    align=center, text width=2.55cm, inner xsep=4pt, inner ysep=5pt,
+    font=\sffamily\scriptsize, minimum height=1.12cm
+  },
+  badge/.style={
+    circle, fill=blue!60, text=white, font=\sffamily\bfseries\tiny,
+    inner sep=0pt, minimum size=0.42cm
+  },
+  titregroup/.style={
+    font=\sffamily\bfseries\scriptsize, inner xsep=5pt, inner ysep=1.2pt,
+    anchor=west
+  },
+  cadre/.style={
+    rounded corners=4pt, dashed, line width=0.7pt,
+    inner sep=0pt, outer sep=0pt
+  },
+  sync/.style={
+    -{Stealth[length=2.2mm, width=1.7mm]},
+    draw=black!55, line width=0.8pt
+  },
+  async/.style={
+    -{Stealth[length=2.2mm, width=1.7mm]},
+    draw=green!45!black, line width=0.75pt,
+    dashed, dash pattern=on 2.1pt off 1.35pt
+  }
+]
+\tikzset{
+  pics/enveloppe/.style={
+    code={
+      \draw[line width=0.4pt, draw=green!50!black, fill=green!18, rounded corners=0.2pt]
+        (-0.17,-0.11) rectangle (0.17,0.11);
+      \draw[line width=0.4pt, draw=green!50!black]
+        (-0.17,0.11) -- (0,-0.01) -- (0.17,0.11);
+    }
+  }
+}
+
+% ----- 3. Accès (synchrone), indépendant du bus -----
+\node[cadre, draw=black!38, fill=gray!9, minimum width=15.4cm, minimum height=1.30cm,
+      anchor=south west] (acces) at (0.15, 8.05) {};
+\node[badge] at (0.42, 9.18) {3};
+\node[titregroup, fill=gray!9] at (0.68, 9.18) {Accès synchrone};
+\node[svc, text width=13.4cm, minimum height=0.70cm] (route) at (7.85, 8.48)
+  {Routing Service / UI : l'agent continue de travailler pendant le traitement};
+
+% ----- 1. Couche services -----
+\node[cadre, draw=black!38, fill=blue!4, minimum width=15.4cm, minimum height=2.90cm,
+      anchor=south west] (services) at (0.15, 4.85) {};
+\node[badge] at (0.42, 7.58) {1};
+\node[titregroup, fill=blue!4] at (0.68, 7.58) {Couche services};
+
+\node[svc] (scan)    at (1.75, 6.20) {Scanners\\[-1pt]{\tiny dossiers partagés}};
+\node[svc] (upload)  at (4.85, 6.20) {Upload Service\\[-1pt]{\tiny dépôt manuel}};
+\node[svc] (ocr)     at (7.95, 6.20) {OCR Service\\[-1pt]{\tiny Tesseract}};
+\node[svc] (extract) at (11.05, 6.20) {Extraction Service\\[-1pt]{\tiny chunking + embeddings}};
+\node[svc] (llm)     at (14.15, 6.20) {LLM Service\\[-1pt]{\tiny classification, renommage}};
+
+\draw[sync] (scan) -- (upload);
+\draw[sync] (extract) -- node[font=\sffamily\tiny, text=black!55, above=0.5pt] {HTTP} (llm);
+
+% ----- 2. Bus RabbitMQ -----
+\node[cadre, draw=orange!55!black, fill=orange!11, minimum width=15.4cm, minimum height=2.90cm,
+      anchor=south west] (mq) at (0.15, 1.55) {};
+\node[badge, fill=orange!70!black] at (0.42, 4.28) {2};
+\node[titregroup, fill=orange!11, text=orange!55!black] at (0.68, 4.28)
+  {Messagerie asynchrone (RabbitMQ)};
+
+\begin{scope}[shift={(14.85, 4.05)}]
+  \fill[orange!65!black] (0,0) circle (2.1pt);
+  \fill[orange!65!black] (0.28,0.16) circle (2.1pt);
+  \fill[orange!65!black] (0.20,-0.20) circle (2.1pt);
+  \draw[orange!65!black, line width=0.45pt]
+    (0,0) -- (0.28,0.16) -- (0.20,-0.20) -- cycle;
+\end{scope}
+
+\node[
+  rounded corners=2pt, draw=orange!60!black, fill=white,
+  font=\sffamily\ttfamily\tiny, inner xsep=6pt, inner ysep=4pt, align=center
+] at (7.85, 2.55) {%
+  \texttt{document.uploaded}
+  \quad$\cdot$\quad
+  \texttt{ocr.completed}
+  \quad$\cdot$\quad
+  \texttt{vector.reindex}
+};
+
+% Flèches asynchrones : uniquement verticales, sans traverser d'autre service
+\coordinate (upA) at (upload.south);
+\coordinate (upB) at (upload.south |- mq.north);
+\draw[async] (upA) -- (upB)
+  node[pos=0.58, right, font=\sffamily\tiny, text=green!40!black, inner sep=1.5pt] {publie};
+\pic at ($(upA)!0.42!(upB)$) {enveloppe};
+
+\coordinate (ocrConsA) at ([xshift=-3mm] ocr.south |- mq.north);
+\coordinate (ocrConsB) at ([xshift=-3mm] ocr.south);
+\draw[async] (ocrConsA) -- (ocrConsB)
+  node[pos=0.58, left, font=\sffamily\tiny, text=green!40!black, inner sep=1.5pt] {consomme};
+\pic at ($(ocrConsA)!0.42!(ocrConsB)$) {enveloppe};
+
+\coordinate (ocrPubA) at ([xshift=3mm] ocr.south);
+\coordinate (ocrPubB) at ([xshift=3mm] ocr.south |- mq.north);
+\draw[async] (ocrPubA) -- (ocrPubB)
+  node[pos=0.55, right, font=\sffamily\tiny, text=green!40!black, inner sep=1.5pt] {publie};
+\pic at ($(ocrPubA)!0.40!(ocrPubB)$) {enveloppe};
+
+\coordinate (exA) at (extract.south |- mq.north);
+\coordinate (exB) at (extract.south);
+\draw[async] (exA) -- (exB)
+  node[pos=0.58, right, font=\sffamily\tiny, text=green!40!black, inner sep=1.5pt] {consomme};
+\pic at ($(exA)!0.42!(exB)$) {enveloppe};
+
+% ----- Légende -----
+\draw[sync] (0.20, 0.85) -- (1.55, 0.85);
+\node[font=\sffamily\tiny, anchor=west, text=black!70] at (1.70, 0.85)
+  {appel synchrone (HTTP)};
+\draw[async] (5.55, 0.85) -- (7.15, 0.85);
+\pic at (6.35, 0.85) {enveloppe};
+\node[font=\sffamily\tiny, anchor=west, text=black!70] at (7.40, 0.85)
+  {message asynchrone (file d'attente)};
+
+\end{tikzpicture}
+\endgroup
+\vspace{0.15em}
+\footnotesize \textbf{Légende :} le bus conserve l'événement ; l'interface (3) n'est pas bloquée par l'OCR ni par l'extraction.
