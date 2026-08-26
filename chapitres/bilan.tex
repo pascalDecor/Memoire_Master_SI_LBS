@@ -1,0 +1,171 @@
+\chapter{Bilan, limites et perspectives}
+\label{ch:bilan}
+
+Au \nomMinistere{}, les chapitres précédents ont permis de concevoir puis de réaliser une plateforme destinée à alléger le traitement documentaire observé sur le terrain. Il ne s'agit plus, ici, de décrire le fonctionnement du système. Il s'agit de revenir aux difficultés identifiées au chapitre~\ref{ch:existant} et de voir, concrètement, ce qui a changé pour les agents, ce qui reste fragile, et ce qu'il faudrait encore engager pour que la solution tienne dans la durée.
+
+\section{Réponse à la problématique et bilan de la solution}
+
+La problématique, formulée de manière identique depuis l'introduction, est la suivante :
+\begin{quote}
+\textbf{\problematiqueMemoire}
+\end{quote}
+Cette section examine d'abord si les problèmes du chapitre~\ref{ch:existant} ont été traités, puis ce que la solution apporte au-delà de cette réponse.
+
+\subsection{Réponse aux besoins identifiés}
+
+Dans l'existant, chaque pièce devait encore être identifiée, décrite, nommée, classée et indexée à la main. D'après l'observation du service et les échanges avec les personnes concernées, cinq secrétaires assurent le flux courant, pour un volume de l'ordre de 10\,000 dossiers par an, tandis que cinq agents ont été mobilisés pour l'archivage du fonds documentaire. Ces gestes répétitifs pesaient déjà sur le quotidien. La plateforme ne fait pas disparaître ce travail. Elle en change surtout la nature. La chaîne prépare désormais l'extraction, le renommage et une proposition de classement ; l'agent lit, corrige si besoin, puis confirme. Sur la solution réalisée, la saisie initiale est clairement allégée. Une correction humaine reste toutefois nécessaire avant validation : le système aide, il ne clôt pas le dossier à la place des secrétaires.
+
+La séparation entre le serveur de fichiers et l'index Excel constituait une autre source de fragilité. Un document pouvait être correctement stocké et mal décrit, ou l'inverse. Désormais, le fichier, ses métadonnées, son emplacement dans l'arborescence et sa représentation destinée à la recherche restent associés au sein du même système documentaire. On n'a plus, d'un côté, un nom de fichier et, de l'autre, une ligne d'index. Cette continuité ne garantit pas que tous les champs soient toujours exacts : le tableau de bord mesure une complétude d'environ 99~\% côté propositions de l'IA, ce qui n'équivaut pas à une précision des valeurs. Le destinataire reste le champ le plus souvent vide. Elle supprime en revanche la dépendance à une architecture reposant sur deux supports distincts, celle qui rendait les écarts les plus difficiles à voir.
+
+Le classement dépendait beaucoup de l'interprétation de chacun. Deux agents pouvaient ranger une pièce similaire à deux endroits différents dès que les règles restaient implicites. Dans la solution réalisée, le modèle de langage ne détermine pas directement le chemin : il propose des informations, puis des règles explicites construisent l'emplacement. La recherche ne passe plus seulement par Excel ou par le parcours des dossiers. L'accès n'est plus celui d'un simple partage de fichiers, et aucune pièce n'entre dans le corpus confirmé sans validation humaine. L'intelligence artificielle assiste. Elle ne tranche pas le classement définitif.
+
+Le tableau~\ref{tab:besoins-reponse-ch6} relie ces constats au diagnostic du chapitre~\ref{ch:existant}.
+
+\begin{table}[htbp]
+\centering
+\caption{Problèmes identifiés au chapitre~\ref{ch:existant} et réponses apportées}
+\label{tab:besoins-reponse-ch6}
+\small
+\renewcommand{\arraystretch}{1.55}
+\begingroup
+\rowcolors{2}{black!3}{white}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}Y Y@{}}
+\toprule
+\rowcolor{black!12}
+\tableheader{Problème du chapitre~\ref{ch:existant}} &
+\tableheader{Réponse apportée} \\
+\midrule
+Saisie manuelle &
+Extraction et proposition automatique \\
+Classement manuel &
+Métadonnées puis règles explicites de classement \\
+Excel séparé du stockage &
+Métadonnées associées au document dans le même système \\
+Recherche par parcours de dossiers &
+Recherche hybride et interrogation en langage naturel \\
+Accès peu structuré &
+RBAC, ACL et plafond de sensibilité \\
+Absence de validation formelle &
+Passage de \texttt{DRAFT} à \texttt{VALIDATED} \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table}
+
+La solution répond ainsi aux principales difficultés du traitement documentaire observé au ministère. Elle ne supprime pas l'intervention humaine. Elle la déplace : moins de saisie et de classement à construire de zéro, davantage de contrôle et de validation des propositions.
+
+\subsection{Apports de la solution}
+
+Au-delà de ces réponses point par point, le projet change la manière dont le traitement documentaire est organisé.
+
+Le premier apport est celui de l'\textbf{assistance contrôlée}. L'intelligence artificielle prépare une description et un classement, mais la décision d'archivage reste humaine. Ce n'est pas seulement un workflow de plus : c'est le principe qui rend la solution acceptable dans une administration.
+
+Le deuxième concerne l'\textbf{architecture}. La plateforme traite des textes, des images, de l'audio et de la vidéo. Les services sont séparés, ce qui permet de faire évoluer un modèle, un moteur d'OCR ou un service d'embeddings sans reconstruire l'ensemble du système. Cette modularité conditionne la capacité du ministère à ajuster les composants selon le coût, la performance et les exigences de souveraineté.
+
+Le troisième est celui de la \textbf{recherche}. Au-delà du simple fait de retrouver une pièce, l'indexation sémantique et l'assistance fondée sur des extraits sourcés ouvrent un autre rapport au fonds : on interroge le contenu, pas seulement le chemin.
+
+Le quatrième est celui de la \textbf{gouvernance}. Les droits, la sensibilité, le journal et l'empreinte ne viennent pas \og en plus\fg{} à la fin. Ils déterminent ce qui peut être vu, validé, recherché ou transmis au modèle. La traçabilité n'est plus seulement un historique technique : elle permet de suivre l'usage de l'intelligence artificielle dans le traitement des archives.
+
+Ces apports distinguent la solution d'une GED classique : une chaîne d'assistance contrôlée, un traitement centré sur les scans et les PDF tout en accueillant d'autres formats, une recherche ancrée dans le contenu, et un cadre qui encadre à la fois les personnes et les modèles.
+
+\subsection{Portée des résultats}
+
+Les résultats obtenus décrivent le comportement de la solution sur le fonds de production et dans les conditions du harnais d'évaluation. Ils ne permettent pas de conclure, tels quels, pour l'ensemble des archives administratives togolaises.
+
+Ce que l'évaluation montre déjà, c'est que la chaîne est opérationnelle à l'échelle du fonds accessible : 35\,007 documents traités, pour un taux d'échec moyen d'environ 5~\% en exploitation. Environ 92,7~\% des pièces sont validées ; près de 7~\% restent en file humaine. La recherche, mesurée sur 205 questions du split de test, ramène le document pertinent dans le top~5 dans 62~\% des cas (MRR de 0,597 ; nDCG au rang~5 de 0,603), pour une latence de 0,703~s au 95\textsuperscript{e}~percentile. Le rappel du contexte récupéré (0,838) décrit une couverture des passages, non la qualité des réponses générées.
+
+En revanche, certains chiffres demandent à être lus avec prudence, et d'autres ne doivent pas entrer dans le résultat principal. Le CER et le WER nuls, comme l'accuracy et le F1 macro égaux à 1,0, comparent le système à ses propres sorties de production. Ils mesurent une reproductibilité, pas une performance métier. La complétude des métadonnées (environ 99~\% côté IA) n'est pas un taux de précision. ROUGE-L et le taux d'ancrage des réponses n'ont pas été obtenus pour ce jeu. On ne peut donc pas encore dire, de façon représentative, à quelle fréquence les types et les champs proposés sont justes, ni quelle est la qualité des réponses de l'assistant.
+
+Reste aussi à mieux évaluer ce qui dépend d'un gold relu : le comportement de l'OCR sur des archives anciennes mal contrastées, la justesse des propositions lorsque les types sont très déséquilibrés, et la charge d'exploitation à un rythme proche des 10\,000 dossiers annuels. Ces limites n'annulent pas la réponse apportée aux besoins du chapitre~\ref{ch:existant}. Elles en marquent simplement le périmètre actuel.
+
+\section{Limites et conditions de pérennisation}
+
+Cette section porte sur la solution elle-même : ce qui peut en limiter le fonctionnement, ce que l'évaluation ne permet pas encore d'affirmer, et ce qu'il faut entretenir une fois le système déployé.
+
+\subsection{Limites techniques}
+
+Plusieurs limites tiennent d'abord aux documents. La qualité des scans varie beaucoup. Un courrier bien contrasté donne souvent un texte exploitable. Une page sombre, tamponnée ou manuscrite peut au contraire produire un OCR pauvre, parfois inexploitable. Un modèle de vision rattrape certains cas, mais au prix d'un temps et d'une charge plus élevés. Les pièces atypiques, formulaires, documents composites ou formats peu fréquents, restent plus difficiles à décrire automatiquement. Ces écarts n'invalident pas la chaîne. Ils rappellent que la reconnaissance dépend d'abord de la qualité de la capture.
+
+Le modèle peut aussi se tromper. Un type mal tranché, un expéditeur proche d'un autre organisme, un objet trop vague ou une date ambiguë suffisent à égarer une pièce. C'est une limite technique de l'assistance automatique, et non un défaut de conception : elle justifie le maintien de la validation humaine.
+
+D'autres limites tiennent à l'indexation. Les représentations vectorielles dépendent du modèle d'embeddings : en changer impose souvent de réindexer. L'index de recherche doit être entretenu à mesure que le fonds s'accroît. Les formats documentaires, enfin, continueront d'évoluer : le pipeline couvre les cas principaux observés, sans prétendre tout absorber d'avance.
+
+\subsection{Limites de l'évaluation}
+
+La limite principale n'est plus le volume observé. Le fonds de production (35\,007 documents) et l'échantillon de test ($n = 205$) suffisent à décrire la robustesse du pipeline et la recherche. La limite est celle de la \textbf{référence}. Tant que le gold recopie les sorties de production, un CER nul ou une accuracy de 1,0 ne démontrent pas la qualité de l'OCR, du classifieur ou de l'extracteur. Ils démontrent que le harnais retrouve ce que le système a déjà écrit.
+
+Les questions de recherche, générées automatiquement à partir de l'objet et de l'expéditeur, ne sont pas un jeu métier relu. Le rappel au rang~5 de 0,620 est donc une mesure réelle du moteur, mais sur un type de requête particulier. La précision au rang~$k$ a été écartée du tableau principal pour la même raison de lisibilité : un seul document pertinent par question rend le chiffre peu intuitif. Côté RAG, le rappel du contexte ne dit pas si la réponse générée est fondée ; ROUGE-L et le taux d'ancrage manquent encore.
+
+D'autres limites tiennent au fonds lui-même. La catégorie \og Lettre\fg{} est presque entièrement non validée. Des millésimes aberrants signalent des erreurs de date à corriger. Le destinataire reste le champ le moins souvent rempli par l'IA. Ces constats orientent l'exploitation ; ils ne se substituent pas à une annotation humaine du split de test, qui reste le prolongement indispensable pour publier un CER, un F1 macro ou un F1 d'extraction dans le résultat principal.
+
+\subsection{Pérennisation du système}
+
+Mettre le système en production n'est pas la fin du projet. C'est le début d'un usage qu'il faudra entretenir. Une plateforme d'archivage n'est pas livrée une fois pour toutes.
+
+Il faudra maintenir les services, les écrans, les files d'attente et les données. Les fichiers, la base et les configurations devront pouvoir être restaurés après un incident. La supervision devra signaler une file bloquée, un traitement trop long ou un échec d'OCR. Les secrets et les certificats ne devront pas rester figés dans une image. Les types documentaires, les expéditeurs et les droits devront suivre l'organisation, sans attendre une nouvelle version du logiciel. Le suivi des incidents, enfin, ne peut pas se limiter à un tableau de bord : il suppose une pratique d'exploitation.
+
+Sans cet entretien, ce qui a été gagné en exploitation s'érode : index décalé, droits oubliés, fichiers difficiles à relier. La pérennité de la solution fait donc partie de la réponse à la problématique, autant que sa conception initiale.
+
+\section{Ressources et conditions d'exploitation}
+
+Une solution destinée à une administration, et qui s'appuie sur l'intelligence artificielle, ne se juge pas seulement à ses fonctions. Elle se juge aussi aux ressources nécessaires pour la faire fonctionner : infrastructure, modèles et travail humain. Cette section n'est pas une analyse financière chiffrée. Elle précise les ressources mobilisées et les compromis qu'elles entraînent.
+
+\subsection{Ressources techniques}
+
+Conserver les fichiers, servir les écrans et tracer les opérations demande déjà des serveurs, un stockage, une base de données, un réseau interne, des sauvegardes et une supervision. Les traitements d'intelligence artificielle ajoutent une charge différente : lire des PDF longs, produire des vecteurs, appeler un modèle de langage, parfois transcrire de l'audio. Cette charge pèse surtout sur le processeur. Lorsque les modèles tournent en local, un accélérateur graphique peut devenir nécessaire.
+
+Le traitement en arrière-plan évite que l'interface se fige, mais il ne fait pas disparaître cette charge. Plus le volume augmente, plus il faudra distinguer ce qui relève du simple hébergement des archives et ce qui relève de l'analyse. Le réseau interne, le cloisonnement et les sauvegardes restent, quant à eux, des exigences de souveraineté, quel que soit le modèle utilisé.
+
+\subsection{Modèles d'intelligence artificielle et coûts associés}
+
+Deux manières de faire coexistent. Un modèle local garde les données dans le périmètre du ministère, réduit la dépendance à un fournisseur et permet de fonctionner sans appel extérieur. Il demande en revanche davantage d'infrastructure, d'électricité, de maintenance, et souvent une carte graphique. Un service distant allège cette infrastructure et donne accès à des modèles plus performants, mis à jour par le fournisseur. Il introduit un coût variable, une dépendance, un transfert possible de données, et donc un enjeu de souveraineté particulièrement sensible pour des archives ministérielles.
+
+La comparaison interne du chapitre~\ref{ch:realisation} a tranché, pour le déploiement actuel, en faveur de Tesseract~5 et de Mistral~7B : local, gratuit à la page, latence compatible avec l'usage interactif. Ces coûts n'ont pas été chiffrés ici. L'architecture a toutefois été conçue pour que l'on puisse changer de modèle sans reconstruire toute la plateforme. Ce qui change alors, c'est le calcul des représentations ou de la génération, parfois suivi d'une réindexation. La recherche, le filtrage des droits et la validation humaine restent. Ce choix ne fige pas une fois pour toutes le couple OCR / modèle de langage. Il permet d'ajuster le compromis selon l'évolution des contraintes du \nomMinistere{}.
+
+\subsection{Charge humaine et organisationnelle}
+
+Même assisté, le dispositif continue de reposer sur des personnes. Ce sont les agents qui confirment le classement. Il faut aussi administrer le système, tenir les référentiels, surveiller les traitements, maintenir la plateforme et gérer les droits. L'objectif n'était pas de remplacer les secrétaires. Il était de leur épargner une partie des tâches répétitives, pour qu'elles puissent se concentrer sur le contrôle et la décision.
+
+Ce recentrage a lui-même une charge. Il faut du temps pour valider, former les utilisateurs, mettre à jour les types documentaires et traiter les cas particuliers. Cette charge n'est toutefois plus celle de tout ressaisir. La solution ne tiendra que si l'organisation assume ce rôle de contrôle, plutôt que d'attendre une automatisation totale.
+
+\section{Enjeux liés à l'utilisation de l'intelligence artificielle}
+
+Les points qui suivent ne reprennent pas les limites techniques déjà énoncées. Ils portent sur les conséquences spécifiques de l'introduction de l'intelligence artificielle dans le traitement des archives : supervision, confidentialité, responsabilité et dépendance aux modèles.
+
+\subsection{Fiabilité et supervision humaine}
+
+Puisque le modèle peut se tromper, la question n'est plus seulement technique. Elle devient celle de la supervision. L'OCR peut laisser passer un texte bruité. Le modèle de langage peut également produire une réponse qui ne correspond pas aux informations présentes dans les extraits fournis (\citer{nist2024}{NIST, 2024}). Dans l'assistant, les sources sont affichées pour que l'agent ouvre le document, plutôt que de s'en remettre à la seule fluidité du texte (\citer{lewis2020}{Lewis et al., 2020}).
+
+L'intelligence artificielle assiste. Elle ne tranche pas le classement définitif. Ce n'est pas un frein. Dans des archives publiques, c'est la condition pour que l'outil soit acceptable.
+
+\subsection{Confidentialité et souveraineté des données}
+
+L'usage de l'intelligence artificielle pose un risque particulier lorsque le contenu quitte le périmètre interne. Un modèle local évite d'envoyer les documents à un fournisseur. Lorsqu'un service distant est utilisé, le transfert d'un document ou d'un extrait doit être examiné au regard de la sensibilité et des règles de l'administration. Les extraits transmis à l'assistant sont, en outre, déjà filtrés selon les droits et le plafond de sensibilité de l'utilisateur.
+
+Ces choix réduisent les risques. Ils ne les font pas disparaître. Un extrait trop large envoyé à l'extérieur, un secret oublié ou un droit mal attribué suffisent à compromettre la confidentialité. La souveraineté n'est donc pas acquise par le seul hébergement interne. Elle se maintient par des précautions continues.
+
+\subsection{Responsabilité et traçabilité}
+
+Dès qu'une proposition automatique est incorrecte, se pose une autre question, distincte de la limite technique : qui en est responsable ? Dans l'architecture retenue, la réponse est claire. Le système propose. L'agent valide ou corrige. L'action est enregistrée, avec la personne, le moment et le document concernés. La décision d'archivage n'est donc pas celle du modèle. Elle est celle de l'agent qui confirme, dans un cadre où l'on peut encore reconstituer ce qui avait été proposé.
+
+La traçabilité n'est pas qu'un journal technique. Elle permet de séparer l'erreur de prédiction, la correction humaine et, le cas échéant, un oubli de procédure. Sans cette trace, l'assistance automatique brouillerait les responsabilités au lieu de les clarifier (\citer{iso15489}{\mbox{ISO 15489-1:2016}}).
+
+\subsection{Évolution et dépendance aux modèles}
+
+Introduire l'intelligence artificielle, c'est aussi accepter une dépendance à des modèles qui évoluent. On peut en remplacer un, en changer de version ou de fournisseur. Si toute la plateforme était liée à un seul moteur, chaque évolution redeviendrait une refonte. Le découpage en services vise à isoler ces changements. Il ne supprime pas le travail de vérification après un remplacement. Il permet de le faire sans remettre en cause le classement, les droits et la validation humaine.
+
+Cette dépendance est donc acceptée, mais limitée. Le système documentaire ne doit pas être réécrit lorsque le fournisseur d'un modèle de langage change.
+
+\section{Perspectives}
+
+Les évolutions envisagées visent d'abord à \textbf{amplifier le gain de temps} déjà recherché pour les secrétaires du flux courant et pour les agents chargés de l'archivage du fonds. La plateforme allège déjà la saisie et le classement à construire de zéro ; elle ne supprime pas le contrôle. L'objectif n'est donc pas d'ajouter des fonctions pour elles-mêmes, mais de réduire encore les allers-retours, les dépôts manuels et la surveillance des files, afin que le temps humain se concentre sur la validation et les cas difficiles. Ce gain n'a pas été chronométré dans le cadre de l'évaluation ; il oriente néanmoins les prolongements.
+
+Un \textbf{module de connecteurs} irait dans ce sens. Aujourd'hui, les documents arrivent surtout par les scanners et par le dépôt manuel. Un connecteur irait chercher automatiquement de nouvelles pièces dans d'autres systèmes (espaces de stockage, plateformes documentaires, API), selon des règles de synchronisation configurées par l'administrateur. Google Drive, SharePoint ou d'autres fonds pourraient ainsi alimenter la chaîne déjà en place, sans que les secrétaires aient à récupérer, nommer et déposer chaque fichier.
+
+Le \textbf{Model Context Protocol (MCP)} viserait le même allègement, côté interrogation plutôt que côté ingestion. Là où les connecteurs font entrer des documents, le MCP permettrait aux agents d'interagir, de façon standardisée, avec d'autres outils du système d'information, sans quitter l'espace de travail documentaire. Selon les droits accordés, un agent pourrait par exemple consulter une messagerie, retrouver un courriel, récupérer une pièce jointe ou déclencher l'envoi d'un message. Moins de bascule entre applications, davantage de temps pour contrôler le fonds.
+
+Les \textbf{alertes intelligentes} réduiraient, elles, le temps passé à surveiller les files et les échéances. À partir des événements, des métadonnées et du contenu, la plateforme pourrait signaler une arrivée importante, un traitement bloqué, une échéance proche ou un cas inhabituel, en tenant compte des responsabilités et des droits de chacun. L'agent n'aurait plus à parcourir l'ensemble du stock pour savoir où son attention est requise.
+
+Ces trois leviers ne font pas partie de la solution réalisée. Ils n'ont d'intérêt que s'ils restent soumis aux mêmes exigences de sécurité, de contrôle des accès et de validation humaine, surtout lorsqu'une action peut modifier des données ou engager un processus de l'organisation. Un gold relu du split de test reste, par ailleurs, le prolongement scientifique nécessaire pour mesurer la qualité des propositions, distinct du gain de temps visé ici.
+
+Le projet ne prétend donc pas avoir automatisé intégralement le traitement documentaire. Face aux difficultés identifiées au chapitre~\ref{ch:existant}, la solution réalisée au chapitre~\ref{ch:realisation} met en place une chaîne d'assistance permettant d'automatiser une partie des opérations tout en conservant la décision humaine sur les étapes sensibles. L'évaluation montre que cette approche est opérationnelle à l'échelle du fonds de production, avec un taux d'échec moyen d'environ 5~\% en exploitation, et que la recherche retrouve le document pertinent dans le top~5 pour 62~\% des questions du test. Le prolongement prioritaire est d'amplifier le gain de temps pour les secrétaires et les agents d'archivage, notamment par des connecteurs, le MCP et des alertes, tout en annotant un gold relu pour mesurer la qualité des propositions.

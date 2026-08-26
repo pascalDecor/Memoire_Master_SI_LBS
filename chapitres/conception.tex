@@ -1,6 +1,7 @@
-\chapter{Conception de la solution d'archivage intelligent}
+\chapter[Conception de la solution]{Conception de la solution d'archivage intelligent}
+\label{ch:conception}
 
-Au \nomMinistere{}, l'analyse menée au chapitre précédent a mis en évidence les limites d'un traitement documentaire encore largement manuel. Identifier l'expéditeur, renseigner les informations du document, déterminer son emplacement et le retrouver parmi un volume croissant d'archives mobilisent un temps important et rendent le traitement plus difficile à mesure que les documents s'accumulent. Ces constats ont permis de dégager plusieurs besoins : automatiser les tâches répétitives sans retirer aux agents leur rôle de contrôle, fiabiliser le classement, faciliter la recherche et garantir la sécurité ainsi que la traçabilité des opérations.
+Au \nomMinistere{}, l'analyse menée au chapitre précédent a mis en évidence les limites d'un traitement documentaire encore largement manuel. Identifier l'expéditeur, renseigner les informations du document, déterminer son emplacement et le retrouver parmi un volume croissant d'archives mobilisent un temps important et rendent le traitement plus difficile à mesure que les documents s'accumulent. Ces constats ont permis de dégager plusieurs besoins : automatiser les tâches répétitives sans retirer aux agents leur rôle de contrôle, fiabiliser le classement, faciliter la recherche et contribuer à la sécurité ainsi qu'à la traçabilité des opérations.
 
 Le présent chapitre traduit ces besoins en choix de conception pour la plateforme d'archivage intelligent. Il présente d'abord les principes qui guident ces choix et les responsabilités des différents acteurs, puis la représentation du document, le modèle de données qui la supporte et son organisation dans l'archive. Il décrit ensuite la chaîne de traitement, de l'acquisition à la validation, avant de présenter les mécanismes de recherche intelligente et de génération augmentée par récupération (RAG). Enfin, il expose l'architecture de la solution, les mécanismes de sécurité et de gouvernance, ainsi que les principales interfaces retenues.
 
@@ -24,7 +25,7 @@ Ces principes se traduisent en réponses concrètes aux besoins formulés au cha
 
 \begin{table}[htbp]
 \centering
-\caption{Correspondance entre les besoins du chapitre~3 et les choix de conception}
+\caption{Correspondance entre les besoins du chapitre~\ref{ch:existant} et les choix de conception}
 \label{tab:besoins-conception-ch4}
 \small
 \renewcommand{\arraystretch}{1.55}
@@ -33,7 +34,7 @@ Ces principes se traduisent en réponses concrètes aux besoins formulés au cha
 \begin{tabularx}{\textwidth}{@{}>{\bfseries}Y Y@{}}
 \toprule
 \rowcolor{black!12}
-\tableheader{Besoin (chapitre~3)} &
+\tableheader{Besoin (chapitre~\ref{ch:existant})} &
 \tableheader{Réponse de conception} \\
 \midrule
 Réduire le traitement manuel &
@@ -76,7 +77,7 @@ Pour répondre à la séparation constatée entre fichiers et index, un document
 \begin{figure}[htbp]
 \centering
 \input{images/fig_modele_documentaire}
-\caption{Représentation multi-composante d'un document : fichier, métadonnées, nœud d'exploration et index vectoriel.}
+\caption{Représentation multi-composante d'un document : fichier, métadonnées, nœud d'exploration et index vectoriel}
 \label{fig:modele-documentaire}
 \end{figure}
 
@@ -172,16 +173,16 @@ La figure~\ref{fig:modele-donnees-conception} décrit d'abord le document, son c
 \begin{figure}[H]
 \centering
 \input{images/fig_modele_donnees_conception}
-\caption{Diagramme de classes UML : modèle documentaire et recherche.}
+\caption{Diagramme de classes UML : modèle documentaire et recherche}
 \label{fig:modele-donnees-conception}
 \end{figure}
 
-Le contrôle des accès et la traçabilité relèvent du même modèle, mais portent sur les acteurs plutôt que sur le contenu. Un utilisateur est rattaché à des rôles, eux-mêmes associés à des permissions, et peut appartenir à des groupes ; les événements journalisent une action, un horodatage et l'utilisateur concerné, en lien avec le document le cas échéant. La figure~\ref{fig:modele-donnees-securite} isole cette dimension. Le document y apparaît de manière réduite : il sert de point d'accroche avec le modèle documentaire, sans en répéter les attributs métier. Les listes de contrôle d'accès portent les droits fins sur les nœuds. \texttt{ControleAcces} est lié à l'utilisateur et au groupe lorsqu'ils en sont le principal ; un attribut \texttt{typePrincipal} permet aussi un rôle, sans superposer une troisième association sur le schéma.
+Le contrôle des accès et la traçabilité relèvent du même modèle, mais portent sur les acteurs plutôt que sur le contenu. Un utilisateur est rattaché à des rôles, eux-mêmes associés à des permissions, et peut appartenir à des groupes ; les événements journalisent une action, un horodatage et l'utilisateur concerné, en lien avec le document le cas échéant. La figure~\ref{fig:modele-donnees-securite} isole cette dimension. Le document y apparaît de manière réduite : il sert de point d'accroche avec le modèle documentaire, sans en répéter les attributs métier. Les listes de contrôle d'accès portent les droits fins sur les nœuds. Le principal d'une règle n'est pas un type de chaîne redondant avec des associations parallèles : \texttt{Utilisateur}, \texttt{Groupe} et \texttt{Role} spécialisent une classe abstraite \texttt{Principal}, et \texttt{ControleAcces} n'y est lié qu'une fois.
 
 \begin{figure}[H]
 \centering
 \input{images/fig_modele_donnees_securite}
-\caption{Diagramme de classes UML : sécurité et traçabilité.}
+\caption{Diagramme de classes UML : sécurité et traçabilité}
 \label{fig:modele-donnees-securite}
 \end{figure}
 
@@ -197,13 +198,13 @@ Les \textbf{référentiels} (types documentaires, expéditeurs, destinataires) r
 
 L'\textbf{utilisateur} n'est pas un simple compte de connexion. Il est rattaché à des rôles et permissions (RBAC) et peut appartenir à des groupes.
 
-Le \textbf{groupe} est une entité organisationnelle. Il rassemble des utilisateurs et peut porter des rôles, afin d'appliquer des droits homogènes à un ensemble d'agents. Il peut aussi servir de principal dans les listes de contrôle d'accès.
+Le \textbf{groupe} est une entité organisationnelle. Il rassemble des utilisateurs et peut porter des rôles, afin d'appliquer des droits homogènes à un ensemble d'agents. Comme l'utilisateur et le rôle, il spécialise \texttt{Principal} et peut donc être le sujet d'une règle d'accès.
 
-Au-delà du RBAC, un \textbf{contrôle d'accès} (\texttt{ControleAcces}) rattache un principal à un nœud. Il est lié à l'utilisateur et au groupe lorsque l'un d'eux est le principal ; un rôle peut l'être également, via \texttt{typePrincipal}. La règle porte une permission (lecture, écriture, suppression, validation), un effet et une propagation éventuelle dans le sous-arbre. Le niveau de sensibilité, lui, reste un attribut du document. Les \textbf{événements} relient une action, un horodatage, un utilisateur, un document et éventuellement un nœud, afin de distinguer ce que le pipeline a proposé de ce qu'un agent a décidé.
+Au-delà du RBAC, un \textbf{contrôle d'accès} (\texttt{ControleAcces}) rattache un \texttt{Principal} à un nœud. La généralisation évite de dupliquer le lien vers l'utilisateur, le groupe et le rôle, et de compenser cette duplication par un attribut \texttt{typePrincipal}. La règle porte une permission (lecture, écriture, suppression, validation), un effet et une propagation éventuelle dans le sous-arbre. Le niveau de sensibilité, lui, reste un attribut du document. Les \textbf{événements} relient une action, un horodatage, un utilisateur, un document et éventuellement un nœud, afin de distinguer ce que le pipeline a proposé de ce qu'un agent a décidé.
 
 \subsection{Contraintes importantes}
 
-Plusieurs contraintes assurent la cohérence du modèle. Un nœud de type fichier ne référence qu'un seul document, et un document n'apparaît qu'une fois dans l'arborescence. L'index d'un segment est unique au sein d'un document, afin d'éviter des doublons d'indexation. Les statuts du nœud et la source du flux sont des valeurs fermées, pour que les règles de classement et de visibilité restent déterministes. L'empreinte SHA-256 du fichier est conservée avec le document : elle ne remplace pas un identifiant métier, mais permet la vérification d'intégrité et la détection de contenus identiques. La réalisation présentera ce mécanisme dans l'interface de vérification. Les référentiels ne peuvent pas être supprimés tant qu'ils restent utilisés par des documents. En cas de suppression physique d'un document, ses segments associés sont également supprimés. Enfin, les filtres de droits et de sensibilité s'appliquent aux requêtes comme à la récupération RAG, de sorte qu'aucune relation du modèle ne contourne le périmètre d'accès.
+Plusieurs contraintes assurent la cohérence du modèle. Un nœud de type fichier ne référence qu'un seul document, et un document n'apparaît qu'une fois dans l'arborescence. L'index d'un segment est unique au sein d'un document, afin d'éviter des doublons d'indexation. Les statuts du nœud et la source du flux sont des valeurs fermées, pour que les règles de classement et de visibilité restent déterministes. L'empreinte SHA-256 du fichier est conservée avec le document : elle ne remplace pas un identifiant métier, mais permet la vérification d'intégrité et la détection de contenus identiques. La réalisation présentera ce mécanisme dans l'interface de vérification. Les référentiels ne peuvent pas être supprimés tant qu'ils restent utilisés par des documents. En cas de suppression physique d'un document, ses segments associés sont également supprimés. Une règle \texttt{ControleAcces} référence exactement un \texttt{Principal} ; le polymorphisme de cette association interdit qu'un même contrôle pointe à la fois vers un utilisateur et un groupe. Au niveau physique, cette généralisation pourra se traduire par une colonne discriminante, qui n'est plus un attribut métier du diagramme de classes. Enfin, les filtres de droits et de sensibilité s'appliquent aux requêtes comme à la récupération RAG, de sorte qu'aucune relation du modèle ne contourne le périmètre d'accès.
 
 \subsection{Métadonnées structurées et métadonnées dynamiques}
 
@@ -218,7 +219,7 @@ Pour réduire la charge manuelle sans rompre avec les pratiques du ministère, l
 \begin{figure}[htbp]
 \centering
 \resizebox{\textwidth}{!}{\input{images/fig_pipeline_conception}}
-\caption{Pipeline de traitement documentaire : convergence papier et numérique vers l'acquisition, puis confirmation après validation.}
+\caption{Pipeline de traitement documentaire : convergence papier et numérique vers l'acquisition, puis confirmation après validation}
 \label{fig:pipeline-conception}
 \end{figure}
 
@@ -240,47 +241,95 @@ Le contenu peut ensuite être préparé pour l'indexation destinée à la recher
 
 \section{Conception de la recherche et de l'assistance intelligente}
 
-L'analyse de l'existant a montré que la recherche dépend encore trop souvent du parcours des dossiers ou de la mémoire des agents. Une fois les documents décrits et classés, la plateforme doit donc permettre de les retrouver autrement. L'indexation textuelle et vectorielle, puis une assistance fondée sur la génération augmentée par récupération (\textit{Retrieval-Augmented Generation}, RAG), répondent à ce besoin. Le RAG associe un modèle génératif à un mécanisme de récupération d'informations externes, afin de fournir au modèle un contexte documentaire adapté à la requête \citer{lewis2020}{Lewis et al. (2020)}. Le pipeline d'archivage constitue le corpus ; le RAG l'interroge ensuite de manière ancrée.
+L'analyse de l'existant a montré que la recherche dépend encore trop souvent du parcours des dossiers ou de la mémoire des agents. Une fois les documents décrits et classés, la plateforme doit donc permettre de les retrouver autrement. L'indexation textuelle et vectorielle, puis une assistance fondée sur la génération augmentée par récupération (\textit{Retrieval-Augmented Generation}, RAG), répondent à ce besoin. Le RAG associe un modèle génératif à un mécanisme de récupération d'informations externes, afin de fournir au modèle un contexte documentaire adapté à la requête \citp{lewis2020}{Lewis et al., 2020}. Le pipeline d'archivage constitue le corpus ; le RAG l'interroge ensuite de manière ancrée.
 
 \subsection{Architecture du pipeline RAG}
 
-Le fonctionnement prévu enchaîne des responsabilités distinctes (figure~\ref{fig:rag-pipeline}). L'utilisateur pose une question depuis l'interface ; le système tient compte de ses droits, prépare la recherche, récupère des passages pertinents, les fusionne et les compresse, puis les fournit à un modèle de langage pour produire une réponse accompagnée de ses sources \citer{lewis2020}{Lewis et al. (2020)}. L'objectif n'est pas d'obtenir une réponse « générique », mais une réponse rattachée aux archives du ministère et traçable jusqu'aux documents mobilisés.
+Le fonctionnement prévu enchaîne des responsabilités distinctes (figure~\ref{fig:rag-pipeline}). L'utilisateur pose une question depuis l'interface ; le système applique d'abord ses droits, puis récupère des passages, les fusionne, en réduit la taille et les fournit à un modèle de langage pour produire une réponse accompagnée de ses sources \citp{lewis2020}{Lewis et al., 2020}. L'objectif n'est pas d'obtenir une réponse « générique », mais une réponse rattachée aux archives du ministère et traçable jusqu'aux documents mobilisés.
 
 \begin{figure}[htbp]
 \centering
 \resizebox{\textwidth}{!}{\input{images/fig_rag_pipeline}}
-\caption{Architecture logique du pipeline RAG : de la requête filtrée à la génération contextualisée.}
+\caption{Architecture logique du pipeline RAG : de la requête filtrée à la génération contextualisée}
 \label{fig:rag-pipeline}
 \end{figure}
 
 \subsection{Indexation vectorielle, chunking et embeddings}
 
-Pour qu'une question formulée en langage naturel puisse rejoindre le bon passage, le contenu doit être découpé et représenté de façon adaptée. Les documents sont donc segmentés en unités de taille maîtrisée, avec un chevauchement destiné à préserver le contexte local. Certains champs métier (objet, expéditeur, type, destinataire, numéro interne) forment des segments distincts, utiles lorsque l'utilisateur cherche précisément ces informations.
+Pour qu'une question formulée en langage naturel puisse rejoindre le bon passage, le contenu doit être découpé et représenté de façon adaptée. On distingue deux objets d'indexation. Les \textbf{segments de contenu} sont des passages d'environ $n_{c}$ caractères, avec un chevauchement $o$ destiné à préserver le contexte local. Les \textbf{champs métier} (objet, expéditeur, type documentaire, destinataire, numéro interne) sont indexés à part : ce ne sont pas des chunks de contenu, mais des attributs structurés vectorisés afin qu'une requête portant sur un organisme ou un numéro puisse les atteindre directement.
 
-Chaque segment reçoit une représentation vectorielle stockée en base. Ces représentations denses permettent de rapprocher sémantiquement une requête et des passages, au-delà de la seule correspondance de mots-clés \citer{reimers2019}{Reimers et Gurevych, 2019} ; \citer{karpukhin2020}{Karpukhin et al., 2020}. Le modèle d'embedding peut être local ou cloud selon l'environnement : ce qui change alors, c'est le calcul des vecteurs et éventuellement la réindexation ; le reste du dispositif (récupération, filtres de sécurité, génération) demeure stable. Cette souplesse compte dans un contexte ministériel où les contraintes de souveraineté peuvent évoluer.
+Chaque unité ainsi indexée --- segment de contenu ou champ métier --- reçoit une représentation vectorielle stockée en base. Ces représentations denses permettent une \textbf{récupération dense} : rapprocher l'embedding de la requête de ceux des unités indexées, au-delà de la seule correspondance de mots-clés (\citer{reimers2019}{Reimers et Gurevych, 2019} ; \citer{karpukhin2020}{Karpukhin et al., 2020}). Le modèle d'embedding peut être local ou cloud selon l'environnement : ce qui change alors, c'est le calcul des vecteurs et éventuellement la réindexation ; le reste du dispositif (récupération, filtres de sécurité, génération) demeure stable. Cette souplesse compte dans un contexte ministériel où les contraintes de souveraineté peuvent évoluer.
 
-La figure~\ref{fig:indexation-vectorielle} résume ce dispositif : le document est découpé en segments métier et en passages de contenu, puis chaque segment est vectorisé et conservé dans l'index.
+La figure~\ref{fig:indexation-vectorielle} résume ce dispositif : le document est découpé en champs métier et en segments de contenu, puis chaque unité est vectorisée et conservée dans l'index.
 
 \begin{figure}[H]
 \centering
 \resizebox{0.92\textwidth}{!}{\input{images/fig_indexation_vectorielle}}
-\caption{Indexation vectorielle : segmentation (métier et contenu) puis embedding par segment.}
+\caption{Indexation vectorielle : champs métier et segments de contenu, puis embedding}
 \label{fig:indexation-vectorielle}
 \end{figure}
 
 \subsection{Récupération hybride}
 
-Les agents ne formulent pas toujours leurs besoins avec les mêmes mots que le document original. Une recherche uniquement sémantique, ou uniquement par mots-clés, resterait donc partielle. La récupération \textbf{hybride} combine similarité vectorielle \citer{karpukhin2020}{Karpukhin et al., 2020}, correspondances lexicales dans les segments et recherche plein texte / métadonnées au niveau document, puis fusionne ces signaux selon une approche de type Reciprocal Rank Fusion \citer{cormack2009}{Cormack, Clarke et Buettcher, 2009}. On limite ainsi le risque de manquer une pièce parce que la formulation de la requête diffère de celle de l'archive.
+Les observations réalisées dans le cadre de l'étude montrent que les agents ne formulent pas toujours leurs besoins avec les mêmes mots que le document original. Une recherche uniquement dense, ou uniquement par mots-clés, resterait donc partielle.
 
-D'autres mécanismes renforcent cette robustesse : reformulation ou expansion de la requête \citer{azad2019}{Azad et Deepak, 2019}, réordonnancement léger, diversité des sources pour éviter qu'un seul document monopolise le contexte, \textbf{récupération itérative} lorsque les premiers résultats sont insuffisants, et compression des passages avant génération, afin de ne transmettre au modèle qu'un contexte limité \citer{liu2024}{Liu et al., 2024}. Les paramètres associés (nombre de passages retenus, seuils de similarité, nombre d'itérations, etc.) restent configurables ; leur réglage fin relève de l'évaluation expérimentale.
+Le raisonnement retenu place la sécurité \textbf{avant} le classement, et non après que le modèle de langage ait vu des extraits : corpus $C$ (nœuds \texttt{VALIDATED} par défaut), puis filtrage de sécurité, puis trois stratégies de récupération, puis fusion RRF, diversification et sélection des $N$ extraits. Soit $D \subseteq C$ l'ensemble des documents autorisés à être récupérés, après application des ACL, du plafond de sensibilité et du statut. Les trois stratégies opèrent directement sur $D$, de sorte qu'aucun contenu hors périmètre n'entre dans le ranking.
+
+On note $\mathcal{M} = \{\mathrm{dense}, \mathrm{lex}, \mathrm{doc}\}$ l'ensemble des méthodes, et $L_{m}$ la liste de candidats produite par la méthode $m \in \mathcal{M}$ :
+\begin{itemize}
+  \item $L_{\mathrm{dense}}$ : récupération dense au sens du Dense Passage Retrieval, par similarité entre l'embedding de la requête et ceux des unités indexées (segments de contenu et champs métier) \citp{karpukhin2020}{Karpukhin et al., 2020} ;
+  \item $L_{\mathrm{lex}}$ : correspondances lexicales dans le texte des segments de contenu ;
+  \item $L_{\mathrm{doc}}$ : recherche lexicale au niveau document, reposant à la fois sur l'indexation plein texte et sur les champs de métadonnées.
+\end{itemize}
+Ces listes ne partagent pas la même échelle de scores ; les fusionner par une somme de similarités n'aurait pas de sens. On les combine par Reciprocal Rank Fusion \citp{cormack2009}{Cormack, Clarke et Buettcher, 2009}, qui ne retient que le rang $r_{m}(d)$ de $d$ dans $L_{m}$.
+
+Pour tout $d \in D$,
+\begin{equation}
+\label{eq:rrf}
+\mathrm{RRF}(d) = \sum_{m \in \mathcal{M}} \frac{1}{k + r_{m}(d)}.
+\end{equation}
+Le rang $r_{m}(d)$ vaut $1$ pour le premier résultat de $L_{m}$. Si $d$ n'apparaît pas dans $L_{m}$, le terme correspondant est omis (contribution nulle). La constante de lissage $k$ atténue l'influence des têtes de liste. Elle est fixée à $k = 60$, configuration classique reprise de \citer{cormack2009}{Cormack, Clarke et Buettcher (2009)} ; cette valeur n'a pas été optimisée sur le jeu de test du chapitre~\ref{ch:realisation}. Aucune pondération supplémentaire n'est appliquée aux branches : $w_{m} = 1$ pour tout $m \in \mathcal{M}$. Un réordonnancement lexical léger n'intervient qu'après cette fusion, et n'entre pas dans l'équation~\eqref{eq:rrf}.
+
+Les paramètres de conception du RAG et de l'indexation sont posés dans le tableau~\ref{tab:params-rag-conception}. Les seuils de similarité restent configurables. Les valeurs du tableau sont celles retenues pour la conception et confirmées à la réalisation ; elles ne prétendent pas à un optimum expérimental pour ce corpus.
+
+\begin{table}[htbp]
+\centering
+\caption{Paramètres de conception de l'indexation, de la fusion RRF et du RAG}
+\label{tab:params-rag-conception}
+\small
+\renewcommand{\arraystretch}{1.40}
+\begingroup
+\rowcolors{2}{black!3}{white}
+\begin{tabularx}{\textwidth}{@{}L{4.3cm} L{1.8cm} Y@{}}
+\toprule
+\rowcolor{black!12}
+\tableheader{Paramètre} &
+\tableheader{Notation} &
+\tableheader{Valeur} \\
+\midrule
+Taille d'un segment de contenu & $n_{c}$ & $\approx$\,2000 caractères \\
+Chevauchement entre segments & $o$ & 400 caractères \\
+Constante de lissage RRF & $k$ & 60 (littérature, non calibrée) \\
+Pondération des méthodes $\mathcal{M}$ & $w_{m}$ & $1$ (équipondération) \\
+Nombre d'extraits transmis au modèle & $N$ & 8 \\
+Champs métier exploités & --- & objet, expéditeur, type documentaire, destinataire, numéro interne \\
+Corpus RAG par défaut & $C$ & nœuds \texttt{VALIDATED} (hors \texttt{DRAFT} et corbeille) \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table}
+
+La procédure nominale s'enchaîne ainsi : (1)~filtrer $C$ en $D$ selon les droits, la sensibilité et le statut ; (2)~construire $L_{\mathrm{dense}}$, $L_{\mathrm{lex}}$ et $L_{\mathrm{doc}}$ sur $D$ ; (3)~calculer $\mathrm{RRF}(d)$ selon l'équation~\eqref{eq:rrf} ; (4)~diversifier (un même document ne monopolise pas les $N$ extraits) et retenir $N$ passages ; (5)~réduire chaque passage par une sélection extractive des phrases les plus proches de la requête, puis en borner la longueur, afin de limiter les informations redondantes transmises au modèle. Cette réduction n'est pas une méthode nommée de \textit{context compression} ; elle vise surtout à contenir la taille du prompt, conformément au constat que les modèles exploitent mal un contexte trop long \citp{liu2024}{Liu et al., 2024}.
+
+Deux mécanismes complémentaires n'entrent dans cette chaîne que lorsque la première récupération ne fournit pas d'extraits suffisants : une expansion lexicale de la requête par synonymes du vocabulaire métier \citp{azad2019}{Azad et Deepak, 2019}, et une seconde passe (seuils assouplis, éventuellement reformulation). Ils sont prévus dans l'architecture et implémentés, mais n'ont pas été isolés dans l'évaluation du chapitre~\ref{ch:realisation}. Cette combinaison vise ainsi à réduire le risque de manquer un document lorsque la formulation de la requête diffère de celle employée dans l'archive.
 
 \subsection{Filtrage de sécurité avant récupération}
 
-Dans une administration, faciliter la recherche ne doit pas contourner les règles d'accès. Les applications fondées sur des modèles de langage exposent un risque de divulgation d'informations hors périmètre \citer{namer2024}{Namer et al., 2024} ; \citer{owasp2025}{OWASP, 2025}. C'est pourquoi, dans notre conception, les filtres de sensibilité, d'ACL et de statut s'appliquent \textbf{avant} la récupération des passages, et non après la génération d'une réponse. Un contenu hors périmètre n'entre pas dans le contexte du modèle : par défaut, cela concerne un document encore en \texttt{DRAFT} comme un document retiré dans la corbeille (\texttt{ARCHIVED}). L'assistance intelligente prolonge ainsi le besoin de sécurité déjà identifié, au lieu de le mettre entre parenthèses.
+Dans une administration, faciliter la recherche ne doit pas contourner les règles d'accès. Les applications fondées sur des modèles de langage exposent un risque de divulgation d'informations hors périmètre (\citer{namer2024}{Namer et al., 2024} ; \citer{owasp2025}{OWASP, 2025}). C'est pourquoi, dans notre conception, les filtres de sensibilité, d'ACL et de statut s'appliquent \textbf{avant} la récupération des passages, et non après la génération d'une réponse. Un contenu hors périmètre n'entre pas dans le contexte du modèle : par défaut, cela concerne un document encore en \texttt{DRAFT} comme un document retiré dans la corbeille (\texttt{ARCHIVED}). L'assistance intelligente prolonge ainsi le besoin de sécurité déjà identifié, au lieu de le mettre entre parenthèses.
 
 \subsection{Génération contextualisée}
 
-Le modèle de langage reçoit l'historique de conversation et les extraits retenus. La génération est guidée par ce contexte, et le système invite le modèle à ne pas inventer une réponse lorsque les informations disponibles sont insuffisantes. On cherche ainsi à limiter les réponses non étayées, sans prétendre supprimer tout risque d'hallucination \citer{nist2024}{NIST, 2024}. On distingue ainsi l'assistant documentaire d'un modèle généraliste.
+Le modèle de langage reçoit l'historique de conversation et les extraits retenus. La génération est guidée par ce contexte, et le système invite le modèle à ne pas inventer une réponse lorsque les informations disponibles sont insuffisantes. On cherche ainsi à limiter les réponses non étayées, sans prétendre supprimer tout risque d'hallucination \citp{nist2024}{NIST, 2024}. On distingue ainsi l'assistant documentaire d'un modèle généraliste.
 
 Selon l'environnement, la génération peut s'appuyer sur un modèle local ou cloud. Dans les deux cas, l'orchestration lui fournit le même type d'entrée. Changer de fournisseur n'oblige pas à reconcevoir la récupération ni le filtrage de sécurité, point important lorsque le déploiement doit rester maîtrisé au sein du ministère.
 
@@ -292,10 +341,13 @@ Pour tenir ces exigences dans un environnement interne, la plateforme s'organise
 
 Nous avons donc choisi un stockage objet (MinIO) pour les fichiers, afin de ne plus confondre conservation binaire et description métier, et de conserver un déploiement maîtrisable en interne. Une base relationnelle PostgreSQL, enrichie de pgvector, regroupe métadonnées, droits, nœuds d'exploration et index vectoriel, pour que description, gouvernance et recherche restent liées sans multiplier les silos. Un bus de messages asynchrone (RabbitMQ) découple l'ingestion des étapes longues, ce qui répond à la contrainte de volume déjà soulignée. Keycloak assure l'authentification technique entre services ; Vault isole les secrets de configuration du code. Le monitoring (métriques, tableaux de bord, logs) complète ce cadre pour une exploitation continue en conditions ministérielles. Les modalités concrètes de déploiement seront précisées lors de la réalisation.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \resizebox{\textwidth}{!}{\input{images/fig_architecture_generale}}
-\caption{Architecture générale de la plateforme en déploiement \textit{on-premise}.}
+\vspace{0.35em}
+{\footnotesize\textbf{Légende :} bleu = services, vert = infrastructure, gris = accès et supervision.
+Les traitements longs passent par RabbitMQ ; l'interface (7) reste indépendante.\par}
+\caption{Architecture générale de la plateforme en déploiement sur site}
 \label{fig:archi-generale-conception}
 \end{figure}
 
@@ -305,10 +357,10 @@ L'asynchronisme n'est pas un détail d'implémentation. Tant que l'OCR ou l'anal
 
 La figure~\ref{fig:communication-async} isole ce mécanisme. L'upload publie un événement ; RabbitMQ le conserve ; l'OCR puis l'extraction le consomment à leur rythme. Le modèle de langage est ensuite appelé de manière synchrone depuis l'extraction, pour la classification et le renommage. L'interface de l'agent n'appartient pas à cette file : elle reste disponible pendant le traitement.
 
-\begin{figure}[htbp]
+\begin{figure}[H]
 \centering
 \resizebox{\textwidth}{!}{\input{images/fig_communication_async}}
-\caption{Communication asynchrone par bus de messages : publication, conservation dans RabbitMQ, consommation par les travailleurs.}
+\caption{Communication asynchrone par bus de messages : publication, conservation dans RabbitMQ, consommation par les travailleurs}
 \label{fig:communication-async}
 \end{figure}
 

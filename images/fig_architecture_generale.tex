@@ -65,11 +65,11 @@
 % ----- 4. Stockage -----
 \node[cadre, draw=green!50!black!45, fill=green!6, minimum width=11.35cm, minimum height=2.20cm,
       anchor=south west] (stock) at (0.10, 2.80) {};
+\node[infra] (pg)    at (1.95, 3.62) {PostgreSQL\\[-0.4pt]{\scriptsize pgvector, métadonnées, RBAC}};
+\node[infra] (minio) at (5.70, 3.62) {MinIO\\[-0.4pt]{\scriptsize stockage objets}};
+\node[infra] (redis) at (9.45, 3.62) {Redis\\[-0.4pt]{\scriptsize cache / état}};
 \node[badge, fill=green!50!black] at (0.38, 4.82) {4};
 \node[titregroup, fill=green!6] at (0.66, 4.82) {Stockage};
-\node[infra] (pg)    at (1.95, 3.70) {PostgreSQL + pgvector\\[-0.4pt]{\scriptsize métadonnées, RBAC, index}};
-\node[infra] (minio) at (5.70, 3.70) {MinIO\\[-0.4pt]{\scriptsize stockage objets}};
-\node[infra] (redis) at (9.45, 3.70) {Redis\\[-0.4pt]{\scriptsize cache / état}};
 
 % ----- 5. Sécurité -----
 \node[cadre, draw=green!50!black!45, fill=green!6, minimum width=5.45cm, minimum height=2.00cm,
@@ -108,5 +108,3 @@
 
 \end{tikzpicture}
 \endgroup
-\vspace{0.15em}
-\footnotesize \textbf{Légende :} bleu = services, vert = infrastructure, gris = accès et supervision. Les traitements longs passent par RabbitMQ ; l'interface (7) reste indépendante.

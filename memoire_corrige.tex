@@ -1,4 +1,4 @@
-% Forcer la sortie PDF même si le compilateur Overleaf est réglé sur « LaTeX »
+﻿% Forcer la sortie PDF même si le compilateur Overleaf est réglé sur « LaTeX »
 % (le moteur sous-jacent est pdfTeX ; sans ceci, on reste en mode DVI/dvips).
 \pdfoutput=1
 
@@ -7,7 +7,14 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[french]{babel}
+\addto\captionsfrench{%
+  \renewcommand{\tablename}{Tableau}%
+  \renewcommand{\listtablename}{Liste des tableaux}%
+  \renewcommand{\figurename}{Figure}%
+  \renewcommand{\listfigurename}{Liste des figures}%
+}
 \usepackage{lmodern}
+\usepackage{amsmath}
 \usepackage{microtype}
 \usepackage{setspace}
 \setstretch{1.25}
@@ -27,13 +34,21 @@
 
 \usepackage{fancyhdr}
 \setlength{\headheight}{28pt}
-\fancypagestyle{main}{
-  \fancyhf{}
-  \fancyhead[L]{\nouppercase{\leftmark}}
-  \fancyfoot[C]{\thepage}
-  \renewcommand{\headrulewidth}{0.4pt}
-  \renewcommand{\footrulewidth}{0pt}
+% Réglages fancyhdr 3.10 (TeX Live 2019). Activés par \pagestyle{fancy} dans le corps.
+\fancyhf{}
+\fancyhead[L]{\itshape\leftmark}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+% Pages de titre (partie, chapitre) : numéro de page uniquement, sans en-tête.
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+  \renewcommand{\footrulewidth}{0pt}%
 }
+% Ancienne mention de source sous les figures : no-op, pour ne plus faire échouer la compilation.
+\providecommand{\sourceperso}{}
 
 % Réduit les risques de lignes trop longues (overfull boxes)
 \setlength{\emergencystretch}{2em}
@@ -48,6 +63,7 @@
 \newcommand{\tableheader}[1]{\textbf{\small #1}}
 \newcommand{\tabarrow}{\ensuremath{\rightarrow}}
 
+\usepackage{xurl}
 \usepackage{hyperref}
 \hypersetup{
   colorlinks=true,
@@ -57,9 +73,15 @@
 }
 
 % Citation auteur-année cliquable vers la bibliographie.
-% Usage : \citer{davenport1998}{Davenport et Prusak (1998)}
-% L'ancre correspondante dans la bibliographie est \label{ref:davenport1998}.
+% \citer : forme narrative (Auteur (année) montrent que...).
+% \citp  : forme parenthétique ((Auteur, année)).
 \newcommand{\citer}[2]{\hyperref[ref:#1]{#2}}
+\newcommand{\citp}[2]{(\hyperref[ref:#1]{#2})}
+\AtBeginDocument{%
+  \renewcommand{\tablename}{Tableau}%
+  \renewcommand{\chaptermark}[1]{\markboth{\chaptername\ \thechapter. #1}{}}%
+  \renewcommand{\sectionmark}[1]{}%
+}
 
 \usepackage{csquotes}
 \usepackage{listings}
@@ -75,21 +97,20 @@
 % ---------------------------------------------------------------------------
 % Métadonnées (à adapter si besoin)
 % ---------------------------------------------------------------------------
-\newcommand{\rapportTitre}{Vers une gestion documentaire intelligente : conception et réalisation d'une plateforme d'archivage numérique intégrant des mécanismes d'intelligence artificielle}
+\newcommand{\rapportTitre}{Conception et réalisation d'une plateforme d'archivage numérique multimodale intégrant des techniques d'intelligence artificielle : cas du Ministère de l'Efficacité du Service Public et de la Transformation Numérique}
 \newcommand{\auteurNom}{KOEVI Komi Pascal}
 \newcommand{\typeDocument}{Mémoire pour le diplôme de}
-\newcommand{\diplome}{Master professionnel en système d'information}
+\newcommand{\diplome}{Master professionnel en Systèmes d'Information}
 \newcommand{\formation}{Master Systèmes d’Information}
 \newcommand{\universite}{LBS}
 \newcommand{\nomEcole}{Lomé Business School}
-\newcommand{\anneeAcademique}{2025--2026}
-\newcommand{\nomMinistere}{Ministère de l'Efficacité du Service Public et de Transformation Numérique (MESPTN)}
+\newcommand{\anneeAcademique}{2023--2025}
+\newcommand{\nomMinistere}{Ministère de l'Efficacité du Service Public et de la Transformation Numérique (MESPTN)}
+\newcommand{\problematiqueMemoire}{Comment concevoir et réaliser une plateforme capable d'assister le traitement, le classement, la conservation et la recherche des documents administratifs, issus de la numérisation comme nativement numériques, tout en conservant un niveau de contrôle humain compatible avec les exigences d'une administration publique~?}
 \newcommand{\directeurNom}{M. KONAN Arnaud}
-\newcommand{\directeurFonction}{Sr Machine Learning \& AI Engineer}
+\newcommand{\directeurFonction}{Senior Machine Learning \& AI Engineer}
 \newcommand{\structureAccueil}{Structure d’accueil : \textit{\nomMinistere}}
 \newcommand{\tuteurStage}{Référent professionnel : \textit{M. Morlé KOUDEKA}}
-\newcommand{\appNom}{ARIA}
-\newcommand{\appDescription}{Archivage et Recherche par Intelligence Artificielle}
 
 \title{\rapportTitre}
 \author{\parbox{0.95\textwidth}{\centering
@@ -99,7 +120,8 @@
   \structureAccueil\\
   \tuteurStage
 }}
-\date{Avril 2026}
+\date{2026}
+\hypersetup{pdftitle={\rapportTitre}, pdfauthor={\auteurNom}}
 
 \begin{document}
 % Page de garde (mise en page contrôlée, évite les débordements)
@@ -113,24 +135,34 @@
   {\large \typeDocument\par}
   \vspace{0.2cm}
   {\large \diplome}\par
-  \vspace{2cm}
+  \vspace{1.6cm}
 
-  {\LARGE \textbf{\rapportTitre}\par}
-  \vspace{2.2cm}
+  {\LARGE\bfseries
+    Conception et réalisation d'une plateforme\\
+    d'archivage numérique multimodale\\
+    intégrant des techniques d'intelligence artificielle
+  \par}
+  \vspace{0.5cm}
+  {\large\bfseries
+    Cas du Ministère de l'Efficacité
+    du Service Public et de la\\
+    Transformation Numérique
+  \par}
+  \vspace{1.8cm}
 
   {\large Présenté par\par}
   \vspace{0.2cm}
   {\large \textbf{\auteurNom}\par}
   \vspace{1.5cm}
 
-  {\large Directeur de Mémoire\par}
+  {\large Directeur de mémoire\par}
   \vspace{0.3cm}
   {\directeurNom\par}
   {\directeurFonction\par}
   \vspace{0.8cm}
 
   \vfill
-  {Année universitaire 2023-2025\par}
+  {Année universitaire \anneeAcademique\par}
 \end{titlepage}
 
 % Préliminaires (numérotation romaine)
@@ -140,32 +172,42 @@
 
 \chapter*{Remerciements}
 \addcontentsline{toc}{chapter}{Remerciements}
-Je tiens tout d’abord à exprimer ma profonde gratitude au Ministère de l’Efficacité du Service Public et de la Transformation Numérique (MESPTN), au sein duquel j’exerce mes fonctions, pour le cadre professionnel, les ressources et la confiance qui m’ont permis de mener à bien ce projet et la rédaction de ce mémoire. Je remercie également l’ensemble de mes collègues pour leur disponibilité, leur collaboration et la qualité des échanges qui ont enrichi cette expérience, en particulier M. Songuimpale Koumbogle pour son soutien constant et ses précieux conseils tout au long du projet.
+\begingroup
+\setstretch{1.15}
+\setlength{\parskip}{0.45em}
+\vspace{-0.6em}
+Je tiens tout d'abord à exprimer ma profonde gratitude au Ministère de l'Efficacité du Service Public et de la Transformation Numérique (MESPTN), au sein duquel j'exerce mes fonctions, pour le cadre professionnel, les ressources et la confiance qui m'ont permis de mener à bien ce projet et la rédaction de ce mémoire. Je remercie également l'ensemble de mes collègues pour leur disponibilité, leurs retours d'expérience et la qualité des échanges qui ont permis d'affiner les besoins, les règles de gestion documentaire et les choix de conception, en particulier M.~Songuimpale Koumbogle pour son soutien constant et ses précieux conseils tout au long du projet.
 
-J’adresse mes sincères remerciements à M. Morlé KOUDEKA pour son encadrement, sa disponibilité et ses précieux conseils relatifs aux enjeux métiers de l’archivage numérique. Son expertise du domaine, sa vision stratégique ainsi que ses orientations ont largement contribué à la conception et à la réalisation de la solution proposée.
+J'adresse mes sincères remerciements à M.~Morlé KOUDEKA pour son encadrement, sa disponibilité et ses conseils relatifs aux enjeux métiers de l'archivage numérique. Son expertise et ses orientations ont largement contribué à la conception et à la réalisation de la solution proposée.
 
-Je remercie également M. KONAN Arnaud, mon directeur de mémoire, pour la qualité de son accompagnement, la rigueur de ses observations et ses conseils éclairés sur les aspects techniques et méthodologiques liés à l’intelligence artificielle. Ses recommandations ont constitué un appui essentiel dans le développement du système et dans la rédaction de ce mémoire.
+Je remercie également M.~KONAN Arnaud, mon directeur de mémoire, pour la qualité de son accompagnement, la rigueur de ses observations et ses conseils sur les aspects techniques et méthodologiques liés à l'intelligence artificielle. Ses recommandations ont constitué un appui essentiel dans le développement du système et dans la rédaction de ce mémoire.
 
-Ma reconnaissance s’adresse également à l’ensemble des collaborateurs du ministère qui, à travers leurs retours d’expérience, leurs échanges constructifs et leur disponibilité, ont contribué à affiner les besoins fonctionnels, à définir les règles de gestion documentaire et à orienter les choix de conception retenus pour cette plateforme intelligente d’archivage documentaire.
+Je remercie Lomé Business School ainsi que l'ensemble du corps enseignant du Master professionnel en Systèmes d'Information pour la qualité de la formation dispensée et l'accompagnement méthodologique qui ont constitué un socle indispensable à ce travail.
 
-Je remercie Lomé Business School ainsi que l’ensemble du corps enseignant du Master Professionnel en Systèmes d’Information pour la qualité de la formation dispensée, les connaissances transmises et l’accompagnement méthodologique qui ont constitué un socle indispensable à la réalisation de ce travail.
-
-Je tiens également à exprimer ma profonde gratitude à ma famille pour son soutien indéfectible, sa patience et ses encouragements tout au long de ce parcours. J’adresse une pensée particulière à mon frère Augustin pour ses relectures attentives, ses remarques pertinentes et les discussions enrichissantes qui ont nourri ma réflexion.
-
-Enfin, je suis profondément reconnaissant envers toutes les personnes qui, de près ou de loin, ont contribué à la réussite de ce projet. Leur soutien, leurs conseils et leurs encouragements ont été une source constante de motivation et ont joué un rôle déterminant dans la concrétisation de ce mémoire et de la solution développée.
+Enfin, j'exprime ma profonde gratitude à ma famille pour son soutien, sa patience et ses encouragements. J'adresse une pensée particulière à mon frère Augustin pour ses relectures attentives et les discussions qui ont nourri ma réflexion, ainsi qu'à toutes les personnes qui, de près ou de loin, ont contribué à la concrétisation de ce mémoire.
+\endgroup
 
 \clearpage
 \chapter*{Dédicace}
 \addcontentsline{toc}{chapter}{Dédicace}
-\begin{flushright}
+\begin{center}
 \vspace*{1cm}
 \textbf{À ma famille,}\\[0.8em]
-Pour son amour, son soutien indéfectible, ses sacrifices et ses encouragements constants tout au long de mon parcours académique et professionnel.\\[1.2em]
+\textit{Pour son amour, son soutien indéfectible, ses sacrifices et ses encouragements constants tout au long de mon parcours académique et professionnel.}\\[1.2em]
 \textbf{À mes camarades, amis et collègues,}\\[0.8em]
-Pour leur soutien moral, leurs échanges enrichissants et les moments de partage qui ont contribué à maintenir ma motivation et à enrichir ma réflexion.\\[1.2em]
+\textit{Pour leur soutien moral, leurs échanges enrichissants et les moments de partage qui ont contribué à maintenir ma motivation et à enrichir ma réflexion.}\\[1.2em]
 \textbf{À toutes les personnes qui m’ont accompagné, soutenu et encouragé dans la poursuite de mes objectifs et de mes ambitions.}\\[1.2em]
-Je dédie ce travail avec gratitude et reconnaissance.
-\end{flushright}
+\textit{Je dédie ce travail avec gratitude et reconnaissance.}
+\end{center}
+
+\clearpage
+\chapter*{Présentation de Lomé Business School}
+\addcontentsline{toc}{chapter}{Présentation de Lomé Business School}
+Lomé Business School (LBS) est un établissement d'enseignement supérieur situé à Lomé (Togo), engagé dans la formation de cadres et de professionnels capables de répondre aux besoins du tissu économique et institutionnel. L'école propose des parcours de Licence et de Master dans des domaines liés au management, à la finance, au marketing et aux systèmes d'information, avec une orientation professionnalisante fondée sur l'articulation entre enseignements théoriques et mises en situation pratiques.
+
+Dans le cadre du Master professionnel en Systèmes d'Information, la formation vise à doter les étudiants de compétences en conception, développement, déploiement et gouvernance des systèmes d'information. Elle combine des apports académiques (méthodologie de recherche, architecture logicielle, bases de données, sécurité) et une immersion professionnelle via le stage de fin de cycle. Le mémoire constitue l'aboutissement de ce parcours : il doit articuler une problématique scientifique ou technique, une revue des connaissances existantes et une expérience de terrain, tout en respectant les normes de rédaction et de validation définies par l'établissement.
+
+Le présent travail s'inscrit pleinement dans cette logique. Il a été réalisé sous la direction de M. KONAN Arnaud, dans le cadre d'une mission menée au \nomMinistere{}, et répond aux exigences du diplôme de Master professionnel en Systèmes d'Information de Lomé Business School. Il illustre la volonté de l'école de former des profils capables de concevoir des solutions numériques sobres, sécurisées et adaptées aux contraintes des organisations publiques.
 
 \clearpage
 \listoffigures
@@ -176,49 +218,54 @@ Je dédie ce travail avec gratitude et reconnaissance.
 \chapter*{Liste des abréviations, sigles et acronymes}
 \addcontentsline{toc}{chapter}{Liste des abréviations, sigles et acronymes}
 \begin{description}[leftmargin=2.5cm, style=nextline]
-  \item[ACL] \textit{Access Control List}
-  \item[API] \textit{Application Programming Interface}
+  \item[ACL] \textit{Access Control List} (liste de contrôles d'accès)
+  \item[API] \textit{Application Programming Interface} (interface de programmation applicative)
+  \item[BERT] \textit{Bidirectional Encoder Representations from Transformers}
+  \item[CER] \textit{Character Error Rate} (taux d'erreur au caractère)
   \item[GED] Gestion électronique des documents
   \item[IA] Intelligence artificielle
-  \item[IAM] \textit{Identity and Access Management}
-  \item[LLM] \textit{Large Language Model}
-  \item[MFA] \textit{Multi-Factor Authentication}
+  \item[LBS] Lomé Business School
+  \item[LLM] \textit{Large Language Model} (grand modèle de langage)
+  \item[MAC] \textit{Mandatory Access Control} (contrôle d'accès obligatoire)
+  \item[MCP] \textit{Model Context Protocol}
+  \item[MESPTN] Ministère de l'Efficacité du Service Public et de la Transformation Numérique
+  \item[MRR] \textit{Mean Reciprocal Rank} (rang réciproque moyen)
+  \item[nDCG] \textit{normalized Discounted Cumulative Gain}
   \item[OAIS] \textit{Open Archival Information System}
-  \item[OCR] \textit{Optical Character Recognition}
-  \item[RBAC] \textit{Role-Based Access Control}
-  \item[RAG] \textit{Retrieval-Augmented Generation}
+  \item[OCR] \textit{Optical Character Recognition} (reconnaissance optique de caractères)
+  \item[RBAC] \textit{Role-Based Access Control} (contrôle d'accès fondé sur les rôles)
+  \item[RAG] \textit{Retrieval-Augmented Generation} (génération augmentée par récupération)
+  \item[RAGAS] \textit{Retrieval-Augmented Generation Assessment}
   \item[RRF] \textit{Reciprocal Rank Fusion}
-  \item[SSO] \textit{Single Sign-On}
-  \item[TAL] Traitement automatique du langage
-  \item[TLS] \textit{Transport Layer Security}
+  \item[S3] \textit{Simple Storage Service} (interface de stockage objet)
+  \item[SHA-256] \textit{Secure Hash Algorithm} 256~bits
+  \item[WER] \textit{Word Error Rate} (taux d'erreur au mot)
 \end{description}
 
 \clearpage
 \chapter*{Résumé}
 \addcontentsline{toc}{chapter}{Résumé}
-Un document scanné n’est pas encore une archive. Dans les administrations publiques, la gestion documentaire repose encore largement sur des supports papier et sur des pratiques de classement hétérogènes, rendant l’accès à l’information difficile, lent et peu fiable. Au \nomMinistere{}, des milliers de documents anciens, dont certains remontent à 1906, devaient être numérisés dans un délai contraint, tout en restant exploitables au quotidien.
+Un document scanné n'est pas encore une archive. Au \nomMinistere{}, le traitement documentaire reposait encore largement sur des opérations manuelles, sur la séparation entre un serveur de fichiers et un index Excel, et sur une recherche trop dépendante du parcours des dossiers. Le fonds est principalement constitué de documents papier numérisés et de PDF, auxquels s'ajoutent d'autres formats produits par l'activité administrative.
 
-L’enjeu principal consistait ainsi à transformer un volume important de documents numérisés en archives structurées, correctement nommées, classées et facilement retrouvables.
+Ce mémoire présente la conception et la réalisation d'une plateforme d'archivage numérique déployée en environnement interne. La chaîne assiste l'acquisition, la reconnaissance du contenu, la proposition de métadonnées, le renommage et le classement. Un agent valide ou corrige ces propositions avant toute intégration définitive au corpus. La recherche hybride et un assistant conversationnel permettent d'interroger les documents à partir de leur contenu, sous contrainte des droits d'accès.
 
-Ce rapport présente la conception et la réalisation d’un système d’archivage numérique déployé en environnement \textit{on-premise}. La solution proposée permet l’ingestion automatique des documents depuis plusieurs scanners via des dossiers partagés, puis déclenche une chaîne de traitement basée sur des techniques d’intelligence artificielle : reconnaissance optique de caractères (OCR), extraction d’informations, structuration des données et génération de métadonnées. Ces traitements permettent de proposer automatiquement un renommage et un classement conformes aux règles définies par le ministère, tout en laissant à l’utilisateur la possibilité de valider ou corriger les résultats via une interface web dédiée.
+L'intelligence artificielle n'y est pas une autorité de décision. Elle prépare une description et un classement ; la responsabilité reste humaine. L'architecture modulaire permet de faire évoluer un moteur d'OCR, un modèle d'embeddings ou un modèle de langage sans reconstruire l'ensemble du système.
 
-L’architecture du système repose sur une approche microservices, garantissant la scalabilité, la résilience et la modularité de la solution. En complément, un assistant conversationnel permet d’interroger le contenu documentaire en langage naturel. Les réponses sont générées à partir d’un contexte extrait des documents archivés, selon une approche de recherche sémantique couplée à la génération augmentée par récupération (\textit{RAG}), améliorant significativement l’accès à l’information.
+L'évaluation menée sur le fonds de production (35\,007 documents ; taux d'échec moyen d'environ 5~\% en exploitation) et sur un échantillon de test de 205 documents montre que la chaîne tient à l'échelle interne. La recherche ramène le document pertinent dans les cinq premiers résultats pour 62~\% des questions du test (MRR de 0,597). Ces chiffres décrivent un fonds distinct du flux annuel d'environ 10\,000 dossiers et du fonds historique. Ils ne permettent pas d'affirmer une précision métier de l'OCR, de la classification ou de l'extraction : le gold du harnais recopie encore les sorties de production. La qualité des scans, un référentiel relu par les agents et la qualité des réponses générées restent des facteurs à approfondir.
 
-Ainsi, la solution mise en place permet d’industrialiser le processus d’archivage numérique en réduisant les tâches manuelles, en améliorant la qualité et la cohérence du classement, et en garantissant la traçabilité des opérations. Elle répond également aux exigences de sécurité et de souveraineté grâce à un déploiement en environnement interne.
-
-\noindent\textbf{Mots-clés :} archivage numérique ; intelligence artificielle ; RAG ; OCR ; administration publique.
+\noindent\textbf{Mots-clés :} archivage numérique ; intelligence artificielle ; GED ; OCR ; RAG ; administration publique.
 
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-A scanned document is not yet an archive. In public administrations, document management still relies heavily on paper-based workflows and heterogeneous filing practices, making access to information difficult, slow, and unreliable. At the \nomMinistere{}, thousands of legacy documents, some dating back to 1906, had to be digitized within a constrained timeframe while remaining usable on a daily basis.
+A scanned document is not yet an archive. At the \nomMinistere{}, document processing still relied largely on manual operations, on the separation between a file server and an Excel index, and on retrieval that depended too heavily on browsing folders. The holdings consist mainly of digitized paper documents and PDFs, together with other formats produced by administrative activity.
 
-The main challenge was therefore to transform a large volume of digitized documents into structured archives that are properly named, consistently classified, and easy to retrieve.
+This thesis presents the design and implementation of a digital archiving platform deployed in an internal environment. The pipeline supports acquisition, content recognition, metadata suggestion, renaming and classification. An officer validates or corrects these suggestions before any document is permanently added to the corpus. Hybrid search and a conversational assistant make it possible to query documents from their content, subject to access-control constraints.
 
-This report presents the design and implementation of an on-premise digital archiving system. The proposed solution enables automatic ingestion of documents from multiple scanners through shared network folders, then triggers an AI-driven processing pipeline: optical character recognition (OCR), information extraction, data structuring, and metadata generation. These capabilities support automated suggestions for file naming and classification according to predefined rules, while allowing users to validate or correct the results through a dedicated web interface.
+Artificial intelligence is not treated as a decision-making authority. It prepares a description and a filing proposal; responsibility remains with the human officer. The modular architecture allows an OCR engine, an embedding model or a language model to be replaced without rebuilding the whole system.
 
-The system architecture follows a microservices approach to ensure scalability, resilience, and modularity. In addition, a conversational assistant allows users to query the document corpus in natural language. Answers are generated from relevant document context using semantic search combined with retrieval-augmented generation (RAG), significantly improving access to information.
+Evaluation on the production holdings (35,007 documents; average operational failure rate of about 5\%) and on a test sample of 205 documents shows that the pipeline holds at internal scale. Search returns the relevant document in the top five results for 62\% of the test questions (MRR of 0.597). These figures describe holdings distinct from the annual flow of about 10,000 files and from the historical fonds. They do not support claims of OCR, classification or extraction accuracy: the evaluation gold still copies production outputs. Scan quality, a human-reviewed reference set and the quality of generated answers remain to be investigated further.
 
-\noindent\textbf{Keywords:} digital archiving; artificial intelligence; RAG; OCR; public administration.
+\noindent\textbf{Keywords:} digital archiving; artificial intelligence; EDM; OCR; RAG; public administration.
 
 \clearpage
 \tableofcontents
@@ -226,57 +273,38 @@ The system architecture follows a microservices approach to ensure scalability, 
 
 % Corps du document (numérotation arabe + en-têtes/pieds de page)
 \pagenumbering{arabic}
-\pagestyle{main}
+\pagestyle{fancy}
 
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
-L'information est aujourd'hui reconnue comme l'une des ressources les plus stratégiques des organisations. Dans les administrations publiques, elle constitue le fondement de l'action administrative, assure la continuité du service public, garantit la transparence des décisions et participe à la préservation de la mémoire institutionnelle. Chaque courrier, rapport, arrêté, contrat, note de service ou document réglementaire représente une trace des activités de l'administration et contribue à la constitution d'un patrimoine documentaire dont la valeur dépasse largement son usage immédiat. Correctement conservé, organisé, sécurisé et exploité, ce patrimoine devient un levier essentiel de gouvernance, de pilotage et d'aide à la décision.
+\markboth{Introduction}{Introduction}
+Dans les administrations publiques, l'information n'est pas un stock passif. Chaque courrier, arrêté, contrat ou note de service est une trace de l'action administrative : il soutient la décision, la continuité du service et la mémoire de l'institution. Une part importante de ce patrimoine reste toutefois sur papier, difficile à classer, à préserver et à retrouver. En parallèle, la transformation numérique a fait croître un fonds hybride, principalement constitué de scans et de PDF, auxquels s'ajoutent d'autres formats produits par l'activité.
 
-Cependant, une part importante de ce patrimoine documentaire demeure encore conservée sous format papier dans de nombreuses administrations publiques. Accumulés pendant plusieurs années, voire plusieurs décennies, ces fonds documentaires représentent une richesse informationnelle considérable, mais leur exploitation reste limitée par les contraintes liées aux supports physiques : difficultés de classement, risques de détérioration, temps nécessaire à la recherche d'informations et absence de mécanismes permettant une exploitation rapide et intelligente des contenus. Ainsi, la préservation et la valorisation de ces archives nécessitent aujourd'hui une approche dépassant la simple conservation physique des documents.
+Numériser ne suffit pas. Les plateformes de gestion électronique des documents (GED) centralisent le stockage, l'indexation et le partage, mais elles interviennent souvent après la capture et restent dépendantes d'opérations manuelles : description, classification, nommage, classement. Dès que les volumes augmentent, notamment lors d'une reprise d'archives papier, ces gestes deviennent longs, coûteux et sources d'incohérences. Le fichier obtenu n'est pas encore une archive exploitable : il doit encore être identifié, enrichi de métadonnées, organisé selon des règles stables et rendu accessible aux personnes autorisées.
 
-L'accélération de la transformation numérique a profondément modifié la manière dont le patrimoine documentaire est produit, traité et conservé. La dématérialisation progressive des procédures administratives, la généralisation des services numériques et l'évolution des outils collaboratifs ont entraîné une croissance continue du volume documentaire produit par les organisations. Parallèlement, les administrations doivent désormais gérer une diversité importante de ressources : documents papier historiques nécessitant une numérisation, fichiers bureautiques, courriers électroniques, images numérisées, feuilles de calcul, présentations, contenus audiovisuels, archives compressées et autres formats numériques hétérogènes. Cette coexistence entre documents physiques à transformer et documents numériques natifs donne naissance à un patrimoine documentaire multimodal dont la gestion constitue un défi majeur pour les systèmes d'information.
+L'intelligence artificielle peut assister une partie de ce travail : reconnaissance optique de caractères, proposition de métadonnées, classification, recherche sémantique, interrogation en langage naturel par génération augmentée par récupération (RAG). Dans des archives publiques, où l'authenticité, l'intégrité, la confidentialité et la traçabilité conditionnent l'acceptabilité de l'outil, elle ne peut toutefois pas décider seule. Elle doit réduire les tâches répétitives sans dessaisir l'agent des opérations qui structurent le fonds.
 
-Face à cette évolution, les plateformes de Gestion Électronique des Documents (GED) se sont progressivement imposées comme des outils essentiels de modernisation des organisations. Elles permettent de centraliser les documents, d'en assurer le stockage, l'indexation, le partage et la conservation tout au long de leur cycle de vie. Toutefois, ces solutions interviennent généralement après la numérisation des documents et restent encore largement dépendantes d'opérations manuelles réalisées par les utilisateurs pour l'indexation, la description des contenus, la classification ou l'organisation des documents. Lorsque les volumes documentaires deviennent importants, notamment lors de projets de numérisation massive d'archives papier, ces opérations deviennent longues, coûteuses et sources d'erreurs, limitant ainsi la capacité des organisations à exploiter efficacement leur patrimoine documentaire.
-
-La problématique ne réside donc plus uniquement dans la conversion des documents papier en fichiers numériques, mais dans la capacité des organisations à transformer ces nouveaux contenus numériques en une ressource informationnelle structurée et exploitable. La numérisation constitue une première étape indispensable, mais elle ne garantit pas à elle seule la valorisation des archives. Les documents obtenus doivent être identifiés, classifiés, enrichis par des métadonnées pertinentes, organisés selon des règles documentaires cohérentes et rendus facilement accessibles aux utilisateurs concernés. La gestion documentaire évolue ainsi d'une logique de simple stockage vers une logique de valorisation intelligente de la connaissance contenue dans les archives.
-
-Les progrès récents de l'intelligence artificielle offrent des perspectives particulièrement prometteuses pour répondre à ces nouveaux défis. Les avancées en reconnaissance optique de caractères (OCR), en vision par ordinateur, en traitement automatique du langage naturel, en apprentissage profond et, plus récemment, en grands modèles de langage (\textit{Large Language Models}) permettent aujourd'hui d'automatiser des tâches auparavant réalisées exclusivement par l'humain. Ces technologies rendent possible l'extraction automatique d'informations depuis des documents numérisés, la génération de métadonnées, la classification intelligente, la reconnaissance d'entités, le renommage automatique des fichiers, la détection de similarités documentaires ainsi que la recherche sémantique dans des corpus volumineux. Les approches fondées sur le \textit{Retrieval-Augmented Generation} (RAG) ouvrent également la voie à de nouvelles formes d'interaction avec les archives, en permettant aux utilisateurs d'interroger leur patrimoine documentaire en langage naturel.
-
-Toutefois, l'intégration de l'intelligence artificielle dans les systèmes documentaires ne peut se limiter à une simple évolution technologique. Dans le domaine des archives publiques, où l'authenticité, l'intégrité, la confidentialité, la disponibilité et la traçabilité des documents constituent des exigences fondamentales, l'intelligence artificielle doit être conçue comme un outil d'assistance au service des archivistes et des gestionnaires de l'information. Elle doit permettre de réduire les tâches répétitives et d'améliorer l'efficacité des traitements documentaires, tout en respectant les principes archivistiques et les règles de gouvernance documentaire.
-
-Au Togo, la modernisation de l'administration publique s'inscrit dans une dynamique de transformation numérique visant à améliorer l'efficacité des services publics, à renforcer la transparence administrative et à promouvoir une meilleure gouvernance de l'information. Dans ce cadre, plusieurs institutions ont engagé des initiatives visant à numériser leurs archives physiques afin de préserver le patrimoine documentaire national et d'en faciliter l'accès. Toutefois, ces projets de numérisation font apparaître de nouveaux défis liés au traitement de grandes quantités de documents numérisés : identification du contenu, classement, indexation, organisation logique des archives et recherche efficace de l'information. La transformation d'un document papier en fichier numérique ne constitue donc qu'une étape intermédiaire ; elle doit être accompagnée de mécanismes intelligents permettant d'exploiter pleinement la valeur informationnelle des archives.
-
-C'est dans ce contexte que s'inscrit le présent mémoire intitulé \textbf{« \rapportTitre{} »}. Ce travail trouve son origine dans un projet de transformation numérique d'un fonds documentaire composé de plusieurs milliers de documents papier issus d'une administration publique togolaise. L'objectif initial était de préserver ces archives physiques par leur numérisation. Cependant, cette opération a rapidement mis en évidence une problématique majeure : une fois les documents convertis en fichiers numériques, leur organisation représentait toujours un défi important.
-
-En effet, le traitement manuel des documents numérisés nécessitait de nombreuses interventions humaines pour l'identification des informations pertinentes, l'extraction des métadonnées, la détermination des catégories documentaires, le renommage des fichiers, l'identification des expéditeurs et leur classement dans une structure archivistique cohérente. Face au volume important des documents traités, ces opérations devenaient particulièrement longues, complexes et susceptibles d'introduire des incohérences dans l'organisation finale des archives.
-
-Afin de répondre à ces défis, ce mémoire propose \textbf{\appNom{}} (\textit{\appDescription{}}), une plateforme intelligente de gestion documentaire multimodale conçue pour accompagner la transformation des archives papier en archives numériques intelligemment organisées. La plateforme intervient dans l'ensemble du cycle de transformation documentaire, depuis l'exploitation des documents issus de la numérisation jusqu'à leur classification, leur organisation et leur recherche avancée. Elle prend également en charge les documents nativement numériques afin de répondre aux besoins actuels des administrations.
-
-\appNom{} repose sur une architecture orientée services intégrant un stockage objet compatible S3 permettant la gestion de ressources documentaires hétérogènes. Les mécanismes d'intelligence artificielle intégrés automatisent notamment l'extraction de métadonnées, la classification documentaire, le renommage intelligent, la reconnaissance d'entités, la recherche sémantique et l'assistance aux utilisateurs, tout en garantissant les exigences de sécurité, de traçabilité et de gouvernance propres aux environnements administratifs.
+C'est dans ce cadre que s'inscrit le présent mémoire, intitulé \textbf{« \rapportTitre{} »}. Il trouve son origine dans un projet de numérisation mené au \nomMinistere{}. Une fois les pièces converties en fichiers, leur organisation restait le goulot d'étranglement : identification, extraction, renommage, classement dans une arborescence, saisie dans un index distinct du stockage. La plateforme proposée assiste cette chaîne, de l'acquisition à la recherche, pour les scans et les PDF comme pour les documents nativement numériques. Les modèles proposent ; un agent valide. L'architecture, orientée services, permet de faire évoluer un moteur d'OCR ou un modèle de langage sans reconstruire l'ensemble.
 
 Cette situation conduit à la problématique suivante :
 
-\textbf{Comment concevoir une plateforme intelligente de gestion documentaire multimodale capable d'accompagner la transformation des archives papier vers des archives numériques intelligemment organisées, tout en exploitant les capacités de l'intelligence artificielle afin d'améliorer la classification, la recherche et la valorisation du patrimoine documentaire de l'administration publique togolaise ?}
+\begin{quote}
+\textbf{\problematiqueMemoire}
+\end{quote}
 
-Pour répondre à cette problématique, ce mémoire poursuit comme objectif principal la conception et la réalisation d'une plateforme intelligente de gestion documentaire multimodale intégrant des techniques d'intelligence artificielle afin d'automatiser le traitement documentaire et d'améliorer la valorisation des archives administratives. Plus spécifiquement, il s'agit d'analyser les besoins liés à la transformation des archives papier, de concevoir une architecture adaptée à un environnement documentaire multimodal, de développer une plateforme fonctionnelle intégrant des mécanismes d'intelligence artificielle et d'évaluer les apports de cette approche dans un contexte réel d'utilisation.
+L'objectif principal est de concevoir et de réaliser une plateforme d'archivage numérique intégrant des techniques d'intelligence artificielle, afin d'assister le traitement, le classement, la conservation et la recherche des documents administratifs, tout en conservant un contrôle humain sur les décisions sensibles. Plus spécifiquement, il s'agit d'analyser les besoins liés à la reprise des archives papier et à l'accueil des fichiers nativement numériques, de concevoir une architecture adaptée à ce fonds, de développer une plateforme fonctionnelle et d'évaluer ses apports dans un contexte réel d'utilisation.
 
-Le présent mémoire est organisé en plusieurs parties. Le premier chapitre présente les fondements de la gestion documentaire intelligente : notions d'information, de document et de patrimoine documentaire, principes d'archivage numérique, évolution des systèmes de GED, multimodalité et technologies d'intelligence artificielle mobilisées. Le deuxième chapitre situe l'étude dans le contexte de la transformation numérique de l'administration publique togolaise et précise la problématique liée au traitement des archives. La partie suivante analyse le fonctionnement documentaire existant au \nomMinistere{} et spécifie les besoins de la plateforme, avant de décrire la conception et la réalisation de \appNom{}, puis l'évaluation, l'exploitation et le bilan de la démarche.
-
-\chapter*{Présentation de Lomé Business School}
-\addcontentsline{toc}{chapter}{Présentation de Lomé Business School}
-Lomé Business School (LBS) est un établissement d’enseignement supérieur situé à Lomé (Togo), engagé dans la formation de cadres et de professionnels capables de répondre aux besoins du tissu économique et institutionnel. L’école propose des parcours de Licence et de Master dans des domaines liés au management, à la finance, au marketing et aux systèmes d’information, avec une orientation professionnalisante fondée sur l’articulation entre enseignements théoriques et mises en situation pratiques.
-
-Dans le cadre du Master professionnel en Systèmes d’Information, la formation vise à doter les étudiants de compétences en conception, développement, déploiement et gouvernance des systèmes d’information. Elle combine des apports académiques (méthodologie de recherche, architecture logicielle, bases de données, sécurité) et une immersion professionnelle via le stage de fin de cycle. Le mémoire constitue l’aboutissement de ce parcours : il doit articuler une problématique scientifique ou technique, une revue des connaissances existantes et une expérience de terrain, tout en respectant les normes de rédaction et de validation définies par l’établissement.
-
-Le présent travail s’inscrit pleinement dans cette logique. Il a été réalisé sous la direction de M. KONAN Arnaud, dans le cadre d’une mission menée au \nomMinistere{}, et répond aux exigences du diplôme de Master professionnel en systèmes d’information de Lomé Business School. Il illustre la volonté de l’école de former des profils capables de concevoir des solutions numériques sobres, sécurisées et adaptées aux contraintes des organisations publiques.
+Le mémoire s'organise comme suit. Le premier chapitre présente les fondements de la gestion documentaire intelligente. Le deuxième situe l'étude dans le contexte de la transformation numérique de l'administration publique togolaise. Le troisième précise la méthodologie. L'analyse de l'existant au \nomMinistere{}, la conception, la réalisation et le bilan occupent ensuite les chapitres suivants.
 
 \part{Fondements théoriques et contexte de l'étude}
-\chapter{Fondements de la gestion documentaire intelligente}
+\thispagestyle{plain}
+\chapter[Fondements de la gestion documentaire]{Fondements de la gestion documentaire intelligente}
+\label{ch:fondements}
 La gestion documentaire constitue un enjeu essentiel pour les organisations qui doivent produire, conserver, retrouver et exploiter un volume croissant d'informations. L'évolution des pratiques administratives et la transformation numérique ont progressivement fait évoluer les méthodes de gestion des documents, depuis les approches principalement fondées sur le support papier vers des environnements numériques capables de traiter des ressources documentaires hétérogènes.
 
 Cette évolution ne concerne pas uniquement le stockage des documents. Elle touche également leur identification, leur description, leur classement, leur conservation et leur exploitation. Les systèmes de Gestion Électronique des Documents (GED) ont ainsi apporté des mécanismes permettant de structurer et de sécuriser les ressources documentaires. Les progrès de l'intelligence artificielle ouvrent aujourd'hui une nouvelle étape en permettant d'automatiser certaines opérations d'analyse et de traitement documentaire.
 
-Ce chapitre présente les principaux concepts nécessaires à la compréhension de cette évolution. Il aborde successivement la relation entre information, document et patrimoine documentaire, les principes de la gestion documentaire et de l'archivage numérique, l'évolution des systèmes de GED vers des plateformes plus intelligentes, la gestion des documents multimodaux et les principales technologies d'intelligence artificielle appliquées au traitement documentaire.
+Ce chapitre présente les principaux concepts nécessaires à la compréhension de cette évolution. Il aborde successivement la relation entre information, document et patrimoine documentaire, les principes de la gestion documentaire et de l'archivage numérique, l'évolution des systèmes de GED vers des plateformes plus intelligentes, le traitement des scans et des PDF, y compris lorsqu'ils combinent image et texte, et les principales technologies d'intelligence artificielle appliquées au traitement documentaire.
 
 \section{De l'information au patrimoine documentaire}
 La compréhension de la gestion documentaire repose d'abord sur la distinction entre l'information, le document et le patrimoine documentaire. Ces trois notions sont liées : l'information constitue le contenu à exploiter, le document permet de la fixer et de la transmettre, tandis que l'ensemble des documents produits et conservés par une organisation forme progressivement son patrimoine documentaire.
@@ -291,11 +319,11 @@ La transformation numérique a considérablement augmenté les volumes d'informa
 \subsection{Le document : support de l'information}
 Un document est un support sur lequel une information est fixée afin d'être conservée, transmise ou exploitée. Il peut être physique ou numérique et prendre des formes variées : texte, image, tableau, présentation, courrier électronique, fichier audio ou vidéo.
 
-Conformément à la norme \citer{iso15489}{ISO~15489-1:2016}, les documents d'activité doivent être gérés indépendamment de leur structure ou de leur forme, dès lors qu'ils constituent une preuve ou une trace des activités de l'organisation. Cette approche permet de ne pas limiter le concept de document aux seuls fichiers bureautiques ou aux formats PDF.
+Conformément à la norme \citer{iso15489}{\mbox{ISO 15489-1:2016}}, les documents d'activité doivent être gérés indépendamment de leur structure ou de leur forme, dès lors qu'ils constituent une preuve ou une trace des activités de l'organisation. Cette approche permet de ne pas limiter le concept de document aux seuls fichiers bureautiques ou aux formats PDF.
 
 Dans les environnements numériques, la facilité de production et de duplication des documents entraîne une augmentation importante des volumes documentaires. La gestion de ces ressources nécessite alors de disposer d'informations permettant de les identifier, de les contextualiser et de les retrouver.
 
-La valeur d'un document ne dépend donc pas uniquement de son contenu. Elle dépend également de son contexte, de son origine, de son authenticité, de son intégrité et des informations qui permettent de le retrouver et de l'exploiter, conformément aux principes rappelés par la norme \citer{iso15489}{ISO~15489-1:2016}.
+La valeur d'un document ne dépend donc pas uniquement de son contenu. Elle dépend également de son contexte, de son origine, de son authenticité, de son intégrité et des informations qui permettent de le retrouver et de l'exploiter, conformément aux principes rappelés par la norme \citer{iso15489}{\mbox{ISO 15489-1:2016}}.
 
 \subsection{Le patrimoine documentaire : mémoire des organisations}
 Les documents produits ou reçus dans le cadre des activités d'une organisation constituent progressivement un patrimoine documentaire. Certains sont conservés en raison de leur valeur administrative, juridique, historique ou informationnelle.
@@ -310,19 +338,19 @@ La gestion documentaire regroupe les pratiques et les mécanismes permettant de 
 \subsection{Les principes de la gestion documentaire}
 La gestion documentaire vise notamment à organiser les documents, contrôler leur accès, faciliter leur recherche et garantir leur conservation selon les règles définies par l'organisation.
 
-La norme \citer{iso15489}{ISO~15489-1:2016} met l'accent sur la maîtrise du cycle de vie des documents d'activité et sur les propriétés qui en garantissent la valeur dans le temps : authenticité, fiabilité, intégrité et exploitabilité. Elle précise également les principes relatifs à la création, à la capture et à la gestion des documents, ainsi qu'aux politiques, responsabilités et systèmes documentaires associés.
+La norme \citer{iso15489}{\mbox{ISO 15489-1:2016}} met l'accent sur la maîtrise du cycle de vie des documents d'activité et sur les propriétés qui en garantissent la valeur dans le temps : authenticité, fiabilité, intégrité et exploitabilité. Elle précise également les principes relatifs à la création, à la capture et à la gestion des documents, ainsi qu'aux politiques, responsabilités et systèmes documentaires associés.
 
-Ces principes nécessitent des règles de classement, des droits d'accès et des mécanismes de traçabilité adaptés. Les métadonnées y jouent un rôle central : la norme \citer{iso23081}{ISO~23081-1:2017} en définit les principes de gestion afin d'assurer l'identification, le contexte et l'exploitabilité des documents d'activité.
+Ces principes nécessitent des règles de classement, des droits d'accès et des mécanismes de traçabilité adaptés. Les métadonnées y jouent un rôle central : la norme \citer{iso23081}{\mbox{ISO 23081-1:2017}} en définit les principes de gestion afin d'assurer l'identification, le contexte et l'exploitabilité des documents d'activité.
 
 \subsection{De la capture numérique à l'archivage numérique}
-La transition d'un document physique vers un environnement numérique commence par sa capture. Celle-ci consiste à produire une représentation numérique du document, notamment au moyen d'un dispositif de numérisation. Dans la logique de la norme \citer{iso15489}{ISO~15489-1:2016}, la capture constitue une étape de gestion documentaire, et non une fin en soi.
+La transition d'un document physique vers un environnement numérique commence par sa capture. Celle-ci consiste à produire une représentation numérique du document, notamment au moyen d'un dispositif de numérisation. Dans la logique de la norme \citer{iso15489}{\mbox{ISO 15489-1:2016}}, la capture constitue une étape de gestion documentaire, et non une fin en soi.
 
-Numérisation et archivage numérique ne se confondent donc pas. Le fichier obtenu doit encore pouvoir être identifié, décrit, classé, stocké et retrouvé. L'archivage numérique ajoute des exigences de conservation et d'accès dans le temps. Le modèle de référence OAIS (\citer{iso14721}{ISO~14721:2025}) définit un système d'archivage comme un ensemble combinant matériel, logiciel, informations, politiques et processus, mis en œuvre afin de préserver l'information et de la rendre disponible à une communauté désignée.
+Numérisation et archivage numérique ne se confondent donc pas. Le fichier obtenu doit encore pouvoir être identifié, décrit, classé, stocké et retrouvé. L'archivage numérique ajoute des exigences de conservation et d'accès dans le temps. Le modèle de référence OAIS (\citer{iso14721}{\mbox{ISO 14721:2025}}) définit un système d'archivage comme un ensemble combinant matériel, logiciel, informations, politiques et processus, mis en œuvre afin de préserver l'information et de la rendre disponible à une communauté désignée.
 
 Les bonnes pratiques de préservation numérique rappellent par ailleurs que l'évolution technologique peut rendre des contenus inutilisables si leur environnement de lecture devient obsolète (\citer{dpc}{Digital Preservation Coalition (s.d.)}). La valeur d'un document numérique dépend ainsi de son organisation, de ses métadonnées et des dispositifs qui en assurent la conservation.
 
 \subsection{Les exigences de l'archivage numérique}
-L'archivage numérique doit permettre de maintenir les documents accessibles et exploitables sur la durée tout en préservant leurs caractéristiques essentielles. Ces exigences rejoignent les propriétés rappelées par la norme \citer{iso15489}{ISO~15489-1:2016} et se déclinent notamment ainsi :
+L'archivage numérique doit permettre de maintenir les documents accessibles et exploitables sur la durée tout en préservant leurs caractéristiques essentielles. Ces exigences rejoignent les propriétés rappelées par la norme \citer{iso15489}{\mbox{ISO 15489-1:2016}} et se déclinent notamment ainsi :
 \begin{itemize}
   \item l'authenticité, permettant d'établir qu'un document est bien celui qu'il prétend être ;
   \item l'intégrité, garantissant que son contenu n'a pas été altéré de manière non autorisée ;
@@ -331,7 +359,7 @@ L'archivage numérique doit permettre de maintenir les documents accessibles et 
   \item l'exploitabilité, permettant de retrouver et d'interpréter l'information dans le temps.
 \end{itemize}
 
-Le modèle OAIS (\citer{iso14721}{ISO~14721:2025}) complète cette perspective en précisant les responsabilités liées à la conservation et à l'accessibilité à long terme, tandis que \citer{dpc}{Digital Preservation Coalition (s.d.)} met en évidence les risques technologiques et organisationnels associés à l'obsolescence des formats et des environnements de lecture. L'archivage numérique ne peut donc être réduit à une simple fonction de stockage : il suppose une organisation cohérente des documents, de leurs métadonnées et des règles qui encadrent leur conservation.
+Le modèle OAIS (\citer{iso14721}{\mbox{ISO 14721:2025}}) complète cette perspective en précisant les responsabilités liées à la conservation et à l'accessibilité à long terme, tandis que \citer{dpc}{Digital Preservation Coalition (s.d.)} met en évidence les risques technologiques et organisationnels associés à l'obsolescence des formats et des environnements de lecture. L'archivage numérique ne peut donc être réduit à une simple fonction de stockage : il suppose une organisation cohérente des documents, de leurs métadonnées et des règles qui encadrent leur conservation.
 
 \subsection{Les limites des approches traditionnelles à grande échelle}
 Lorsque les volumes documentaires restent limités, les opérations de description, de classement et d'indexation peuvent être réalisées manuellement. Leur maintien devient plus difficile lorsque le nombre de documents augmente et que les ressources deviennent plus hétérogènes.
@@ -355,18 +383,16 @@ Les travaux sur la compréhension automatique des documents illustrent cette év
 
 Le système documentaire ne se limite alors plus seulement à conserver et à retrouver des documents : il peut aussi assister leur traitement et leur exploitation.
 
-\section{La gestion documentaire multimodale}
-Les documents gérés par les organisations ne se limitent plus à du texte brut. Ils combinent souvent plusieurs formes de contenu : texte, tableaux, images, éléments graphiques, parfois son ou vidéo. Dans le cadre de ce mémoire, la multimodalité désigne surtout la coexistence, au sein d'une même ressource, de modalités textuelles et visuelles, typiquement une image de document scanné, sa mise en page et le texte qui peut en être extrait.
+\section{Scans, PDF et autres formats documentaires}
+Le fonds concerné par cette étude est d'abord constitué de documents papier numérisés et de fichiers PDF. C'est sur ces pièces que portent l'essentiel du volume, de la difficulté d'extraction et du besoin d'assistance. D'autres formats existent toutefois dans l'activité administrative : fichiers bureautiques, parfois audio ou vidéo. Ils doivent pouvoir entrer dans la même chaîne, sans en déplacer le centre de gravité.
 
-\subsection{Les différentes modalités documentaires}
-Une ressource documentaire peut être constituée d'une ou plusieurs modalités. Un document numérisé combine par exemple une image du support original et du texte obtenu après reconnaissance de caractères. Un document nativement numérique peut, lui, associer texte, tableaux et illustrations selon son format et sa structure.
+\subsection{Image, texte et mise en page}
+Un document scanné combine une image du support original et, après reconnaissance de caractères, un texte plus ou moins exploitable. Un PDF nativement numérique peut déjà porter une couche texte, tout en conservant une mise en page, des tableaux ou des illustrations. Dans les deux cas, une approche limitée au seul fichier, sans extraction du contenu, laisse le classement et la recherche dépendants du nom ou du dossier.
 
-La gestion d'un patrimoine documentaire doit donc prendre en compte cette diversité. Les modèles multimodaux tels que LayoutLM et LayoutLMv2 (\citer{xu2020}{Xu et al., 2020} ; \citer{xu2021}{Xu et al., 2021}) l'illustrent en combinant texte, mise en page et image pour analyser des documents visuellement riches.
+Les modèles multimodaux tels que LayoutLM et LayoutLMv2 (\citer{xu2020}{Xu et al., 2020} ; \citer{xu2021}{Xu et al., 2021}) montrent qu'il est possible d'exploiter conjointement le texte, la mise en page et l'image. Ils éclairent un enjeu réel pour les scans peu contrastés ou visuellement riches. Ils ne constituent pas, pour autant, le cœur opérationnel de la solution réalisée, présentée plus loin.
 
-\subsection{Les enjeux de la multimodalité}
-Une approche limitée au seul texte risque de perdre une partie de l'information portée par la structure visuelle, un tableau ou une image. LayoutLMv2 (\citer{xu2021}{Xu et al., 2021}) montre précisément que la compréhension d'un document ne repose pas uniquement sur son contenu textuel, mais aussi sur sa mise en page et sur ses éléments visuels.
-
-La gestion documentaire multimodale nécessite ainsi des mécanismes capables de traiter ces différentes formes de contenu et, lorsque cela est utile, de les exploiter conjointement. Cette capacité apparaît particulièrement utile pour les systèmes documentaires contemporains, lorsque les fonds mêlent ressources issues de supports physiques et documents nativement numériques.
+\subsection{Une chaîne unique pour un fonds hybride}
+Le besoin immédiat du ministère est de traiter de manière homogène les scans et les PDF, qu'ils soient issus de la capture ou nativement numériques. La capacité à transcrire un enregistrement audio ou à extraire le texte d'un fichier Word vient en complément. La multimodalité, dans ce mémoire, désigne donc cette coexistence de supports, et non l'ambition de tout analyser par un unique modèle vision-langage.
 
 \section{Intelligence artificielle appliquée au traitement documentaire}
 L'intelligence artificielle apporte de nouvelles possibilités d'automatisation au traitement documentaire. Elle permet notamment d'analyser des contenus qui nécessitaient auparavant une intervention humaine systématique.
@@ -394,7 +420,7 @@ Le \textit{Retrieval-Augmented Generation} (RAG) associe cette capacité à un m
 Cette approche permet d'envisager des interactions en langage naturel avec de grands corpus documentaires, tout en maintenant un lien entre les réponses produites et les sources disponibles.
 
 \subsection{Apports de l'intelligence artificielle dans la gestion documentaire}
-Ces technologies peuvent être combinées pour assister différentes opérations du traitement documentaire. L'OCR rend exploitable le texte contenu dans une image (\citer{smith2007}{Smith, 2007}) ; les modèles de langage, fondés sur l'architecture Transformer (\citer{vaswani2017}{Vaswani et al., 2017}), interprètent et génèrent du contenu textuel ; les \textit{embeddings} assurent une représentation sémantique (\citer{reimers2019}{Reimers et Gurevych, 2019}) ; le RAG associe recherche et génération (\citer{lewis2020}{Lewis et al., 2020}) ; les modèles multimodaux tels que LayoutLM prennent en compte conjointement le texte, la structure et l'image (\citer{xu2020}{Xu et al., 2020} ; \citer{xu2021}{Xu et al., 2021}).
+Ces technologies peuvent être combinées pour assister différentes opérations du traitement documentaire. L'OCR rend exploitable le texte contenu dans une image de scan ou de PDF (\citer{smith2007}{Smith, 2007}) ; les modèles de langage, fondés sur l'architecture Transformer (\citer{vaswani2017}{Vaswani et al., 2017}), interprètent et génèrent du contenu textuel ; les \textit{embeddings} assurent une représentation sémantique (\citer{reimers2019}{Reimers et Gurevych, 2019}) ; le RAG associe recherche et génération (\citer{lewis2020}{Lewis et al., 2020}). Les modèles multimodaux tels que LayoutLM restent une référence pour les documents visuellement riches (\citer{xu2020}{Xu et al., 2020} ; \citer{xu2021}{Xu et al., 2021}), sans être retenus ici comme moteur principal.
 
 L'intelligence artificielle ne constitue cependant pas une solution autonome. Son efficacité dépend de la qualité des documents, des données disponibles, des règles de gestion et des mécanismes de validation mis en place. Elle doit être envisagée comme un moyen d'assistance intégré à un système documentaire maîtrisé, plutôt que comme un remplacement des principes de gestion documentaire.
 
@@ -433,20 +459,29 @@ Embeddings / RAG &
 Recherche sémantique et interrogation en langage naturel &
 Dépendance à la qualité de l'indexation et du corpus &
 Soigner la constitution et l'indexation du fonds \\
-Modèles multimodaux &
+Modèles visuels (LayoutLM) &
 Prise en compte conjointe du texte, de la structure et de l'image &
-Complexité technique et coût de mise en œuvre plus élevés &
-Pertinents pour les documents scannés et visuellement riches \\
+Coût et complexité élevés pour un déploiement interne &
+Éclairent les scans difficiles ; Tesseract retenu pour le fonds principal \\
 \bottomrule
 \end{tabularx}
 \endgroup
 \end{table}
 
-La littérature montre donc une évolution allant du stockage documentaire vers l'analyse et l'exploitation automatisées du contenu. Toutefois, ces approches répondent généralement à des dimensions spécifiques du traitement documentaire. Leur combinaison au sein d'une plateforme prenant en charge la capture de documents physiques, les documents nativement numériques, leur organisation, leur conservation et leur exploitation constitue un problème d'ingénierie et de conception qui reste à traiter dans le contexte de cette étude.
+La littérature montre donc une évolution allant du stockage documentaire vers l'analyse et l'exploitation automatisées du contenu. Ces approches ne se substituent toutefois pas les unes aux autres, et aucune n'équivaut, à elle seule, à la chaîne dont le ministère a besoin.
 
-Ces constats fournissent les fondements théoriques nécessaires à l'analyse du contexte dans lequel s'inscrit cette étude. Le chapitre suivant examine ce contexte à travers la transformation numérique de l'administration publique togolaise, la place des archives administratives et la formulation de la problématique de l'étude.
+Les systèmes de GED, dès les travaux de \citer{sprague1995}{Sprague (1995)}, centralisent le stockage, le classement et la recherche. Ils laissent cependant largement à l'utilisateur le soin d'indexer et de classer. C'est précisément la situation observée au \nomMinistere{}, où le serveur de fichiers et l'index Excel assurent une conservation, mais pas une assistance à la description. La solution réalisée ne prétend pas inventer une GED. Elle vise à assister les opérations qui, dans une GED classique, restent manuelles : extraction, nommage, proposition de classement, sous validation humaine.
 
-\chapter{Contexte de l'étude et problématique de la gestion des archives administratives}
+Le modèle OAIS (\citer{iso14721}{\mbox{ISO 14721:2025}}) fournit un cadre de référence pour la conservation et l'accès dans le temps. Il oriente les exigences d'intégrité, d'exploitabilité et de communauté désignée. La plateforme réalisée n'en est pas une implémentation complète : elle ne met pas en œuvre les paquets d'information SIP, AIP et DIP, ni une politique de migration de formats. Elle s'inscrit plutôt dans une GED assistée par intelligence artificielle, qui reprend certains principes archivistiques (métadonnées, traçabilité, contrôle d'accès, empreinte d'intégrité) sans se substituer à un système d'archivage pérenne au sens strict de l'OAIS.
+
+Les modèles de compréhension documentaire tels que LayoutLM (\citer{xu2020}{Xu et al., 2020} ; \citer{xu2021}{Xu et al., 2021}) sont pertinents pour des pages visuellement riches. Ils n'ont pas été retenus comme moteur principal, pour des raisons de déploiement interne, de coût et de couverture du fonds réel, largement composé de scans et de PDF de qualité variable. La réalisation s'appuie sur Tesseract (\citer{smith2007}{Smith, 2007}), complété par une heuristique de qualité et, le cas échéant, par un modèle de vision. LayoutLM demeure une piste d'évolution pour les mises en page les plus difficiles, non le fondement de la chaîne actuelle.
+
+Enfin, les LLM et le RAG (\citer{lewis2020}{Lewis et al., 2020}) rendent possible une interrogation en langage naturel, à condition que la récupération respecte les droits (\citer{namer2024}{Namer et al., 2024} ; \citer{owasp2025}{OWASP, 2025}) et que l'agent puisse vérifier les sources (\citer{nist2024}{NIST, 2024}). L'apport distinctif de cette étude n'est donc pas un nouveau modèle, mais l'intégration, dans un même dispositif ministériel, de l'extraction, du classement déterministe, de la validation humaine et d'une recherche ancrée dans le corpus.
+
+Ces constats fournissent les fondements théoriques nécessaires à l'analyse du contexte. Le chapitre suivant examine la transformation numérique de l'administration publique togolaise, la place des archives administratives et la formulation de la problématique.
+
+\chapter[Contexte de l'étude]{Contexte de l'étude et problématique de la gestion des archives administratives}
+\label{ch:contexte}
 La transformation numérique de l'administration togolaise modifie progressivement les modes de production, de circulation et de conservation de l'information. Cette évolution ne fait cependant pas disparaître les fonds documentaires constitués au fil des années sur support papier. Dans de nombreuses administrations, ces documents continuent de représenter une part importante du patrimoine informationnel et doivent être préservés tout en devenant plus facilement accessibles et exploitables.
 
 Le présent chapitre situe l'étude dans ce contexte. Il s'appuie notamment sur le cas du \nomMinistere{}, où un fonds d'archives papier, hétérogène et classé sans nomenclature standardisée, devait être transformé en ressources numériques organisées et exploitables dans un délai contraint. L'analyse distingue la capture numérique de l'organisation documentaire, met en évidence les limites du traitement manuel, puis conduit à la formulation de la problématique et des objectifs de l'étude.
@@ -454,7 +489,7 @@ Le présent chapitre situe l'étude dans ce contexte. Il s'appuie notamment sur 
 \section{Une administration togolaise engagée dans sa transformation numérique}
 La transformation numérique constitue un axe important de modernisation de l'administration publique togolaise. Les initiatives nationales portent notamment sur le développement des infrastructures numériques, la dématérialisation des procédures, la mise en place de services publics numériques et l'amélioration de la gouvernance de l'information. La stratégie \textit{Togo Digital 2025} formalise cette orientation (\citer{togodigital2025}{République togolaise, s.d.}), tandis que des programmes tels que ProDigiT accompagnent le renforcement des usages numériques dans les institutions (\citer{prodigit}{GIZ et LuxDev, s.d.}).
 
-Cette dynamique implique de maîtriser non seulement les outils, mais aussi les informations produites dans le cadre des activités publiques. La gestion documentaire en constitue un composant essentiel, conformément aux principes de maîtrise des documents d'activité (\citer{iso15489}{ISO~15489-1:2016}).
+Cette dynamique implique de maîtriser non seulement les outils, mais aussi les informations produites dans le cadre des activités publiques. La gestion documentaire en constitue un composant essentiel, conformément aux principes de maîtrise des documents d'activité (\citer{iso15489}{\mbox{ISO 15489-1:2016}}).
 
 Le \nomMinistere{} s'inscrit dans cette orientation. Chargé d'accompagner la modernisation de l'administration, il dispose lui-même d'un patrimoine documentaire important, en partie encore conservé sur support papier. La modernisation de ses systèmes d'information doit donc prendre en compte à la fois les documents nouvellement produits sous forme numérique et les fonds physiques existants.
 
@@ -462,7 +497,7 @@ Le \nomMinistere{} s'inscrit dans cette orientation. Chargé d'accompagner la mo
 Les administrations publiques produisent et reçoivent quotidiennement des documents nécessaires à l'exercice de leurs missions. Ces documents, lorsqu'ils sont conservés comme archives, participent à la continuité administrative, à la justification des actes, au contrôle et à la mémoire institutionnelle. \citer{unesco2015}{L'UNESCO (2015)} rappelle que le patrimoine documentaire doit être préservé, protégé et rendu accessible, y compris sous forme numérique.
 
 \subsection{La valeur des archives administratives}
-La valeur des archives repose sur leur contenu, mais également sur leur authenticité, leur intégrité, leur contexte de production et leur capacité à être retrouvées et exploitées (\citer{iso15489}{ISO~15489-1:2016}). Dans une administration publique, elles peuvent servir de preuves, soutenir le fonctionnement des services et permettre de retracer l'évolution des décisions.
+La valeur des archives repose sur leur contenu, mais également sur leur authenticité, leur intégrité, leur contexte de production et leur capacité à être retrouvées et exploitées (\citer{iso15489}{\mbox{ISO 15489-1:2016}}). Dans une administration publique, elles peuvent servir de preuves, soutenir le fonctionnement des services et permettre de retracer l'évolution des décisions.
 
 \subsection{La situation observée au \nomMinistere{}}
 Dans le cadre de cette étude, le fonds concerné est conservé dans une salle d'archives physique du \nomMinistere{}. Les documents y sont classés manuellement dans des dossiers, sans nomenclature standardisée, ce qui rend leur organisation, leur recherche et leur suivi difficiles. La conservation exclusivement physique expose également le fonds à des risques de perte, de détérioration ou d'altération au fil du temps.
@@ -470,7 +505,7 @@ Dans le cadre de cette étude, le fonds concerné est conservé dans une salle d
 La diversité typologique du fonds renforce cette complexité. Y figurent notamment des lettres d'invitation, d'information ou de remerciement, des arrêtés, décrets et lois, des bordereaux, des courriers entrants et sortants, des notes de service, des attestations de prise de service, des contrats et des offres de marchés. La diversité temporelle du patrimoine documentaire est également notable : certains documents conservés remontent à 1906, témoignant d'une profondeur historique de près de 120 ans. Dans ce contexte, la conservation du support physique doit être complétée par des mécanismes facilitant l'accès et l'exploitation de l'information.
 
 \subsection{De la capture du document papier à l'archive numérique}
-La capture numérique constitue une première étape permettant de transformer un document physique en une représentation numérique, notamment sous forme d'image ou de fichier PDF. Elle ne suffit toutefois pas à constituer une archive numérique organisée. Le document doit encore être identifié, décrit, associé à des métadonnées pertinentes et intégré dans une structure de classement permettant sa conservation et sa recherche (\citer{iso15489}{ISO~15489-1:2016} ; \citer{iso14721}{ISO~14721:2025}).
+La capture numérique constitue une première étape permettant de transformer un document physique en une représentation numérique, notamment sous forme d'image ou de fichier PDF. Elle ne suffit toutefois pas à constituer une archive numérique organisée. Le document doit encore être identifié, décrit, associé à des métadonnées pertinentes et intégré dans une structure de classement permettant sa conservation et sa recherche (\citer{iso15489}{\mbox{ISO 15489-1:2016}} ; \citer{iso14721}{\mbox{ISO 14721:2025}}).
 
 Le processus peut être représenté de manière simplifiée par la figure~\ref{fig:chaine-transformation-archives}.
 
@@ -490,7 +525,7 @@ Parallèlement à la reprise du fonds papier, l'administration continue de produ
 La transformation des archives papier en ressources numériques suppose plusieurs opérations par document. Lorsque le volume et la diversité augmentent, ces opérations deviennent difficiles à maintenir uniquement à la main.
 
 \subsection{Identification, description et classement}
-Avant d'être classé, un document doit pouvoir être caractérisé : type, expéditeur, numéro d'enregistrement, objet, date, chemin d'archivage, etc. Les métadonnées jouent ici un rôle central pour conserver le contexte et faciliter la recherche (\citer{iso23081}{ISO~23081-1:2017}).
+Avant d'être classé, un document doit pouvoir être caractérisé : type, expéditeur, numéro d'enregistrement, objet, date, chemin d'archivage, etc. Les métadonnées jouent ici un rôle central pour conserver le contexte et faciliter la recherche (\citer{iso23081}{\mbox{ISO 23081-1:2017}}).
 
 Dans le cahier des charges du projet, ces besoins se précisent concrètement. Après capture, le système doit notamment extraire l'expéditeur, le numéro d'enregistrement et l'objet (le cas échéant en le synthétisant à partir du contenu), puis renommer le fichier selon une nomenclature du type \texttt{[Expéditeur] - [Numéro] - [Objet]}, et le classer dans une arborescence organisée par type de document. En l'absence d'assistance, chaque pièce doit être examinée individuellement, ce qui allonge fortement les délais.
 
@@ -504,7 +539,7 @@ Ces constats montrent que la capture numérique doit être accompagnée de méca
 \section{Vers une approche intelligente du traitement documentaire}
 Plutôt que de considérer la capture comme l'étape finale, il devient possible d'utiliser des techniques d'intelligence artificielle pour assister les opérations qui la suivent.
 
-Un scanner produit une représentation numérique, mais ne fournit pas automatiquement l'expéditeur, le numéro d'enregistrement, l'objet ou le type documentaire. L'OCR peut rendre le contenu textuel exploitable (\citer{smith2007}{Smith, 2007}). Des modèles d'analyse documentaire peuvent ensuite contribuer à l'extraction d'informations, à la proposition de métadonnées et à la classification (\citer{xu2020}{Xu et al., 2020} ; \citer{xu2021}{Xu et al., 2021}). Ces mécanismes permettent également d'assister le renommage et le classement dans l'arborescence définie par l'organisation.
+Un scanner produit une représentation numérique, mais ne fournit pas automatiquement l'expéditeur, le numéro d'enregistrement, l'objet ou le type documentaire. L'OCR peut rendre le contenu textuel exploitable (\citer{smith2007}{Smith, 2007}). Des modèles d'analyse documentaire, illustrés notamment par LayoutLM (\citer{xu2020}{Xu et al., 2020} ; \citer{xu2021}{Xu et al., 2021}), peuvent contribuer à l'extraction d'informations et à la classification. Dans la solution retenue, ces opérations sont assistées à partir du texte reconnu, puis confirmées par un agent.
 
 L'objectif n'est toutefois pas de supprimer l'intervention humaine. Dans un contexte administratif, les résultats produits automatiquement doivent pouvoir être vérifiés, corrigés et validés (notamment la date d'arrivée et les champs incomplets) avant confirmation définitive. Au-delà du traitement unitaire, les approches de recherche sémantique et de génération augmentée par récupération ouvrent aussi la voie à une interrogation plus fine du corpus (\citer{lewis2020}{Lewis et al., 2020}).
 
@@ -525,29 +560,33 @@ Lorsque les volumes et la diversité des pièces augmentent, le traitement manue
 Dans ce contexte, la question de recherche retenue est la suivante :
 
 \begin{quote}
-\textbf{Comment concevoir une plateforme intelligente capable d'accompagner la transformation de documents physiques en archives numériques organisées, tout en assurant leur conservation, leur recherche et leur exploitation, et en permettant également la prise en charge des futurs documents nativement numériques~?}
+\textbf{\problematiqueMemoire}
 \end{quote}
 
 \subsection{Objectif général}
-L'objectif général de cette étude est de concevoir et réaliser une plateforme intelligente de gestion documentaire multimodale capable d'assister la transformation des documents physiques en archives numériques organisées et d'assurer la gestion de documents nativement numériques, en mobilisant des techniques d'intelligence artificielle pour améliorer leur traitement, leur organisation, leur recherche et leur exploitation.
+L'objectif général de cette étude est de concevoir et de réaliser une plateforme d'archivage numérique capable d'assister le traitement, le classement, la conservation et la recherche des documents administratifs, principalement des scans et des PDF, ainsi que les fichiers nativement numériques, tout en conservant un contrôle humain sur les décisions sensibles.
 
 \subsection{Objectifs spécifiques}
 Il s'agit plus spécifiquement de :
 \begin{itemize}
   \item analyser les besoins issus du contexte ministériel et du cahier des charges de numérisation ;
-  \item concevoir une architecture permettant la capture, le traitement et la conservation de documents issus de supports et de formats différents ;
-  \item automatiser ou assister l'extraction des informations clés, le renommage normalisé et le classement par type de document ;
+  \item concevoir une architecture permettant l'acquisition, le traitement et la conservation de documents issus de la capture et de fichiers nativement numériques ;
+  \item assister l'extraction des informations clés, le renommage normalisé et le classement par type de document ;
   \item mettre en place des mécanismes de validation humaine, de recherche, de traçabilité et de contrôle d'accès ;
   \item évaluer l'apport de cette approche dans un contexte réel de gestion d'archives administratives.
 \end{itemize}
 
-Ces objectifs orientent la suite du mémoire vers l'analyse de l'existant, la conception de la solution et son évaluation dans le contexte du \nomMinistere{}.
+Ces objectifs orientent la suite du mémoire vers la méthodologie, l'analyse de l'existant, la conception de la solution et son évaluation dans le contexte du \nomMinistere{}.
 
-\part{De l'analyse des besoins à la conception de la solution d'archivage intelligent}
-\chapter{Analyse de l'existant et spécification des besoins}
-Au \nomMinistere{}, le traitement des archives repose encore largement sur une chaîne d'opérations manuelles. Environ cinq secrétaires y participent, pour un volume moyen estimé à 10\,000 dossiers par an (courriers entrants, sortants et pièces internes). Les documents papier sont numérisés, déposés sur un serveur Windows selon une arborescence prédéfinie, puis référencés dans un fichier Excel. Cette organisation assure une conservation et une recherche de base ; elle devient cependant plus difficile à tenir lorsque le volume augmente et que les pièces restent hétérogènes.
+\part{Méthodologie, analyse des besoins et conception de la solution}
+\thispagestyle{plain}
+\input{chapitres/methodologie}
 
-L'observation du processus en place, les échanges avec les agents chargés du traitement et le cahier des charges du projet de numérisation permettent de décrire ce fonctionnement, d'en préciser les limites opérationnelles, puis de formuler les exigences d'une solution plus intégrée.
+\chapter[Analyse de l'existant]{Analyse de l'existant et spécification des besoins}
+\label{ch:existant}
+Au \nomMinistere{}, le traitement des archives repose encore largement sur une chaîne d'opérations manuelles. D'après l'observation du service et les échanges avec les personnes concernées, cinq secrétaires assurent le flux courant, pour un volume moyen estimé à 10\,000 dossiers par an (courriers entrants, sortants et pièces internes) ; cinq agents ont été mobilisés pour l'archivage du fonds documentaire. Les documents papier sont numérisés, déposés sur un serveur Windows selon une arborescence prédéfinie, puis référencés dans un fichier Excel. Cette organisation assure une conservation et une recherche de base ; elle devient cependant plus difficile à tenir lorsque le volume augmente et que les pièces restent hétérogènes.
+
+L'observation du processus en place, les échanges avec les cinq secrétaires du flux courant, les cinq agents mobilisés pour l'archivage du fonds et les autres parties prenantes, ainsi que le cahier des charges du projet de numérisation, déjà présentés comme sources au chapitre~\ref{ch:methodologie}, permettent de décrire ce fonctionnement, d'en préciser les limites opérationnelles, puis de formuler les exigences d'une solution plus intégrée.
 
 \section{Le fonctionnement documentaire existant}
 Lorsqu'un document reçu par le ministère (courrier, note circulaire ou autre pièce administrative) arrive sous forme papier, il est à la fois numérisé pour le traitement documentaire et conservé dans le fonds d'archives physiques. Les secrétaires réalisent la capture à l'aide d'un scanner, puis transmettent l'original à la salle d'archives. Le fichier numérique suit un autre chemin : dépôt manuel sur le serveur documentaire, classement dans l'arborescence, puis indexation dans Excel. Les documents déjà disponibles sous forme numérique rejoignent directement les étapes de stockage et d'indexation.
@@ -569,7 +608,7 @@ Date ; numéro interne ; expéditeur ; objet ; destinataire ; instructions ; dat
 \end{quote}
 Le serveur conserve donc les fichiers, tandis qu'Excel conserve leurs métadonnées. Cette séparation facilite la recherche sans parcours systématique de l'arborescence, mais elle crée une dépendance entre le fichier et sa description : un déplacement, un renommage ou une saisie incomplète suffit à rendre le document plus difficile à retrouver.
 
-Dans la pratique, le traitement d'une pièce physique enchaîne ainsi plusieurs opérations : numérisation, récupération du fichier, identification de l'expéditeur et du type, détermination de l'année et du mois, création ou sélection du répertoire, nommage, déplacement, puis saisie des champs Excel. Avec cinq secrétaires et environ 10\,000 dossiers par an, ces gestes répétitifs constituent une charge structurelle. L'ensemble de ce processus est représenté à la figure~\ref{fig:processus-documentaire-existant}.
+Dans la pratique, le traitement d'une pièce physique enchaîne ainsi plusieurs opérations : numérisation, récupération du fichier, identification de l'expéditeur et du type, détermination de l'année et du mois, création ou sélection du répertoire, nommage, déplacement, puis saisie des champs Excel. D'après ces mêmes observations, ces gestes répétitifs, réalisés par environ cinq secrétaires pour un volume de l'ordre de 10\,000 dossiers par an, constituent une charge structurelle. L'ensemble de ce processus est représenté à la figure~\ref{fig:processus-documentaire-existant}.
 
 \begin{figure}[H]
 \centering
@@ -585,7 +624,7 @@ Ce dispositif répond au besoin de stockage, mais ses limites deviennent visible
 
 Parce que le classement dépend de l'interprétation individuelle, deux agents peuvent placer une pièce similaire dans des emplacements différents lorsque les règles restent implicites ou que certaines informations sont ambiguës. Une erreur sur l'expéditeur, le type, l'année ou le mois déplace alors le fichier hors de la logique attendue et fragilise la cohérence de l'arborescence. La saisie Excel présente le même risque sous une autre forme : transcription inexacte, champs incomplets, variations d'appellation pour l'expéditeur, l'objet ou le destinataire. Or la recherche s'appuie précisément sur cet index ou sur le parcours des dossiers ; un document mal classé ou mal décrit peut donc rester présent sur le serveur tout en devenant difficile à retrouver.
 
-La séparation entre serveur et Excel aggrave ces écarts. Un fichier correctement stocké peut être mal référencé ; une ligne d'index peut survivre à un fichier déplacé, renommé ou supprimé. Aucun des deux supports n'assure non plus un historique complet des opérations : il est difficile de savoir qui a modifié une information, déplacé un document ou validé une saisie. Dans un contexte administratif, cette absence de traçabilité limite le contrôle du cycle de vie documentaire (\citer{iso15489}{ISO~15489-1:2016}).
+La séparation entre serveur et Excel aggrave ces écarts. Un fichier correctement stocké peut être mal référencé ; une ligne d'index peut survivre à un fichier déplacé, renommé ou supprimé. Aucun des deux supports n'assure non plus un historique complet des opérations : il est difficile de savoir qui a modifié une information, déplacé un document ou validé une saisie. Dans un contexte administratif, cette absence de traçabilité limite le contrôle du cycle de vie documentaire (\citer{iso15489}{\mbox{ISO 15489-1:2016}}).
 
 Enfin, l'arborescence actuelle, relativement fixe, répond aux pratiques actuelles mais évolue difficilement. L'ajout de nouvelles catégories, de nouvelles métadonnées ou de nouvelles règles de classement reste coûteux tant que ces règles ne sont pas centralisées dans un système capable de les appliquer de manière homogène.
 
@@ -627,7 +666,7 @@ Le cahier des charges reprend plusieurs de ces orientations : récupération aut
 \section{Besoins fonctionnels}
 Les exigences fonctionnelles découlent directement de cette chaîne. Après capture, les fichiers déposés par les scanners doivent être récupérés automatiquement, et les documents nativement numériques pouvoir être importés dans le même processus de traitement. L'analyse du contenu vise ensuite à proposer les informations nécessaires à l'organisation documentaire : expéditeur, numéro d'enregistrement, objet, type, destinataire lorsque cela est pertinent, ainsi que les éléments utiles au classement.
 
-Sur cette base, le renommage suit la nomenclature retenue, notamment \texttt{[Expéditeur] - [Numéro] - [Objet]}, avec possibilité d'adaptation lorsque certains champs manquent. Le classement s'appuie sur la structure déjà en usage (expéditeur, type, année, mois), tout en restant évolutif. Les métadonnées ne restent plus dans un Excel externe : elles sont associées au document et couvrent au minimum les champs aujourd'hui saisis dans l'index (date, numéro interne, expéditeur, objet, destinataire, instructions, date d'archivage), conformément aux principes de description documentaire (\citer{iso23081}{ISO~23081-1:2017}).
+Sur cette base, le renommage suit la nomenclature retenue, notamment \texttt{[Expéditeur] - [Numéro] - [Objet]}, avec possibilité d'adaptation lorsque certains champs manquent. Le classement s'appuie sur la structure déjà en usage (expéditeur, type, année, mois), tout en restant évolutif. Les métadonnées ne restent plus dans un Excel externe : elles sont associées au document et couvrent au minimum les champs aujourd'hui saisis dans l'index (date, numéro interne, expéditeur, objet, destinataire, instructions, date d'archivage), conformément aux principes de description documentaire (\citer{iso23081}{\mbox{ISO 23081-1:2017}}).
 
 Avant archivage définitif, une validation humaine permet de consulter le document, de corriger les propositions et de confirmer le classement. La recherche s'effectue ensuite à partir des métadonnées et, lorsque c'est possible, du contenu textuel. Enfin, l'accès est différencié selon trois profils prévus par le cahier des charges (administrateur, validateur, lecteur), et les opérations critiques (validation, modification, consultation) sont journalisées.
 
@@ -713,7 +752,7 @@ Exploitation & Rechercher, consulter et utiliser les archives \\
 \endgroup
 \end{table}
 
-Avec environ cinq secrétaires et 10\,000 dossiers traités par an, l'organisation actuelle reste utilisable, mais devient plus difficile à maintenir dès que le volume et l'hétérogénéité augmentent. Les risques d'erreur de classement et d'indexation, la séparation entre fichiers et métadonnées, ainsi que la faible automatisation du traitement limitent l'efficacité du dispositif. Le cahier des charges et les critères d'acceptation convergent vers une chaîne plus intégrée : récupération des documents, extraction des informations, renommage, classification, gestion des métadonnées, validation humaine, recherche, traçabilité et sécurité d'accès.
+Avec ce volume annuel d'environ 10\,000 dossiers, l'organisation actuelle reste utilisable, mais devient plus difficile à maintenir dès que l'hétérogénéité augmente. Les risques d'erreur de classement et d'indexation, la séparation entre fichiers et métadonnées, ainsi que la faible automatisation du traitement limitent l'efficacité du dispositif. Le cahier des charges et les critères d'acceptation convergent vers une chaîne plus intégrée : récupération des documents, extraction des informations, renommage, classification, gestion des métadonnées, validation humaine, recherche, traçabilité et sécurité d'accès.
 
 L'analyse du fonctionnement documentaire existant a ainsi permis de préciser les principales difficultés du dispositif actuel et d'en déduire les besoins auxquels la future plateforme devra répondre. L'enjeu est désormais de traduire ces exigences en une solution cohérente, capable d'intégrer les différentes étapes du traitement documentaire tout en conservant une intervention humaine aux étapes où la vérification et la décision restent nécessaires.
 
@@ -722,198 +761,44 @@ Le chapitre suivant présente les choix de conception retenus pour la plateforme
 \input{chapitres/conception}
 
 \part{Réalisation de la solution}
+\thispagestyle{plain}
 
 \input{chapitres/realisation}
 
-\input{chapitres/methodologie}
+\input{chapitres/bilan}
 
-\part{Exploitation, sécurité, évaluation et bilan}
-\chapter{Observabilité et exploitation}
-\section{Objectifs}
-L’observabilité vise à donner une visibilité sur :
-\begin{itemize}
-  \item la santé des services ;
-  \item les erreurs (OCR/extraction, erreurs HTTP) ;
-  \item la latence et les volumes de requêtes ;
-  \item les logs applicatifs (corrélation par service/conteneur).
-\end{itemize}
+\chapter*{Conclusion}
+\addcontentsline{toc}{chapter}{Conclusion}
+\markboth{Conclusion}{Conclusion}
 
-\section{Tableaux de bord applicatifs}
-En complément de la supervision technique (métriques et logs), l’application propose des tableaux de bord destinés au suivi opérationnel : volumes de documents, répartition par statuts, indicateurs de traitement et journaux d’actions.
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.98\textwidth]{images/screens/dashboard.png}
-\par\vspace{0.6em}
-\includegraphics[width=0.98\textwidth]{images/screens/dashboard.png}
-\caption{Tableaux de bord applicatifs : indicateurs de volumétrie, statuts, types de documents et temps moyen de traitement.}
-\label{fig:dashboards-app}
-\end{figure}
+Ce mémoire avait pour objectif de répondre à une problématique issue d'une difficulté concrète observée au \nomMinistere{} :
 
-\section{Stack mise en place}
-Une stack séparée est fournie :
-\begin{itemize}
-  \item \textbf{Prometheus} : collecte des métriques sur \texttt{/metrics} (FastAPI) et \texttt{/api/metrics} (Next.js) ;
-  \item \textbf{Grafana} : dashboards et alerting, avec provisioning automatique ;
-  \item \textbf{Loki} : stockage des logs ;
-  \item \textbf{Vector} : collecte des logs Docker et expédition vers Loki.
-\end{itemize}
+\begin{quote}
+\textbf{\problematiqueMemoire}
+\end{quote}
 
-\section{Alertes}
-Des règles Prometheus détectent :
-\begin{itemize}
-  \item un taux d’erreurs HTTP 5xx supérieur à 5\% sur 10 minutes ;
-  \item une latence p95 supérieure à 2s sur 10 minutes ;
-  \item la présence d’erreurs OCR/extraction via des compteurs dédiés.
-\end{itemize}
+L'étude de l'existant a montré que le traitement documentaire reposait encore largement sur des opérations manuelles, sur la séparation entre les fichiers stockés et leur indexation, ainsi que sur un parcours des dossiers peu adapté à une recherche fondée sur le contenu. Ces contraintes devenaient d'autant plus importantes que les volumes documentaires augmentaient et que les sources de documents se diversifiaient.
 
-\chapter{Sécurité}
-\section{Approche générale}
-Le système est déployé \textbf{on-premise} afin de respecter les contraintes de souveraineté et de confidentialité propres à une administration publique. Dans ce contexte, l’architecture de sécurité s’inspire d’une approche \textbf{Zero Trust} : ne pas supposer qu’un réseau interne est sûr par défaut, limiter la surface exposée, vérifier systématiquement l’identité et appliquer des contrôles d’accès stricts.
+Pour répondre à ces difficultés, une plateforme d'archivage numérique a été conçue et réalisée. La solution développée assiste une partie de la chaîne de traitement, depuis l'acquisition du document, principalement un scan ou un PDF, jusqu'à l'extraction de son contenu, la proposition de métadonnées, le classement et l'indexation. D'autres formats peuvent entrer dans la même chaîne. Elle intègre également une recherche hybride et un assistant permettant d'interroger le fonds à partir du contenu des documents. L'architecture modulaire retenue permet de faire évoluer les moteurs d'OCR, les modèles d'embeddings et les modèles de langage sans remettre en cause l'ensemble du système.
 
-\section{Exposition, réseau et segmentation}
-L’exposition des composants est volontairement minimisée. Les accès externes sont concentrés sur un point d’entrée unique (reverse proxy), configuré en \textbf{TLS} afin de protéger les échanges. Les services internes (OCR, extraction, bus de messages, bases) restent non exposés et accessibles uniquement sur le réseau interne.
+L'un des choix essentiels du projet a été de ne pas considérer l'intelligence artificielle comme une autorité de décision. Les propositions produites par les modèles restent soumises à une validation humaine avant leur intégration définitive au corpus documentaire. Cette approche permet de bénéficier de l'automatisation tout en maintenant la responsabilité des agents sur les décisions sensibles. Les mécanismes de contrôle d'accès, de gestion de la sensibilité, de journalisation et de filtrage des informations avant leur transmission à l'assistant complètent ce principe d'assistance contrôlée.
 
-La segmentation réseau sépare les composants selon leur rôle (API/Frontend, traitements, stockage, observabilité, consoles). En production, les interfaces d’administration (RabbitMQ, MinIO, Grafana) sont restreintes (VPN, filtrage IP, comptes dédiés) afin d’éviter toute exposition accidentelle.
+La réalisation et l'exploitation de la solution montrent que cette approche est opérationnelle à l'échelle du fonds de production : 35\,007 documents traités, un taux d'échec moyen d'environ 5~\% en exploitation, un rappel au rang~5 de 62~\% sur le split de test. La recherche par contenu et l'assistance conversationnelle permettent d'aller au-delà du simple parcours de l'arborescence. Toutefois, les scores d'exactitude obtenus contre les sorties de production ne mesurent pas la qualité métier de l'OCR, de la classification ou de l'extraction. Un gold relu, ainsi que des mesures de génération (ROUGE-L, taux d'ancrage), restent nécessaires avant d'affirmer un niveau de performance généralisable.
 
-\section{Gestion des identités et des accès (IAM)}
-La gestion des identités et des accès est un élément central pour sécuriser l’usage quotidien (secrétariats, administrateurs, services métier). Une intégration IAM est prévue via un fournisseur dédié (\textbf{Keycloak}) afin de :
-\begin{itemize}
-  \item centraliser l’authentification (\textbf{SSO}) et réduire la multiplication des comptes applicatifs ;
-  \item gérer les rôles et groupes, et appliquer des politiques d’accès homogènes ;
-  \item renforcer l’authentification (ex. \textbf{MFA}) selon la sensibilité des profils.
-\end{itemize}
-Cette approche facilite également la gestion du cycle de vie des comptes (création, révocation) et l’audit des connexions.
+Le travail met ainsi en évidence qu'une plateforme documentaire intelligente ne peut être réduite à l'intégration d'un modèle de langage. Sa pertinence repose sur l'ensemble de la chaîne : qualité des données, extraction du contenu, structuration des métadonnées, règles de classement, recherche, contrôle des accès, supervision humaine et traçabilité. L'intelligence artificielle constitue une composante de cette chaîne, et non son unique fondement.
 
-\section{Contrôle d’accès, RBAC et moindre privilège}
-Le contrôle d’accès repose sur le principe du \textbf{moindre privilège} : chaque utilisateur et chaque service ne dispose que des droits strictement nécessaires. Le modèle RBAC (rôles et permissions) permet de limiter la consultation, la recherche et l’administration selon les profils, et de tracer les actions sensibles.
+Enfin, les perspectives développées au chapitre~\ref{ch:bilan} visent d'abord à amplifier le gain de temps pour les secrétaires et les agents d'archivage. Un module de connecteurs, le Model Context Protocol et des alertes intelligentes sont envisagés comme leviers de cette orientation ; ils ne font pas partie de la solution réalisée. Ces évolutions devront rester soumises aux mêmes exigences de sécurité, de contrôle des accès et de supervision humaine.
 
-Au niveau des services, les permissions d’accès aux ressources (buckets MinIO, tables, files RabbitMQ) sont séparées et attribuées de manière fine, afin de réduire l’impact d’un éventuel compromis d’un composant.
-
-\section{Gestion des secrets et configuration}
-La configuration applicative est aujourd’hui centralisée via un fichier \texttt{.env} (développement). Pour une mise en production robuste, l’externalisation et la sécurisation des secrets est prévue avec \textbf{Vault} (HashiCorp Vault). L’objectif est d’éviter tout stockage en clair de mots de passe, clés API et tokens, et de permettre :
-\begin{itemize}
-  \item la rotation et la révocation des secrets ;
-  \item la distribution contrôlée des secrets aux services autorisés ;
-  \item la réduction du risque de fuite via les dépôts, logs ou sauvegardes.
-\end{itemize}
-
-\section{Traçabilité et journalisation}
-La traçabilité est essentielle pour un environnement sensible : journalisation des actions (audit), suivi des traitements et corrélation des événements. Le système s’appuie sur :
-\begin{itemize}
-  \item un journal d’événements applicatifs (actions et changements d’état) ;
-  \item des logs centralisés (Loki/Vector) et des métriques (Prometheus) pour détecter les anomalies ;
-  \item des alertes (erreurs, latences, indisponibilités) afin de réduire le temps de réaction.
-\end{itemize}
-Ces mécanismes contribuent à la détection d’incidents, à l’analyse post-mortem et au respect des exigences d’audit.
-
-\chapter{Bilan de la mission et recommandations}
-\section{Livrables et résultats}
-Ce chapitre dresse un bilan global de la mission, en présentant les réalisations concrètes, les limites rencontrées, ainsi que les recommandations pour une mise en production et les enseignements tirés sur le plan personnel.
-
-Au cours de la mission, une solution complète d’archivage numérique a été conçue et implémentée. Les principaux livrables incluent :
-\begin{itemize}
-  \item un pipeline de traitement automatisé couvrant l’ingestion des documents, l’OCR, l’extraction d’informations et l’indexation ;
-  \item une architecture microservices assurant la modularité et la scalabilité du système ;
-  \item une interface web permettant la consultation, la recherche et la validation des documents ;
-  \item un système de recherche combinant recherche plein texte et recherche sémantique ;
-  \item un assistant conversationnel basé sur une approche \textit{RAG} pour faciliter l’accès à l’information ;
-  \item un déploiement en environnement \textit{on-premise} via Docker Compose ;
-  \item une première couche d’observabilité incluant logs, métriques et tableaux de bord.
-\end{itemize}
-
-Les résultats observés sur un échantillon représentatif montrent :
-\begin{itemize}
-  \item une réduction significative des tâches manuelles liées au tri et au renommage ;
-  \item une amélioration de la cohérence et de la qualité du classement documentaire ;
-  \item une meilleure traçabilité des opérations grâce à la journalisation ;
-  \item un accès plus rapide à l’information via la recherche et le chat documentaire.
-\end{itemize}
-
-\section{Limites et difficultés rencontrées}
-Malgré les résultats obtenus, plusieurs limites et difficultés ont été identifiées.
-
-\textbf{Sur le plan technique :}
-\begin{itemize}
-  \item la qualité variable des scans a un impact direct sur les performances de l’OCR ;
-  \item l’hétérogénéité des formats documentaires complique l’extraction et la structuration des données ;
-  \item certains traitements (OCR, extraction, embeddings) peuvent être coûteux en temps et en ressources.
-\end{itemize}
-
-\textbf{Sur le plan opérationnel :}
-\begin{itemize}
-  \item l’intégration dans un environnement contraint (réseau interne, sécurité) a nécessité des ajustements ;
-  \item la gestion des volumes importants de documents impose une optimisation continue des performances ;
-  \item la nécessité de conserver une validation humaine limite l’automatisation complète du processus.
-\end{itemize}
-
-Ces contraintes ont conduit à des arbitrages, notamment :
-\begin{itemize}
-  \item le choix d’un traitement asynchrone pour améliorer la robustesse ;
-  \item la mise en place d’un workflow de validation utilisateur pour garantir la fiabilité ;
-  \item une approche progressive privilégiant la qualité des résultats plutôt que l’automatisation totale.
-\end{itemize}
-
-\section{Bilan personnel}
-Cette mission m’a permis de développer des compétences techniques et méthodologiques significatives dans la conception et la mise en œuvre de systèmes distribués orientés traitement documentaire.
-
-\textbf{Sur le plan technique,} j’ai approfondi :
-\begin{itemize}
-  \item le développement d’architectures microservices (API, communication asynchrone) ;
-  \item l’intégration de briques d’intelligence artificielle (OCR, extraction, \textit{RAG}) ;
-  \item le déploiement et l’exploitation de solutions en environnement \textit{on-premise} (Docker, supervision).
-\end{itemize}
-
-\textbf{Sur le plan méthodologique,} cette expérience m’a permis de :
-\begin{itemize}
-  \item adopter une démarche itérative inspirée des méthodes agiles ;
-  \item collaborer étroitement avec des utilisateurs métiers afin de mieux comprendre leurs besoins ;
-  \item intégrer des contraintes réelles (performance, sécurité, exploitation) dans la conception.
-\end{itemize}
-
-Enfin, cette mission a également mis en évidence des axes d’amélioration, notamment :
-\begin{itemize}
-  \item approfondir les aspects liés à la sécurité des systèmes distribués ;
-  \item améliorer l’optimisation des performances sur des volumes importants ;
-  \item renforcer les pratiques de pilotage de projet et de formalisation des besoins.
-\end{itemize}
-
-\chapter{Discussion}
-Ce chapitre interprète les résultats obtenus au regard de la problématique initiale et des choix méthodologiques retenus.
-
-\section{Interprétation des résultats}
-Les livrables du projet montrent qu’il est possible d’industrialiser une chaîne d’archivage numérique sous contraintes \textit{on-premise}, en combinant OCR, extraction assistée par IA et validation humaine. La réduction des tâches manuelles de tri et de renommage, ainsi que l’amélioration de la cohérence du classement, confirment la pertinence d’une approche « proposer puis valider ». L’accès accéléré à l’information via la recherche sémantique et le chat documentaire répond directement à l’enjeu d’exploitabilité des archives numérisées.
-
-\section{Limites de l’interprétation}
-Plusieurs limites appellent à la prudence. La qualité de l'OCR demeure dépendante de la qualité des scans ; les performances observées sur un échantillon ne se généralisent pas automatiquement à l'ensemble du fonds documentaire. Les expérimentations du chapitre~5 confirment l'intérêt opérationnel de l'assistant, tout en restant pour partie qualitatives : une évaluation automatique plus large du RAG demeure un prolongement possible. Enfin, le maintien d'une validation humaine, nécessaire à la fiabilité, freine une automatisation totale : ce n'est pas un échec, mais un arbitrage assumé entre efficacité et contrôle.
-
-\section{Apports au regard de la problématique}
-La problématique posée en introduction trouve une réponse opérationnelle : une chaîne d’archivage numérique peut traiter un volume important de documents, réduire les interventions manuelles, améliorer le classement, garantir la traçabilité et offrir une recherche fiable, à condition de déployer une architecture résiliente, des règles métier explicites et un workflow de validation. Les perspectives (référentiels documentaires, gouvernance, optimisation RAG, signature électronique) prolongent cette réponse vers une industrialisation plus poussée.
-
-\chapter*{Conclusion et perspectives}
-\addcontentsline{toc}{chapter}{Conclusion et perspectives}
-Le système développé constitue une chaîne d’archivage numérique complète, couvrant l’ensemble du cycle de vie du document, depuis la collecte automatique des scans jusqu’à leur consultation et leur recherche. En réduisant significativement les opérations manuelles (tri, renommage, saisie) et en proposant un classement plus homogène, la solution améliore à la fois la qualité de l’archivage et les délais de traitement.
-
-Le choix d’un déploiement en environnement \textit{on-premise} permet de répondre aux exigences de sécurité et de souveraineté propres au contexte administratif, tandis que l’intégration de mécanismes d’observabilité contribue à une exploitation fiable et maîtrisée du système au quotidien. Par ailleurs, l’apport de techniques d’intelligence artificielle, notamment pour l’extraction d’informations et la recherche sémantique, renforce l’accessibilité et la valorisation du patrimoine documentaire.
-
-Néanmoins, ce projet constitue une première étape vers un système d’archivage pleinement industrialisé. Plusieurs axes d’évolution peuvent être envisagés afin d’en améliorer la robustesse, la pertinence et l’intégration métier.
-
-Les perspectives principales concernent :
-\begin{itemize}
-  \item l’amélioration des règles métier de classement, à travers la formalisation de référentiels documentaires, de modèles de nommage et la gestion des cas particuliers ;
-  \item le renforcement des workflows de validation et de la gouvernance documentaire (gestion des droits, circuits de traitement, versioning) ;
-  \item l’amélioration des capacités de recherche et d’assistance documentaire, notamment par l’optimisation des approches \textit{RAG} (qualité des contextes, citations, gestion des permissions) ;
-  \item l’intégration de fonctionnalités complémentaires telles que la signature électronique, les politiques de conservation ou encore des tableaux de bord décisionnels.
-\end{itemize}
-
-À terme, l’évolution de ce système pourrait s’inscrire dans une démarche plus large de transformation numérique, visant à faire de la gestion documentaire un levier stratégique d’efficacité et de valorisation de l’information au sein de l’administration.
+Au terme de ce travail, la solution réalisée constitue ainsi une première réponse concrète à la problématique posée. Elle ne cherche pas à supprimer l'intervention humaine, mais à la repositionner sur les tâches où son jugement apporte le plus de valeur. La plateforme fournit ainsi un cadre permettant de rendre le traitement documentaire plus structuré, plus accessible et davantage assisté par l'intelligence artificielle, tout en conservant les exigences de contrôle nécessaires à la gestion des archives administratives.
 
 \chapter*{Références}
 \addcontentsline{toc}{chapter}{Références}
+\markboth{Références}{Références}
 
-Les références sont regroupées par thème. La numérotation reste continue, afin de conserver les renvois du corps du mémoire.
+Les références sont regroupées par thème et classées par ordre alphabétique au sein de chaque thème. Le système de citation est du type auteur-date.
 
 \subsubsection*{Archives et gestion documentaire}
-\begin{enumerate}[leftmargin=2em, itemsep=0.6em, series=refs]
+\begin{itemize}[leftmargin=1.5em, itemsep=0.6em, label={}]
   \item\label{ref:bantin2002} Bantin, P. (2002). \textit{Records Management in a Digital World}. EDUCAUSE Center for Applied Research, Research Bulletin.
 
   \item\label{ref:davenport1998} Davenport, T.~H. et Prusak, L. (1998). \textit{Working Knowledge: How Organizations Manage What They Know}. Boston~: Harvard Business School Press.
@@ -921,105 +806,115 @@ Les références sont regroupées par thème. La numérotation reste continue, a
   \item\label{ref:dpc} Digital Preservation Coalition (s.d.). \textit{Digital Preservation Handbook}. Disponible sur~: \url{https://www.dpconline.org/handbook} (consulté le 11 août 2026).
 
   \item\label{ref:sprague1995} Sprague, R.~H. (1995). Electronic Document Management: Challenges and Opportunities for Information Systems Managers. \textit{MIS Quarterly}, 19(1), pp.~29--49.
-\end{enumerate}
+\end{itemize}
 
 \subsubsection*{Normes, lois et réglementations}
-\begin{enumerate}[resume=refs, leftmargin=2em, itemsep=0.6em]
-  \item\label{ref:nist2024} Autio, C., Schwartz, R., Dunitz, J. et al. (2024). \textit{Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile} (NIST~AI~600-1). Gaithersburg~: National Institute of Standards and Technology.
+\begin{itemize}[leftmargin=1.5em, itemsep=0.6em, label={}]
+  \item\label{ref:prodigit} GIZ et LuxDev (s.d.). \textit{Transformation digitale de l'économie togolaise (ProDigiT)}. Luxembourg~: LuxDev / GIZ. Disponible sur~: \url{https://www.luxdev.lu/fr/projets/transformation-digitale-de-leconomie-togolaise-prodigit} (consulté le 18 août 2026).
 
-  \item\label{ref:prodigit} GIZ et LuxDev (s.d.). \textit{Projet ProDigiT : Accompagnement de la transformation digitale au Togo}.
+  \item\label{ref:iso14721} Organisation internationale de normalisation (2025). \textit{\mbox{ISO 14721:2025}. Space Data System Practices. Reference model for an open archival information system (OAIS)}. Genève~: ISO. 3\textsuperscript{e}~éd.
 
-  \item\label{ref:iso14721} Organisation internationale de normalisation (2025). \textit{ISO~14721:2025. Space Data System Practices. Reference model for an open archival information system (OAIS)}. Genève~: ISO. 3\textsuperscript{e}~éd.
+  \item\label{ref:iso15489} Organisation internationale de normalisation (2016). \textit{\mbox{ISO 15489-1:2016}. Information et documentation. Gestion des documents d'activité. Partie~1 : Concepts et principes}. Genève~: ISO.
 
-  \item\label{ref:iso15489} Organisation internationale de normalisation (2016). \textit{ISO~15489-1:2016 : Information et documentation. Gestion des documents d'activité. Partie~1 : Concepts et principes}. Genève~: ISO.
+  \item\label{ref:iso23081} Organisation internationale de normalisation (2017). \textit{\mbox{ISO 23081-1:2017}. Information et documentation. Processus de gestion des documents d'activité. Métadonnées pour les documents d'activité. Partie~1 : Principes}. Genève~: ISO.
 
-  \item\label{ref:iso23081} Organisation internationale de normalisation (2017). \textit{ISO~23081-1:2017 : Information et documentation. Processus de gestion des documents d'activité. Métadonnées pour les documents d'activité. Partie~1 : Principes}. Genève~: ISO.
+  \item\label{ref:nist2024} NIST (2024). \textit{Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile} (NIST~AI~600-1). Gaithersburg~: National Institute of Standards and Technology. Rapport préparé par Autio, C., Schwartz, R., Dunitz, J. et al.
 
   \item\label{ref:owasp2025} OWASP Foundation (2025). \textit{OWASP Top 10 for Large Language Model Applications}. Disponible sur~: \url{https://owasp.org/www-project-top-10-for-large-language-model-applications/} (consulté le 18 août 2026).
 
-  \item\label{ref:togodigital2025} République togolaise (s.d.). \textit{Stratégie Togo Digital 2025}.
+  \item\label{ref:togodigital2025} République togolaise (s.d.). \textit{Stratégie Togo Digital 2025}. Lomé~: Ministère de l'Économie numérique et de la Transformation digitale. Disponible sur~: \url{https://numerique.gouv.tg/documentation/strategie-togo-digital-2025/} (consulté le 18 août 2026).
 
   \item\label{ref:unesco2015} UNESCO (2015). \textit{Recommendation concerning the preservation of, and access to, documentary heritage including in digital form}. Paris~: UNESCO / Programme Mémoire du monde.
-\end{enumerate}
+\end{itemize}
 
 \subsubsection*{Intelligence artificielle et modèles de langage (LLM)}
-\begin{enumerate}[resume=refs, leftmargin=2em, itemsep=0.6em]
+\begin{itemize}[leftmargin=1.5em, itemsep=0.6em, label={}]
   \item\label{ref:liu2024} Liu, N.~F., Lin, K., Hewitt, J., Paranjape, A., Bevilacqua, M., Petroni, F. et Liang, P. (2024). Lost in the Middle: How Language Models Use Long Contexts. \textit{Transactions of the Association for Computational Linguistics}, 12, pp.~157--173.
 
   \item\label{ref:reimers2019} Reimers, N. et Gurevych, I. (2019). Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. In \textit{Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)}, pp.~3982--3992.
 
   \item\label{ref:vaswani2017} Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.~N., Kaiser, \L{} et Polosukhin, I. (2017). Attention Is All You Need. In \textit{Advances in Neural Information Processing Systems~(NeurIPS)}, pp.~5998--6008.
-\end{enumerate}
+\end{itemize}
 
 \subsubsection*{Génération augmentée par récupération (RAG) et recherche d'information}
-\begin{enumerate}[resume=refs, leftmargin=2em, itemsep=0.6em]
+\begin{itemize}[leftmargin=1.5em, itemsep=0.6em, label={}]
   \item\label{ref:azad2019} Azad, H.~K. et Deepak, A. (2019). Query expansion techniques for information retrieval: A survey. \textit{Information Processing \& Management}, 56(5), pp.~1698--1735.
 
   \item\label{ref:cormack2009} Cormack, G.~V., Clarke, C.~L.~A. et Buettcher, S. (2009). Reciprocal Rank Fusion outperforms Condorcet and individual Rank Learning Methods. In \textit{Proceedings of the 32nd International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR~'09)}, pp.~758--759.
+
+  \item\label{ref:es2024} Es, S., James, J., Espinosa-Anke, L. et Schockaert, S. (2024). RAGAS: Automated Evaluation of Retrieval Augmented Generation. In \textit{Proceedings of the 18th Conference of the European Chapter of the Association for Computational Linguistics: System Demonstrations}, pp.~150--158.
 
   \item\label{ref:karpukhin2020} Karpukhin, V., Oguz, B., Min, S., Lewis, P., Wu, L., Edunov, S., Chen, D. et Yih, W.-t. (2020). Dense Passage Retrieval for Open-Domain Question Answering. In \textit{Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)}, pp.~6769--6781.
 
   \item\label{ref:lewis2020} Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., Küttler, H., Lewis, M., Yih, W.-t., Rocktäschel, T., Riedel, S. et Kiela, D. (2020). Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. In \textit{Advances in Neural Information Processing Systems~(NeurIPS)}.
 
+  \item\label{ref:lin2004} Lin, C.-Y. (2004). ROUGE: A Package for Automatic Evaluation of Summaries. In \textit{Text Summarization Branches Out}, pp.~74--81. Barcelone~: Association for Computational Linguistics.
+
   \item\label{ref:namer2024} Namer, A., Lagerström, R., Balakrishnan, G. et Maltz, B. (2024). Retrieval-Augmented Generation (RAG) Classification and Access Control. \textit{Technical Disclosure Commons}. Disponible sur~: \url{https://www.tdcommons.org/dpubs_series/7382/} (consulté le 18 août 2026).
-\end{enumerate}
+\end{itemize}
 
 \subsubsection*{Intelligence artificielle appliquée aux documents et aux archives}
-\begin{enumerate}[resume=refs, leftmargin=2em, itemsep=0.6em]
+\begin{itemize}[leftmargin=1.5em, itemsep=0.6em, label={}]
   \item\label{ref:smith2007} Smith, R. (2007). An Overview of the Tesseract OCR Engine. In \textit{Proceedings of the Ninth International Conference on Document Analysis and Recognition (ICDAR~2007)}, vol.~2, pp.~629--633. Los Alamitos~: IEEE Computer Society.
 
   \item\label{ref:xu2020} Xu, Y., Li, M., Cui, L., Huang, S., Wei, F. et Zhou, M. (2020). LayoutLM: Pre-training of Text and Layout for Document Image Understanding. In \textit{Proceedings of the 26th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining}, pp.~1192--1200.
 
   \item\label{ref:xu2021} Xu, Y., Xu, Y., Lv, T., Cui, L., Wei, F., Wang, G., Lu, Y., Florencio, D., Zhang, C., Che, W., Zhang, M. et Zhou, L. (2021). LayoutLMv2: Multi-modal Pre-training for Visually-Rich Document Understanding. In \textit{Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics (ACL)}, pp.~2579--2591.
-\end{enumerate}
+\end{itemize}
 
 \chapter*{Glossaire}
 \addcontentsline{toc}{chapter}{Glossaire}
+\markboth{Glossaire}{Glossaire}
 
-Les définitions ci-dessous précisent les termes techniques employés dans le mémoire. Elles sont regroupées par thème.
+Les définitions ci-dessous précisent les termes techniques employés dans le mémoire. Elles sont classées par ordre alphabétique.
 
-\subsubsection*{Archives et gestion documentaire}
-\begin{description}[style=unboxed, leftmargin=0pt, itemsep=0.55em, parsep=0.12em, font=\normalfont\bfseries]
-  \item[archivage numérique] Ensemble des opérations qui permettent de capturer, décrire, classer, conserver et restituer des documents sous forme numérique, dans le temps, tout en préservant leur valeur de preuve et d'information.
-  \item[document d'activité] Trace fixée d'une action administrative (courrier, note, arrêté, contrat, etc.), gérée indépendamment de son support ou de son format, conformément aux principes de la gestion des documents d'activité.
-  \item[fonds documentaire] Ensemble des documents produits ou reçus par une organisation dans l'exercice de ses missions, conservés en raison de leur valeur administrative, juridique, historique ou informationnelle.
-  \item[GED (Gestion électronique des documents)] Ensemble d'outils et de règles permettant de stocker, d'indexer, de partager et de conserver les documents tout au long de leur cycle de vie.
-  \item[métadonnées] Informations structurées qui décrivent un document (expéditeur, objet, type, dates, sensibilité, etc.) afin de le retrouver, de le classer et d'en contrôler l'accès.
-  \item[nomenclature] Règle de nommage des fichiers, ici de la forme \texttt{[Expéditeur] - [Numéro] - [Objet]}, destinée à rendre les noms homogènes et exploitables.
-  \item[nœud d'exploration] Entrée de l'arborescence (dossier ou fichier) qui place le document dans le classement, porte un statut (\texttt{DRAFT}, \texttt{VALIDATED}, \texttt{ARCHIVED}) et reçoit les droits d'accès.
-  \item[OAIS (\textit{Open Archival Information System})] Modèle de référence pour un système d'information archivistique ouvert, normalisé par l'ISO~14721, qui décrit les fonctions nécessaires à la conservation et à l'accès à long terme.
-  \item[patrimoine documentaire] Ensemble des documents conservés par une institution, considéré comme un héritage à préserver et à rendre accessible, y compris sous forme numérique.
-\end{description}
-
-\subsubsection*{Intelligence artificielle, LLM et RAG}
-\begin{description}[style=unboxed, leftmargin=0pt, itemsep=0.55em, parsep=0.12em, font=\normalfont\bfseries]
-  \item[assistant conversationnel] Interface permettant d'interroger le corpus d'archives en langage naturel et d'obtenir une réponse accompagnée de ses sources documentaires.
-  \item[embeddings] Représentations vectorielles de mots, de phrases ou de passages, destinées à capter leur sens afin de comparer des contenus par similarité plutôt que par seuls mots-clés.
-  \item[hallucination] Production, par un modèle de langage, d'informations incorrectes, inventées ou non étayées, souvent présentées comme factuelles. Le RAG vise à en limiter le risque en ancrant la génération dans des extraits du fonds.
-  \item[IA (intelligence artificielle)] Ensemble de techniques permettant à un système d'exécuter des tâches d'analyse, de classification ou de génération habituellement associées à une activité humaine, ici au service du traitement documentaire.
-  \item[LLM (\textit{Large Language Model})] Grand modèle de langage, entraîné sur de vastes corpus textuels, capable de comprendre, de générer et de structurer du langage naturel (extraction de métadonnées, classification, assistance).
-  \item[OCR (\textit{Optical Character Recognition})] Technologie qui convertit l'image d'un texte imprimé ou scanné en texte numérique exploitable, notamment à l'aide du moteur Tesseract.
-  \item[prompt] Instruction ou texte d'entrée fourni à un modèle de langage pour qu'il accomplisse une tâche (classification, renommage, réponse à une question).
-  \item[RAG (\textit{Retrieval-Augmented Generation})] Technique qui fait précéder la génération d'une récupération d'extraits pertinents dans une base documentaire. Ces extraits sont ajoutés au contexte du LLM afin d'obtenir une réponse sourcée plutôt qu'une formulation générique.
-  \item[recherche hybride] Combinaison de recherche sémantique (vecteurs), de correspondances lexicales et de recherche sur les métadonnées, puis fusion des listes de candidats, ici par Reciprocal Rank Fusion (RRF).
-  \item[segment (\textit{chunk})] Passage de texte de taille maîtrisée, éventuellement enrichi d'un champ métier (objet, expéditeur, type), vectorisé et stocké pour la recherche et le RAG.
-  \item[TAL (traitement automatique du langage)] Domaine de l'intelligence artificielle consacré à l'analyse, à la compréhension et à la génération du langage humain (\textit{Natural Language Processing}, NLP).
-  \item[vectorisation] Transformation d'un texte en vecteur numérique afin qu'il puisse être comparé, indexé et retrouvé par des algorithmes de similarité.
-\end{description}
-
-\subsubsection*{Architecture, sécurité et déploiement}
 \begin{description}[style=unboxed, leftmargin=0pt, itemsep=0.55em, parsep=0.12em, font=\normalfont\bfseries]
   \item[ACL (\textit{Access Control List})] Liste de contrôles d'accès rattachée à un nœud, qui autorise un utilisateur, un groupe ou un rôle à effectuer certaines actions, avec héritage possible dans l'arborescence.
   \item[API (\textit{Application Programming Interface})] Interface de programmation par laquelle les services de la plateforme s'échangent des données, par exemple pour le dépôt d'un fichier (\texttt{POST /upload}).
+  \item[archivage numérique] Ensemble des opérations qui permettent de capturer, décrire, classer, conserver et restituer des documents sous forme numérique, dans le temps, tout en préservant leur valeur de preuve et d'information.
+  \item[assistance contrôlée] Principe selon lequel le système propose une description et un classement, tandis que l'agent valide ou corrige avant l'intégration définitive au corpus.
+  \item[assistant conversationnel] Interface permettant d'interroger le corpus d'archives en langage naturel et d'obtenir une réponse accompagnée de ses sources documentaires.
   \item[chaîne de traitement] Séquence d'étapes par lesquelles passe un document, de l'acquisition à la validation : reconnaissance du contenu, analyse, classement, indexation, puis confirmation humaine.
+  \item[complétude] Proportion de champs renseignés (expéditeur, objet, date, etc.), distincte de la justesse des valeurs. Un champ faux mais rempli compte comme complet.
+  \item[connecteur] Module envisagé pour récupérer automatiquement des documents depuis des sources externes (espaces de stockage, API) et les envoyer dans la chaîne d'archivage déjà en place.
+  \item[déploiement sur site] Déploiement sur l'infrastructure interne de l'organisation (\textit{on-premise}), sans exposition du fonds sur un nuage public, retenu ici pour des raisons de souveraineté et de confidentialité.
+  \item[document d'activité] Trace fixée d'une action administrative (courrier, note, arrêté, contrat, etc.), gérée indépendamment de son support ou de son format, conformément aux principes de la gestion des documents d'activité.
+  \item[embeddings] Représentations vectorielles de mots, de phrases ou de passages, destinées à capter leur sens afin de comparer des contenus par similarité plutôt que par seuls mots-clés.
   \item[empreinte SHA-256] Empreinte cryptographique calculée à l'entrée du fichier et conservée avec le document, utilisée pour vérifier l'intégrité et détecter les copies binaires identiques.
-  \item[IAM (\textit{Identity and Access Management})] Gestion des identités et des accès : authentification des personnes, attribution des rôles et contrôle de ce que chaque profil peut consulter ou valider.
+  \item[fonds documentaire] Ensemble des documents produits ou reçus par une organisation dans l'exercice de ses missions, conservés en raison de leur valeur administrative, juridique, historique ou informationnelle.
+  \item[GED (Gestion électronique des documents)] Ensemble d'outils et de règles permettant de stocker, d'indexer, de partager et de conserver les documents tout au long de leur cycle de vie.
+  \item[hallucination] Production, par un modèle de langage, d'informations incorrectes, inventées ou non étayées, souvent présentées comme factuelles. Le RAG vise à en limiter le risque en ancrant la génération dans des extraits du fonds.
+  \item[IA (intelligence artificielle)] Ensemble de techniques permettant à un système d'exécuter des tâches d'analyse, de classification ou de génération habituellement associées à une activité humaine, ici au service du traitement documentaire.
+  \item[Keycloak] Serveur d'identité utilisé pour l'authentification technique entre services, distincte de l'authentification des utilisateurs.
+  \item[LayoutLM] Famille de modèles multimodaux combinant texte, mise en page et image pour la compréhension de documents visuellement riches, citée dans les fondements de l'étude.
+  \item[LLM (\textit{Large Language Model})] Grand modèle de langage, entraîné sur de vastes corpus textuels, capable de comprendre, de générer et de structurer du langage naturel (extraction de métadonnées, classification, assistance).
+  \item[MAC (\textit{Mandatory Access Control})] Contrôle d'accès obligatoire fondé ici sur un plafond de sensibilité : un document dont le niveau dépasse celui autorisé pour l'utilisateur est exclu, y compris des extraits transmis à l'assistant.
+  \item[MCP (\textit{Model Context Protocol})] Protocole visant à standardiser l'interaction d'un agent avec des outils externes du système d'information ; envisagé comme perspective, distinct du module de connecteurs.
   \item[messagerie asynchrone] Mécanisme de communication par files d'attente (ici RabbitMQ) qui découple l'ingestion des traitements longs (OCR, extraction), afin de ne pas bloquer l'interface.
+  \item[métadonnées] Informations structurées qui décrivent un document (expéditeur, objet, type, dates, sensibilité, etc.) afin de le retrouver, de le classer et d'en contrôler l'accès.
   \item[microservices] Organisation de l'application en services spécialisés et relativement indépendants (dépôt, OCR, extraction, modèle de langage, routage), communiquant par API ou par bus de messages.
-  \item[on-premise] Déploiement sur l'infrastructure interne de l'organisation, sans exposition du fonds sur un nuage public, retenu ici pour des raisons de souveraineté et de confidentialité.
+  \item[MinIO] Stockage objet compatible S3, utilisé pour conserver les fichiers, distinct de la description métier en base de données.
+  \item[multimodalité] Coexistence de plusieurs formes de contenu dans le fonds. Ici, le volume principal est constitué de scans et de PDF ; des fichiers bureautiques, audio ou vidéo peuvent néanmoins emprunter la même chaîne.
+  \item[nomenclature] Règle de nommage des fichiers, ici de la forme \texttt{[Expéditeur] - [Numéro] - [Objet]}, destinée à rendre les noms homogènes et exploitables.
+  \item[nœud d'exploration] Entrée de l'arborescence (dossier ou fichier) qui place le document dans le classement, porte un statut (\texttt{DRAFT}, \texttt{VALIDATED}, \texttt{ARCHIVED}) et reçoit les droits d'accès.
+  \item[OAIS (\textit{Open Archival Information System})] Modèle de référence pour un système d'information archivistique ouvert, normalisé par l'\mbox{ISO 14721}, qui décrit les fonctions nécessaires à la conservation et à l'accès à long terme.
+  \item[OCR (\textit{Optical Character Recognition})] Technologie qui convertit l'image d'un texte imprimé ou scanné en texte numérique exploitable, notamment à l'aide du moteur Tesseract.
+  \item[patrimoine documentaire] Ensemble des documents conservés par une institution, considéré comme un héritage à préserver et à rendre accessible, y compris sous forme numérique.
+  \item[pgvector] Extension de PostgreSQL permettant de stocker et d'interroger les représentations vectorielles des segments destinés à la recherche.
+  \item[PostgreSQL] Système de gestion de base de données relationnelle qui porte les métadonnées, les nœuds, les droits et, via pgvector, l'index de recherche.
+  \item[prompt] Instruction ou texte d'entrée fourni à un modèle de langage pour qu'il accomplisse une tâche (classification, renommage, réponse à une question).
+  \item[RAG (\textit{Retrieval-Augmented Generation})] Technique qui fait précéder la génération d'une récupération d'extraits pertinents dans une base documentaire. Ces extraits sont ajoutés au contexte du LLM afin d'obtenir une réponse sourcée plutôt qu'une formulation générique.
   \item[RBAC (\textit{Role-Based Access Control})] Contrôle d'accès fondé sur les rôles : les droits (lecture, validation, administration, etc.) sont attribués à des profils plutôt qu'à chaque action isolée.
+  \item[recherche hybride] Combinaison d'une récupération dense (embeddings), de correspondances lexicales dans les segments et d'une recherche plein texte et sur métadonnées au niveau document, puis fusion des listes de candidats, ici par Reciprocal Rank Fusion (RRF).
+  \item[recherche sémantique] Recherche fondée sur le sens des contenus plutôt que sur la seule correspondance de mots-clés. Dans ce mémoire, elle désigne la récupération dense par similarité d'embeddings, selon le principe du Dense Passage Retrieval.
+  \item[référentiel] Vocabulaire métier administrable (types documentaires, expéditeurs, destinataires) à partir duquel le modèle propose une valeur, plutôt qu'un libellé inventé.
+  \item[segment (\textit{chunk})] Passage de contenu de taille maîtrisée ($n_{c}\approx 2000$ caractères, chevauchement $o=400$), distinct des champs métier (objet, expéditeur, type, etc.) qui sont indexés à part. Les uns et les autres sont vectorisés et stockés pour la recherche et le RAG.
+  \item[Sentence-BERT] Modèle d'embeddings de phrases dérivé de BERT, utilisé ici pour vectoriser les segments, notamment dans sa variante multilingue exécutée en local.
   \item[stockage objet] Conservation des fichiers sous forme d'objets identifiés par une clé, distincte de la description métier en base de données. Dans la plateforme, ce rôle est assuré par MinIO.
-  \item[TLS (\textit{Transport Layer Security})] Protocole de protection des échanges réseau, utilisé notamment sur le point d'entrée exposé (reverse proxy).
+  \item[Transformer] Architecture de réseau de neurones, introduite par Vaswani et al.\ (2017), qui constitue le socle technique des grands modèles de langage contemporains.
+  \item[Vault] Coffre à secrets utilisé pour fournir les identifiants et clés aux services au démarrage, plutôt que de les inscrire dans les images applicatives.
+  \item[vectorisation] Transformation d'un texte en vecteur numérique afin qu'il puisse être comparé, indexé et retrouvé par des algorithmes de similarité.
+  \item[Whisper] Modèle de transcription automatique de l'audio (et de la piste sonore des vidéos) utilisé dans la chaîne de reconnaissance du contenu.
 \end{description}
 
 \end{document}

@@ -1,47 +1,64 @@
-\chapter{Méthodologie et organisation du projet}
-\section{Démarche}
-Ce chapitre rappelle la démarche méthodologique adoptée pour la conduite du projet, depuis le cadrage initial jusqu'à la mise en production progressive de la solution.
+\chapter{Méthodologie de l'étude}
+\label{ch:methodologie}
 
-Une approche itérative et incrémentale, inspirée des méthodes agiles (Scrum), a été retenue afin de livrer rapidement une première version fonctionnelle du système, puis d'enrichir progressivement ses fonctionnalités en fonction des retours des utilisateurs.
+Les chapitres précédents ont situé les fondements de la gestion documentaire et formulé la problématique à partir du contexte ministériel. Avant d'analyser l'existant, de concevoir puis de réaliser la plateforme, il convient de préciser comment l'étude a été conduite. Ce chapitre expose le positionnement de la démarche, le recueil des besoins, les choix de conception et de réalisation, ainsi que le cadre d'évaluation. Il ne décrit pas encore la solution : il en fixe la méthode.
 
-Cette démarche a permis de réduire les risques, d'améliorer l'adéquation aux besoins métiers et de favoriser une validation continue des choix techniques.
+\section{Positionnement de la démarche}
 
-Les principales étapes ont été les suivantes :
-\begin{itemize}
-  \item \textbf{Cadrage fonctionnel} : recueil des besoins auprès des parties prenantes (secrétariats, équipe technique), identification des contraintes métier et définition des cas d'usage prioritaires ;
-  \item \textbf{Prototypage initial} : mise en place d'un premier pipeline minimal (ingestion $\rightarrow$ OCR $\rightarrow$ stockage) afin de valider les choix techniques ;
-  \item \textbf{Itérations successives} : ajout progressif des modules d'extraction, d'assistance intelligente (classification, renommage) et de recherche documentaire ;
-  \item \textbf{Intégration des interfaces utilisateur} : développement des interfaces de consultation et de validation, avec prise en compte des retours terrain ;
-  \item \textbf{Stabilisation et mise en production} : amélioration de la robustesse, mise en place de l'observabilité (logs, métriques, alertes) et préparation au déploiement en environnement \textit{on-premise}.
-\end{itemize}
+Ce mémoire s'inscrit dans un Master professionnel en Systèmes d'Information. Il ne vise pas à proposer un nouveau modèle d'intelligence artificielle, ni à démontrer une loi générale sur l'archivage public. Il vise à concevoir, réaliser et évaluer, dans un contexte administratif réel, une chaîne d'assistance au traitement documentaire.
 
-L'implication des parties prenantes a été un élément clé de la démarche. Des échanges réguliers avec les utilisateurs finaux ont permis d'ajuster les fonctionnalités, notamment sur les règles de classement et les interfaces de validation.
+La démarche est donc celle d'un projet d'ingénierie ancré dans un terrain. Elle articule quatre temps : observer le fonctionnement existant et en déduire des besoins vérifiables ; traduire ces besoins en choix de conception ; les implémenter dans une plateforme déployée en environnement interne ; confronter la solution aux besoins identifiés, dans les limites du corpus et des conditions d'exploitation disponibles.
 
-Les principaux risques identifiés concernaient :
-\begin{itemize}
-  \item la qualité et la variabilité des documents scannés (impact sur l'OCR) ;
-  \item l'hétérogénéité des formats documentaires ;
-  \item la nécessité de garantir un contrôle humain sur les décisions automatisées.
-\end{itemize}
+Cette orientation explique le poids donné à la validation humaine, à la traçabilité et au contrôle des accès. Dans une administration publique, une automatisation n'est acceptable que si l'agent reste responsable des décisions qui structurent le fonds. La méthode retenue consiste donc à faire proposer par le système, puis à faire confirmer par l'agent, plutôt qu'à mesurer uniquement la performance brute d'un modèle.
 
-Ces risques ont été atténués par :
-\begin{itemize}
-  \item une architecture asynchrone basée sur un système de messagerie, permettant de fiabiliser le traitement ;
-  \item la mise en place d'un workflow de validation utilisateur (\og proposer puis valider \fg{}) ;
-  \item une approche progressive permettant d'ajuster les traitements en fonction des résultats observés.
-\end{itemize}
+\section{Recueil des besoins et analyse de l'existant}
 
-\section{Organisation et planification}
-Le projet a été structuré selon une logique d'itérations courtes (\textit{sprints}), avec des livraisons incrémentales permettant de valider rapidement les fonctionnalités développées.
+L'analyse de l'existant, présentée au chapitre suivant, repose sur trois sources complémentaires, recueillies au \nomMinistere{}.
 
-Les principaux livrables ont été organisés comme suit :
-\begin{itemize}
-  \item (i) ingestion automatique des documents ;
-  \item (ii) OCR et stockage ;
-  \item (iii) extraction des informations et gestion des métadonnées ;
-  \item (iv) assistance au classement et au renommage ;
-  \item (v) interface utilisateur et moteur de recherche ;
-  \item (vi) observabilité, supervision et durcissement du système.
-\end{itemize}
+La première est l'\textbf{observation du processus documentaire} tel qu'il est pratiqué au quotidien : numérisation des pièces papier, dépôt sur le serveur de fichiers, classement dans l'arborescence, saisie dans l'index Excel. Cette observation a permis de reconstituer la chaîne réelle des opérations, et non seulement celle décrite dans les documents de cadrage.
 
-Chaque itération donnait lieu à une démonstration auprès des utilisateurs et de l'équipe technique, permettant de recueillir des retours et d'ajuster les développements suivants. Cette boucle de feedback a contribué à améliorer progressivement la pertinence fonctionnelle et l'ergonomie du système.
+La deuxième est constituée des \textbf{échanges avec les personnes chargées du traitement}. Cinq secrétaires assurent le flux courant, estimé à environ 10\,000 dossiers par an. Cinq agents ont été mobilisés pour l'archivage du fonds documentaire, notamment des archives anciennes. Plusieurs séances ont été tenues avec ces deux groupes et avec les autres parties prenantes (encadrement métier, maîtrise d'ouvrage). Ces échanges ont précisé les gestes répétitifs, les cas ambigus (expéditeur proche d'un autre organisme, source mal tranchée, pièce atypique) et les attentes en matière d'interface : voir le document, le texte extrait et les propositions dans un même espace, afin de corriger sans tout ressaisir.
+
+La troisième est le \textbf{cahier des charges} du projet de numérisation. Il fixe notamment la récupération des fichiers issus des scanners, l'extraction de l'expéditeur, du numéro et de l'objet, le nommage selon la nomenclature retenue, le classement par type et la distinction des profils d'accès. Il a servi de référence pour transformer des constats de terrain en exigences contrôlables.
+
+Ces sources ne constituent pas une enquête statistique. Elles suffisent, dans le cadre d'un mémoire professionnel, à fonder un diagnostic opérationnel et à en dériver des critères d'acceptation. Ceux-ci, formulés au chapitre~\ref{ch:existant}, relient chaque besoin prioritaire à un résultat attendu (ingestion, extraction, renommage, classement, validation, métadonnées, recherche, traçabilité). C'est ce cadre, plutôt qu'une hypothèse expérimentale isolée, qui guide ensuite la conception et l'évaluation.
+
+\section{Démarche de conception}
+
+La conception procède des besoins, et non d'un choix technologique préalable. Les principes retenus (assistance contrôlée, séparation des responsabilités, règles explicites de classement, représentation multi-composante du document, sécurité et traçabilité dès l'architecture) répondent chacun à une difficulté observée sur le terrain.
+
+Le document n'est pas conçu comme un fichier isolé. Il relie un objet binaire, une description, une position dans l'arborescence et une représentation destinée à la recherche. Cette organisation vise à supprimer la séparation constatée entre le serveur de fichiers et l'index Excel. Le classement n'est pas laissé au modèle de langage : celui-ci propose des métadonnées ; des règles déterministes construisent ensuite le chemin. La recherche et l'assistance conversationnelle sont conçues comme un dispositif distinct du pipeline d'archivage, afin de ne pas confondre organiser le fonds et l'interroger.
+
+Les alternatives techniques ont été tranchées selon des contraintes ministérielles : déploiement interne, maîtrise des accès, possibilité de faire évoluer un moteur d'OCR, un modèle d'embeddings ou un modèle de langage sans reconstruire l'ensemble. Le chapitre~\ref{ch:conception} justifie ces choix. Le présent chapitre en retient surtout la méthode : partir du besoin, expliciter les principes, puis sélectionner les composants.
+
+\section{Démarche de réalisation}
+
+La réalisation a suivi une approche itérative. Une première chaîne minimale a permis de valider l'ingestion, la reconnaissance du contenu et le stockage, avant d'ajouter l'extraction, le classement, les interfaces de validation, puis la recherche et l'assistance. Chaque incrément a été confronté aux agents concernés, notamment sur les règles de classement et sur l'écran de traitement.
+
+Cette progression a réduit le risque de livrer un système complet mais inadapté. Elle a aussi permis d'ajuster des choix en cours de route. Ainsi, la lecture directe de la couche texte des PDF nativement numériques, envisagée en conception, n'a pas été retenue : un même pipeline d'OCR traite de manière uniforme un fonds où scans et fichiers nés numériques coexistent. De tels écarts sont documentés au chapitre~\ref{ch:realisation} ; ils font partie de la méthode, plutôt que d'être dissimulés.
+
+Le développement s'est appuyé sur une organisation en services, un bus de messages pour les traitements longs et un déploiement sur site sur le réseau interne. L'objectif n'était pas de produire un démonstrateur isolé, mais une plateforme utilisable dans l'environnement du ministère, avec authentification, droits, journalisation et supervision.
+
+\section{Cadre d'évaluation}
+
+L'évaluation vise à vérifier si la chaîne réalisée répond aux besoins du chapitre~\ref{ch:existant}, dans les conditions d'exploitation internes. Elle ne prétend pas établir une performance généralisable à l'ensemble des archives administratives togolaises.
+
+Le risque, sur ce type de projet, n'est pas d'avoir trop peu d'indicateurs. C'est d'en afficher quelques-uns qui donnent une impression de précision alors qu'ils ne mesurent pas ce que l'on cherche à démontrer. Un taux de documents ayant reçu un type n'est pas un taux de précision. Un CER ou une exactitude calculés contre les sorties déjà produites par le système mesurent une reproductibilité, non une qualité métier. La méthode consiste donc à nommer chaque métrique pour ce qu'elle mesure, et à réserver le tableau principal aux indicateurs dont la référence est indépendante, ou dont la lecture opérationnelle est explicite.
+
+Quatre dimensions structurent l'évaluation, détaillées au chapitre~\ref{ch:realisation}.
+
+La première est la \textbf{qualité du traitement} (robustesse opérationnelle) : volume effectivement pris en charge, taux d'échec du pipeline, achèvement de l'OCR, de l'extraction et de l'analyse, délais perçus par les services interactifs. Les critères d'acceptation du chapitre~\ref{ch:existant} fournissent ici la grille : ils vérifient que la chaîne tient.
+
+La deuxième porte sur la \textbf{qualité de l'OCR, de la classification et de l'extraction}. Le CER et le WER, l'accuracy et le F1 macro, ainsi que le F1 par champ, n'entrent dans le résultat principal que lorsqu'un texte ou des métadonnées de référence ont été vérifiés par un humain. Tant que le gold recopie les sorties de production, ces scores sont relégués à un contrôle de reproductibilité. En revanche, le taux de complétude des métadonnées, lu sur le tableau de bord, reste un indicateur opérationnel utile, à condition de ne jamais l'appeler taux de précision.
+
+La troisième est la \textbf{qualité de la recherche}. Le rappel au rang~5, le MRR et le nDCG au rang~5 comparent des identifiants retournés par le moteur à un document jugé pertinent. C'est, dans ce mémoire, le volet dont la référence est la plus indépendante du pipeline lui-même. La précision au rang~$k$ est écartée du tableau principal : avec un seul document pertinent par requête, elle est mathématiquement correcte mais peu parlante.
+
+La quatrième concerne la \textbf{qualité du RAG}. Le rappel du contexte récupéré mesure une couverture des passages, non la qualité globale de l'assistant. Une mesure de similarité avec une réponse de référence (ROUGE-L) et un taux d'ancrage dans les extraits (\textit{grounded rate}) compléteraient ce volet ; elles ne sont reportées que lorsqu'elles ont effectivement été obtenues.
+
+Le détail du protocole, des corpus et des résultats figure au chapitre~\ref{ch:realisation}. Le chapitre~\ref{ch:bilan} en discute la portée. La méthode consiste donc à évaluer une solution déployée à l'aune des besoins du terrain, en distinguant ce qui est constaté, ce qui n'est qu'un contrôle de reproductibilité, et ce qui ne peut pas encore être affirmé.
+
+\section{Synthèse}
+
+La méthodologie de l'étude combine un diagnostic de terrain, une conception guidée par les besoins, une réalisation itérative en environnement interne, et une évaluation structurée en quatre dimensions (traitement, OCR et extraction, recherche, RAG). Cette démarche est cohérente avec un mémoire professionnel : elle cherche à montrer qu'une chaîne d'assistance contrôlée peut être conçue, mise en œuvre et confrontée à un usage réel, sans multiplier les métriques dont la référence ne permet pas de conclure.
+
+Le chapitre suivant applique cette méthode à l'existant : il décrit le fonctionnement documentaire observé au \nomMinistere{}, en identifie les limites et en déduit les besoins de la plateforme.

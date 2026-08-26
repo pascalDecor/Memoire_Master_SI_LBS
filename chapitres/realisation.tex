@@ -1,4 +1,5 @@
-\chapter{Réalisation de la solution}
+\chapter{Réalisation et mise en œuvre}
+\label{ch:realisation}
 
 Le chapitre précédent a permis de définir les principaux choix de conception de la plateforme : représentation multi-composante du document, règles explicites de classement, traitement automatisé sous contrôle humain, recherche hybride et génération augmentée par récupération, ainsi qu'une architecture modulaire intégrant les exigences de sécurité et de gouvernance. Le présent chapitre montre comment ces choix ont été concrètement mis en œuvre pour aboutir à une plateforme fonctionnelle déployée en environnement interne.
 
@@ -10,21 +11,21 @@ La réalisation s'appuie sur l'architecture présentée au chapitre précédent 
 
 Le backend est développé en Python et s'appuie sur FastAPI pour les services HTTP. Le frontend repose sur Next.js et constitue le point d'entrée des agents du ministère. La couche de données utilise PostgreSQL pour les métadonnées, les nœuds et les droits, ainsi que pgvector pour l'indexation des représentations vectorielles. Les fichiers sont conservés dans MinIO, tandis que RabbitMQ assure la communication asynchrone entre les différentes étapes du traitement. Redis complète cet ensemble pour la gestion du cache et de certains états d'exécution.
 
-Les mécanismes de sécurité et d'exploitation sont intégrés au même environnement. Keycloak est utilisé pour l'authentification technique entre services et Vault pour la gestion des secrets de configuration. La supervision repose sur Prometheus, Grafana, Loki et Vector. Des tableaux de bord applicatifs, notamment avec Apache Superset pour le reporting, complètent les outils de suivi de la plateforme.
+Les mécanismes de sécurité et d'exploitation sont intégrés au même environnement. Keycloak est utilisé pour l'authentification technique entre services et Vault pour la gestion des secrets de configuration. La supervision (Prometheus, Grafana, Loki, Vector) permet de suivre les files d'attente, les durées de traitement et les journaux, afin de détecter notamment un OCR bloqué ou un traitement trop long. Des tableaux de bord applicatifs, notamment avec Apache Superset, complètent le suivi d'activité destiné aux agents.
 
-Le développement est réalisé localement avec Docker Compose. Les différents services, la base de données, le bus de messages et le stockage sont décrits dans une configuration versionnée, tandis que les paramètres d'exécution sont centralisés dans les fichiers d'environnement. L'environnement cible reprend le même assemblage de services dans un déploiement \textit{on-premise} sur le réseau interne du ministère. En production, seuls les accès applicatifs nécessaires sont exposés ; les composants d'infrastructure restent isolés sur le réseau interne.
+Le développement est réalisé localement avec Docker Compose. Les différents services, la base de données, le bus de messages et le stockage sont décrits dans une configuration versionnée, tandis que les paramètres d'exécution sont centralisés dans les fichiers d'environnement. L'environnement cible reprend le même assemblage de services dans un déploiement sur site (\textit{on-premise}) sur le réseau interne du ministère. En production, seuls les accès applicatifs nécessaires sont exposés ; les composants d'infrastructure restent isolés sur le réseau interne.
 
-Les composants d'intelligence artificielle sont intégrés derrière des interfaces stables, afin de permettre l'évolution des modèles sans remettre en cause le reste du pipeline. La reconnaissance optique de caractères s'appuie sur Tesseract, avec la possibilité de recourir à un modèle de vision lorsque le texte extrait est insuffisant. L'audio et la vidéo sont transcrits à l'aide de Whisper. Les représentations vectorielles destinées à la recherche peuvent être produites par un modèle Sentence-BERT multilingue exécuté localement ou par un service d'embeddings externe, selon les contraintes de déploiement. La classification, le renommage et l'assistance conversationnelle sont assurés par le service de langage, qui peut utiliser un modèle local ou un service distant.
+Les composants d'intelligence artificielle sont intégrés derrière des interfaces stables, afin de permettre l'évolution des modèles sans remettre en cause le reste du pipeline. La reconnaissance optique de caractères s'appuie sur Tesseract~5, retenu après comparaison interne (section~\ref{sec:eval-choix-briques}), avec la possibilité de recourir à un modèle de vision lorsque le texte extrait est insuffisant. L'audio et la vidéo sont transcrits à l'aide de Whisper. Les représentations vectorielles destinées à la recherche peuvent être produites par un modèle Sentence-BERT multilingue exécuté localement ou par un service d'embeddings externe, selon les contraintes de déploiement. La classification, le renommage et l'assistance conversationnelle sont assurés par le service de langage ; le modèle local retenu est Mistral~7B, exécuté via Ollama.
 
 Cet environnement n'a pas vocation à constituer un inventaire exhaustif des dépendances du projet. Il permet surtout de montrer comment les différents éléments de l'architecture conçue au chapitre précédent ont été concrètement traduits en composants exécutables.
 
 \section{Implémentation du modèle documentaire et du stockage}
 
-Le modèle conçu au chapitre~4 distingue le fichier, l'enregistrement descriptif, le nœud d'exploration et l'index vectoriel. La réalisation conserve cette séparation : MinIO garde l'objet binaire ; PostgreSQL porte la description, l'arborescence, les droits et les vecteurs destinés à la recherche. Le nom de fichier n'est plus une clé ; un identifiant relie les composantes entre elles.
+Le modèle conçu au chapitre~\ref{ch:conception} distingue le fichier, l'enregistrement descriptif, le nœud d'exploration et l'index vectoriel. La réalisation conserve cette séparation : MinIO garde l'objet binaire ; PostgreSQL porte la description, l'arborescence, les droits et les vecteurs destinés à la recherche. Le nom de fichier n'est plus une clé ; un identifiant relie les composantes entre elles.
 
 Les champs qui servent au classement et aux filtres (objet, type, source, sensibilité, dates, numéros) restent structurés. Un espace JSONB accueille ce qui n'entre pas dans ces colonnes, notamment le texte reconnu et des attributs propres à une famille documentaire. On évite ainsi deux écueils déjà rencontrés dans l'existant : un schéma trop rigide, et un index entièrement libre à la manière d'Excel.
 
-Les types, expéditeurs et destinataires sont administrables. Le modèle de langage propose une valeur parmi ce vocabulaire, plutôt qu'un libellé inventé. Un même document peut être lié à plusieurs organismes, avec un principal pour le chemin. L'arborescence, elle, est un arbre de nœuds (dossier ou fichier). Le statut du nœud reste distinct du statut technique d'ingestion : \texttt{DRAFT} tant que la validation n'est pas confirmée, \texttt{VALIDATED} une fois le classement accepté, \texttt{ARCHIVED} pour la corbeille, et non pour des archives définitives. Dans la version réalisée, le flux est matérialisé par les racines Entrants et Sortants, conformément au serveur existant. La racine Internes envisagée en conception n'est pas encore contrainte en base ; elle demeure une extension possible, sans changer la règle expéditeur / type / année / mois.
+Les types, expéditeurs et destinataires sont administrables. Le modèle de langage propose une valeur parmi ce vocabulaire, plutôt qu'un libellé inventé. Un même document peut être lié à plusieurs organismes, avec un principal pour le chemin. L'arborescence, elle, est un arbre de nœuds (dossier ou fichier). Le statut du nœud reste distinct du statut technique d'ingestion : \texttt{DRAFT} tant que la validation n'est pas confirmée, \texttt{VALIDATED} une fois le classement accepté, \texttt{ARCHIVED} pour la corbeille, et non pour des archives définitives. Le flux est matérialisé par les racines \texttt{Entrants}, \texttt{Sortants} et \texttt{Internes}. Le chemin conserve ensuite la règle expéditeur / type / année / mois.
 
 Les fichiers arrivent d'abord dans une zone tampon MinIO, puis sont déplacés vers le chemin calculé après analyse. L'aperçu dans le navigateur passe par des liens temporaires, sans exposer le stockage. L'index de recherche est porté par les segments du document, et non par un vecteur unique attaché à la pièce entière : c'est ce qui permet le RAG par passages. Si un document est supprimé physiquement, ses segments le sont aussi.
 
@@ -33,18 +34,18 @@ La figure~\ref{fig:db-schema-postgres} traduit ce modèle en implémentation, sa
 \begin{figure}[H]
 \centering
 \input{images/fig_db_schema_postgres.tex}
-\caption{Traduction du modèle documentaire : fichier objet, enregistrement, nœud, segments et droits.}
+\caption{Traduction du modèle documentaire : fichier objet, enregistrement, nœud, segments et droits}
 \label{fig:db-schema-postgres}
 \end{figure}
 
 \section{Réalisation du pipeline de traitement documentaire}
 
-Le pipeline d'archivage enchaîne l'acquisition, la reconnaissance du contenu, l'analyse par modèle de langage, la détermination du classement à partir des métadonnées proposées, l'indexation et la validation humaine (figure~\ref{fig:flux-traitement}). Deux origines convergent vers la même entrée : le dossier surveillé des scanners, et le dépôt manuel depuis l'interface. La figure reprend la chaîne conçue au chapitre~4, en y inscrivant ce qui a été effectivement implémenté : les files RabbitMQ, l'appel HTTP synchrone au modèle de langage, le nœud \texttt{DRAFT} et la confirmation humaine.
+Le pipeline d'archivage enchaîne l'acquisition, la reconnaissance du contenu, l'analyse par modèle de langage, la détermination du classement à partir des métadonnées proposées, l'indexation et la validation humaine (figure~\ref{fig:flux-traitement}). Deux origines convergent vers la même entrée : le dossier surveillé des scanners, et le dépôt manuel depuis l'interface. La figure reprend la chaîne conçue au chapitre~\ref{ch:conception}, en y inscrivant ce qui a été effectivement implémenté : les files RabbitMQ, l'appel HTTP synchrone au modèle de langage, le nœud \texttt{DRAFT} et la confirmation humaine.
 
 \begin{figure}[H]
 \centering
 \input{images/fig_pipeline_realisation.tex}
-\caption{Pipeline réalisé : de l'arrivée du fichier à la validation, avec reconnaissance selon le support et nœud \texttt{DRAFT}.}
+\caption{Pipeline réalisé : de l'arrivée du fichier à la validation, avec reconnaissance selon le support et nœud \texttt{DRAFT}}
 \label{fig:flux-traitement}
 \end{figure}
 
@@ -54,7 +55,7 @@ Le scan-listener surveille un répertoire partagé. Lorsqu'un fichier apparaît 
 
 L'empreinte est conservée avec l'enregistrement. Elle n'interrompt pas la file d'ingestion : le service d'upload enregistre le fichier même si un autre fichier possédant la même empreinte SHA-256 existe déjà. En revanche, lors d'un dépôt depuis l'interface, une comparaison peut signaler à l'agent qu'un fichier binaire identique selon cette empreinte est déjà présent, sans révéler un document hors de son périmètre. L'écran de vérification, présenté plus loin, reprend ce mécanisme.
 
-\subsection{Reconnaissance du contenu et traitement multimodal}
+\subsection{Reconnaissance du contenu selon le support}
 
 Le service OCR consomme \texttt{document.uploaded}, récupère l'objet et oriente le traitement selon le type de contenu, plutôt que d'appliquer un unique moteur à tous les fichiers.
 
@@ -68,7 +69,7 @@ Le texte retenu, la méthode employée et, le cas échéant, une légende ou des
 
 \subsection{Analyse par LLM, métadonnées, renommage et classement}
 
-L'extraction-service consomme \texttt{ocr.completed} et appelle de manière synchrone le language-model-service (\texttt{POST /classify-and-rename}) : le service attend la réponse HTTP avant de poursuivre. Le prompt fournit le texte (borné, afin de rester dans une fenêtre raisonnable), la liste des types documentaires actifs et les consignes de nommage du ministère. Le modèle propose l'expéditeur, le destinataire, les numéros, l'objet, le type, la sensibilité (\texttt{public}, \texttt{interne}, \texttt{confidentiel}, \texttt{secret}), la date d'arrivée et la source (entrant ou sortant). Ces propositions sont écrites en base ; elles ne valident pas l'archivage.
+L'extraction-service consomme \texttt{ocr.completed} et appelle de manière synchrone le language-model-service (\texttt{POST /classify-and-rename}) : le service attend la réponse HTTP avant de poursuivre. Le prompt fournit le texte (borné, afin de rester dans une fenêtre raisonnable), la liste des types documentaires actifs et les consignes de nommage du ministère. Le modèle propose l'expéditeur, le destinataire, les numéros, l'objet, le type, la sensibilité (\texttt{public}, \texttt{interne}, \texttt{confidentiel}, \texttt{secret}), la date d'arrivée et la source (entrant, sortant ou interne). Ces propositions sont écrites en base ; elles ne valident pas l'archivage.
 
 Le renommage suit la nomenclature déjà attendue : \texttt{[Expéditeur] - [Numéro] - [Objet]}, avec \texttt{0000} lorsque le numéro interne est introuvable. Le chemin n'est pas généré par le modèle de langage. À partir des métadonnées proposées, l'application calcule le classement, par exemple :
 
@@ -80,7 +81,7 @@ L'objet MinIO est copié vers cette clé ; le nœud d'exploration est créé ou 
 
 \subsection{Embeddings et validation humaine}
 
-Une fois le texte et les champs métier disponibles, le contenu est découpé en passages d'environ 2\,000 caractères, avec un chevauchement de 400 caractères, afin de préserver une continuité contextuelle entre passages tout en limitant leur taille. Des segments distincts sont également ajoutés pour l'objet, l'expéditeur, le type, le destinataire et le numéro interne. Chaque segment est vectorisé et inséré dans \texttt{document\_chunks}. Les documents en \texttt{DRAFT} peuvent être indexés ; l'accès aux résultats de recherche, et aux extraits transmis au modèle de langage, est ensuite filtré par le statut du nœud, les ACL et la sensibilité.
+Une fois le texte et les champs métier disponibles, le contenu est découpé en passages d'environ 2\,000 caractères, avec un chevauchement de 400 caractères, afin de préserver une continuité contextuelle entre passages tout en limitant leur taille. Les champs métier (objet, expéditeur, type, destinataire, numéro interne) sont indexés à part, comme unités distinctes des segments de contenu. Chaque unité est vectorisée et insérée dans \texttt{document\_chunks}. Les documents en \texttt{DRAFT} peuvent être indexés ; l'accès aux résultats de recherche, et aux extraits transmis au modèle de langage, est ensuite filtré par le statut du nœud, les ACL et la sensibilité.
 
 La confirmation reste humaine : sans validation, le nœud demeure en \texttt{DRAFT}. C'est le principe d'assistance contrôlée. Dans l'espace de traitement, le validateur voit le fichier, le texte extrait, les champs proposés et le classement calculé. Il peut corriger l'expéditeur, l'objet, la source ou le type, puis valider. La validation passe le nœud en \texttt{VALIDATED}, fige la date de validation et, si nécessaire, reclasse le fichier lorsque la date d'arrivée ou la source a été corrigée. Pour les archives anciennes, cinq agents ont participé au contrôle de ces propositions, compte tenu de la sensibilité et de la difficulté particulières de ce corpus.
 
@@ -94,25 +95,23 @@ La conception du RAG (figure~\ref{fig:rag-pipeline}) est implémentée dans le r
 
 \subsection{Indexation, recherche hybride et fusion}
 
-Les segments de contenu et de métadonnées produits par le pipeline de traitement sont enregistrés dans PostgreSQL avec leur représentation vectorielle dans \texttt{pgvector}. Le modèle d'embedding est configurable selon l'environnement d'exécution. La configuration locale repose sur le modèle Sentence-BERT multilingue \texttt{paraphrase-multilingual-MiniLM-L12-v2}, produisant des vecteurs de 384 dimensions \citer{reimers2019}{Reimers et Gurevych, 2019}, tandis qu'un service d'embeddings externe peut être utilisé avec des vecteurs de 1024 dimensions. Pour chaque index, les requêtes sont vectorisées avec le même modèle que celui utilisé pour les documents indexés.
+Les segments de contenu et les champs métier produits par le pipeline de traitement sont enregistrés dans PostgreSQL avec leur représentation vectorielle dans \texttt{pgvector}. Le modèle d'embedding est configurable selon l'environnement d'exécution. La configuration locale repose sur le modèle Sentence-BERT multilingue \texttt{paraphrase-multilingual-MiniLM-L12-v2}, produisant des vecteurs de 384 dimensions \citp{reimers2019}{Reimers et Gurevych, 2019}, tandis qu'un service d'embeddings externe peut être utilisé avec des vecteurs de 1024 dimensions. Pour chaque index, les requêtes sont vectorisées avec le même modèle que celui utilisé pour les documents indexés.
 
-Lorsqu'une requête est soumise, le système constitue trois listes de candidats complémentaires. La première repose sur la similarité vectorielle entre la requête et les segments indexés. La deuxième exploite la correspondance lexicale dans le texte des segments, notamment par recherche de sous-chaînes accélérée par l'extension \texttt{pg\_trgm} de PostgreSQL. La recherche plein texte n'est pas appliquée directement aux segments. La troisième branche interroge les métadonnées des documents. Elle combine une recherche plein texte en français à l'aide de \texttt{tsvector} et \texttt{plainto\_tsquery}, ainsi que des correspondances de sous-chaînes sur des attributs tels que le nom du fichier, l'objet, les tags et la description.
+Lorsqu'une requête est soumise, le filtrage de sécurité détermine d'abord l'ensemble $D$ des documents autorisés. Trois listes de candidats sont ensuite construites sur $D$, selon les méthodes $\mathcal{M}$ du chapitre~\ref{ch:conception}. La première, $L_{\mathrm{dense}}$, est une récupération dense au sens du Dense Passage Retrieval : similarité entre l'embedding de la requête et ceux des unités indexées (segments de contenu et champs métier) \citp{karpukhin2020}{Karpukhin et al., 2020}. La deuxième, $L_{\mathrm{lex}}$, exploite la correspondance lexicale dans le texte des segments, notamment par recherche de sous-chaînes accélérée par l'extension \texttt{pg\_trgm} de PostgreSQL ; la recherche plein texte n'est pas appliquée directement aux segments. La troisième, $L_{\mathrm{doc}}$, combine une recherche plein texte en français (\texttt{tsvector}, \texttt{plainto\_tsquery}) et des correspondances de sous-chaînes sur des attributs tels que le nom du fichier, l'objet, les tags et la description.
 
-La recherche sur les métadonnées constitue une source de candidats indépendante et ne se limite donc pas à filtrer les résultats issus des recherches vectorielle et lexicale. Des filtres optionnels portant notamment sur le type documentaire ou les dates peuvent toutefois restreindre les trois branches avant leur fusion. Les listes obtenues sont ensuite combinées au moyen de Reciprocal Rank Fusion (RRF), avec une constante $k=60$ \citer{cormack2009}{Cormack, Clarke et Buettcher, 2009}. Cette méthode permet de fusionner les résultats à partir de leur rang respectif, sans comparer directement des scores issus de mécanismes de recherche de nature différente.
+Cette troisième liste constitue une source de candidats indépendante et ne se limite donc pas à filtrer les résultats issus des deux autres. Des filtres optionnels portant notamment sur le type documentaire ou les dates peuvent toutefois restreindre les trois branches avant leur fusion. Les listes sont combinées par Reciprocal Rank Fusion selon l'équation~\eqref{eq:rrf}, avec $k=60$ \citp{cormack2009}{Cormack, Clarke et Buettcher, 2009}. Cette constante est celle de la configuration classique ; elle n'a pas été calibrée sur le jeu de test présenté plus bas. Aucune pondération supplémentaire n'est appliquée ($w_{m} = 1$). Un réordonnancement lexical léger n'intervient qu'après cette fusion.
 
-Après la fusion, un réordonnancement léger est appliqué afin de favoriser les résultats présentant un meilleur recouvrement lexical avec la requête. Le système prend également en charge une expansion de requête fondée sur des synonymes du vocabulaire métier, par exemple entre \og arrêté\fg{}, \og décret\fg{} et \og circulaire\fg{}, ou entre \og marché\fg{} et \og offres\fg{}. Cette expansion permet d'élargir les termes pris en compte lors de la recherche lorsque la formulation employée par l'utilisateur diffère de celle présente dans les documents \citer{azad2019}{Azad et Deepak, 2019}.
+L'expansion lexicale de la requête (synonymes du vocabulaire métier, par exemple entre \og arrêté\fg{}, \og décret\fg{} et \og circulaire\fg{}, ou entre \og marché\fg{} et \og offres\fg{}) et une seconde passe (seuils assouplis, éventuellement reformulation) sont implémentées comme mécanismes de secours lorsque la première récupération ne fournit pas d'extraits suffisants \citp{azad2019}{Azad et Deepak, 2019}. Elles n'ont pas été isolées dans l'évaluation de ce chapitre : les métriques rapportées caractérisent le pipeline tel qu'il s'exécute, et non la contribution propre de ces secours.
 
-Lorsque la première récupération ne fournit aucun extrait suffisamment pertinent, une seconde passe peut être déclenchée avec des paramètres élargis, notamment des seuils de similarité moins stricts et un nombre plus important de voisins. Si les résultats demeurent insuffisants, une récupération itérative peut reformuler la requête, explorer de nouvelles variantes ou concentrer la recherche sur un document jugé prometteur. Ce mécanisme reprend ainsi le principe de récupération itérative défini lors de la conception, sans dépendre d'un seuil unique fixé de manière rigide.
-
-L'interface de recherche conversationnelle utilise par défaut huit extraits pour constituer le contexte transmis au modèle de langage. Les seuils appliqués aux recherches par similarité sont configurables et ne sont pas utilisés pour interpréter les scores RRF, qui correspondent à une mesure de classement et non à une similarité cosinus. Enfin, avant leur transmission au modèle, les passages récupérés sont bornés et compressés afin de limiter la taille du contexte et du prompt \citer{liu2024}{Liu et al., 2024}. Une règle de diversification évite également qu'un même document fournisse à lui seul l'ensemble des extraits retenus.
+L'interface de recherche conversationnelle utilise par défaut huit extraits. Les seuils de similarité sont configurables et ne servent pas à interpréter les scores RRF, qui mesurent un rang fusionné plutôt qu'une similarité cosinus. Avant transmission au modèle, chaque passage est réduit de façon extractive : les phrases les plus proches de la requête sont retenues, puis la longueur est bornée (environ 800 caractères). Cette réduction vise à contenir la taille du prompt ; ce n'est pas une méthode nommée de \textit{context compression}. Le constat de \citer{liu2024}{Liu et al. (2024)} sur la dégradation des modèles face à un contexte trop long motive l'objectif, sans valider expérimentalement cet algorithme sur notre corpus. Une règle de diversification évite qu'un même document monopolise les $N$ extraits.
 
 \subsection{Filtrage, génération et sources}
 
-Avant la récupération des passages, le système applique les contraintes de sécurité associées à l'utilisateur courant. Elles portent notamment sur le niveau de sensibilité autorisé (MAC), le statut des nœuds, les droits d'accès définis par les ACL et, le cas échéant, la restriction à un document explicitement ouvert. Ces contraintes déterminent l'ensemble des documents susceptibles d'alimenter la recherche et empêchent qu'un contenu non autorisé soit transmis au modèle de langage \citer{namer2024}{Namer et al., 2024} ; \citer{owasp2025}{OWASP, 2025}. Un document encore en \texttt{DRAFT} ou placé dans la corbeille est ainsi exclu de l'assistance par défaut.
+Avant la récupération des passages, le système applique les contraintes de sécurité associées à l'utilisateur courant. Elles portent notamment sur le niveau de sensibilité autorisé (MAC), le statut des nœuds, les droits d'accès définis par les ACL et, le cas échéant, la restriction à un document explicitement ouvert. Ces contraintes déterminent l'ensemble des documents susceptibles d'alimenter la recherche et empêchent qu'un contenu non autorisé soit transmis au modèle de langage (\citer{namer2024}{Namer et al., 2024} ; \citer{owasp2025}{OWASP, 2025}). Un document encore en \texttt{DRAFT} ou placé dans la corbeille est ainsi exclu de l'assistance par défaut.
 
-Après filtrage et récupération, le modèle de langage reçoit l'historique pertinent de la conversation, les passages sélectionnés et une consigne précisant que la réponse doit s'appuyer sur ce contexte. Lorsque les éléments récupérés ne permettent pas de répondre à la question, le modèle doit signaler l'insuffisance de l'information disponible plutôt que de compléter la réponse par une information non présente dans les sources \citer{nist2024}{NIST, 2024}.
+Après filtrage et récupération, le modèle de langage reçoit l'historique pertinent de la conversation, les passages sélectionnés et une consigne précisant que la réponse doit s'appuyer sur ce contexte. Lorsque les éléments récupérés ne permettent pas de répondre à la question, le modèle doit signaler l'insuffisance de l'information disponible plutôt que de compléter la réponse par une information non présente dans les sources \citp{nist2024}{NIST, 2024}.
 
-Chaque passage transmis au modèle conserve une référence vers le document et son emplacement dans celui-ci. La réponse peut ainsi être accompagnée de sources permettant à l'agent de retrouver et d'ouvrir la pièce correspondante. Cette traçabilité permet de relier la réponse générée aux documents effectivement utilisés et constitue un élément essentiel de l'assistance documentaire fondée sur la récupération, au-delà de la seule génération de texte \citer{lewis2020}{Lewis et al., 2020}.
+Chaque passage transmis au modèle conserve une référence vers le document et son emplacement dans celui-ci. La réponse peut ainsi être accompagnée de sources permettant à l'agent de retrouver et d'ouvrir la pièce correspondante. Cette traçabilité permet de relier la réponse générée aux documents effectivement utilisés et constitue un élément essentiel de l'assistance documentaire fondée sur la récupération, au-delà de la seule génération de texte \citp{lewis2020}{Lewis et al., 2020}.
 
 \section{Mise en œuvre de la sécurité et de la gouvernance}
 
@@ -132,59 +131,63 @@ Enfin, les opérations importantes, notamment la validation, la modification des
 
 Les interfaces réalisées traduisent les principaux parcours du travail documentaire présentés lors de la conception. Leur organisation privilégie les actions effectivement disponibles pour l'utilisateur, tandis que les fonctionnalités accessibles sont déterminées par les permissions qui lui sont attribuées.
 
-Le parcours de traitement et de validation constitue le premier espace central de la plateforme. Il permet de suivre les documents en cours d'analyse, de consulter le fichier et le contenu extrait, puis d'examiner les métadonnées et le classement proposés. Le validateur peut corriger les informations nécessaires avant de confirmer l'archivage.
+Le parcours de traitement et de validation constitue le premier espace central de la plateforme. Il permet de suivre les documents en cours d'analyse, de consulter le fichier et le contenu extrait, puis d'examiner les métadonnées et le classement proposés (figure~\ref{fig:ui-traitement-validation}). Le validateur peut corriger les informations nécessaires avant de confirmer l'archivage.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.98\textwidth]{images/screens/Traitement_documents.png}
-\caption{Interface de traitement et de validation d'un document.}
+\caption{Interface de traitement et de validation d'un document}
 \label{fig:ui-traitement-validation}
 \end{figure}
 
-L'interface d'exploration documentaire reprend l'organisation retenue pour le classement, avec les niveaux Entrants ou Sortants, expéditeur, type documentaire, année et mois. Elle permet ainsi de retrouver les documents selon une logique proche de l'arborescence documentaire définie lors de la conception.
+L'interface d'exploration documentaire reprend l'organisation retenue pour le classement, avec les niveaux Entrants, Sortants ou Internes, puis expéditeur, type documentaire, année et mois (figure~\ref{fig:ui-exploration}). Elle permet ainsi de retrouver les documents selon une logique proche de l'arborescence définie lors de la conception.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.98\textwidth]{images/screens/exploration_arborescence.png}
-\caption{Interface d'exploration du fonds documentaire.}
+\caption{Interface d'exploration du fonds documentaire}
 \label{fig:ui-exploration}
 \end{figure}
 
-La recherche et l'assistance intelligente constituent le second parcours majeur. L'utilisateur peut effectuer une recherche à partir de mots-clés et de filtres, ou formuler directement une question en langage naturel. Dans ce dernier cas, la réponse générée est accompagnée des sources utilisées, qui peuvent être ouvertes pour vérifier l'information fournie.
+La recherche et l'assistance intelligente constituent le second parcours majeur. L'utilisateur peut effectuer une recherche à partir de mots-clés et de filtres, ou formuler directement une question en langage naturel. Dans ce dernier cas, la réponse générée est accompagnée des sources utilisées, qui peuvent être ouvertes pour vérifier l'information fournie (figure~\ref{fig:ui-assistant}).
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.98\textwidth]{images/screens/conversation_assistant.png}
-\caption{Interface de recherche et d'assistance intelligente.}
+\caption{Interface de recherche et d'assistance intelligente}
 \label{fig:ui-assistant}
 \end{figure}
 
-Enfin, une vue synthétique de l'administration ou du suivi de l'activité peut être présentée afin d'illustrer les fonctions de gouvernance et de supervision de la plateforme.
+Enfin, une vue synthétique de l'administration ou du suivi de l'activité illustre les fonctions de gouvernance et de supervision de la plateforme (figure~\ref{fig:ui-dashboard}).
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.98\textwidth]{images/screens/dashboard.png}
-\caption{Tableau de bord de supervision de la plateforme.}
+\caption{Tableau de bord de supervision de la plateforme}
 \label{fig:ui-dashboard}
 \end{figure}
 
-Ces parcours traduisent concrètement les choix du chapitre~4 : proposer puis valider, classer par règles explicites, rechercher autrement qu'en parcourant l'arbre, et n'afficher que ce que les droits autorisent.
+Ces parcours traduisent concrètement les choix du chapitre~\ref{ch:conception} : proposer puis valider, classer par règles explicites, rechercher autrement qu'en parcourant l'arbre, et n'afficher que ce que les droits autorisent.
 
 \section{Expérimentations et évaluation}
 
-La conception a volontairement laissé ouverts certains réglages fins, notamment la taille des segments, le nombre d'extraits récupérés, les seuils de similarité et le nombre d'itérations. Cette section confronte ces choix à un prototype exécuté en environnement interne et revient sur la question posée au chapitre~3 : dans les conditions expérimentées, la solution répond-elle aux besoins identifiés ?
+La conception a volontairement laissé ouverts certains réglages fins, notamment la taille des segments, le nombre d'extraits récupérés, les seuils de similarité et le nombre d'itérations. Cette section confronte ces choix à la solution déployée en environnement interne et revient sur la question posée au chapitre~\ref{ch:existant} : dans les conditions expérimentées, la solution répond-elle aux besoins identifiés ?
 
-L'évaluation porte sur le comportement de la plateforme et sur la qualité des résultats obtenus sur le corpus étudié. Elle ne constitue pas une preuve statistique généralisable à l'ensemble des archives administratives togolaises. Les résultats permettent donc de caractériser le fonctionnement de la solution dans les conditions expérimentées, sans en déduire un niveau de performance valable pour l'ensemble des contextes archivistiques.
+L'évaluation ne vise pas à multiplier les indicateurs. Elle les organise autour de quatre dimensions : la qualité du traitement, celle de l'OCR et de l'extraction, celle de la recherche, et celle du RAG. Elle ne constitue pas une preuve statistique généralisable à l'ensemble des archives administratives togolaises. Elle vise à caractériser le fonctionnement de la solution dans les conditions d'exploitation internes, en distinguant ce qui mesure réellement la question posée de ce qui n'en donne que l'apparence.
 
-\subsection{Protocole et corpus}
+\subsection{Protocole, corpus et lecture des métriques}
 
-Les observations portent sur le pipeline tel qu'il a été exercé : scans de qualité variable, PDF nativement numériques, pièces bureautiques, quelques fichiers audiovisuels. L'échantillon n'est pas tiré de manière représentative des 10\,000 dossiers annuels du ministère. Aucun taux de précision, aucun temps de latence moyen et aucun intervalle de confiance n'ont été mesurés de manière systématique. Les constats qui suivent sont donc principalement des \textbf{observations qualitatives} tirées des expérimentations du prototype. Quelques indicateurs de volume, présentés dans la synthèse du chapitre, complètent ces observations sans prétendre à une inférence statistique. Une campagne instrumentée plus large reste un prolongement possible ; elle n'a pas été retenue ici comme critère unique, car les besoins du chapitre~3 concernent aussi le classement, le contrôle humain et la sécurité.
+Quatre ensembles doivent être distingués. Le \textbf{fonds historique} du ministère n'est pas mesuré ici dans son intégralité. Le \textbf{flux annuel} est estimé, d'après l'observation du service, à environ 10\,000 dossiers. Le \textbf{fonds accessible en production}, lu sur le tableau de bord le 26~août~2026, compte 35\,007 documents archivés. L'\textbf{échantillon d'évaluation} est un tirage stratifié de 300 documents parmi 34\,917 pièces éligibles (statut technique \texttt{done}, texte OCR ou segments disponibles), avec une graine fixée (\texttt{seed = 42}). Les métriques finales du harnais sont calculées sur le seul split de test ($n = 205$). L'écart entre 35\,007 et 34\,917 tient au filtre d'éligibilité du harnais, plus strict que le compteur du tableau de bord.
 
-Les paramètres retenus (tableau~\ref{tab:params-rag-realisation}) décrivent la configuration du prototype. Ils ne prétendent pas à un optimum théorique, ni à une généricité hors de ce contexte.
+Le gold du harnais recopie les propositions déjà présentes en production. Les 300 documents ont été marqués comme validés pour le protocole, \textbf{sans relecture humaine des champs ni du texte OCR}. Les scores d'extraction, de type documentaire et d'OCR obtenus contre ce gold comparent donc le système à ses propres sorties. Ils sont présentés plus bas comme contrôle de reproductibilité, et non comme performance métier. Les questions de recherche, une par document, ont été générées automatiquement à partir de l'objet et de l'expéditeur ; elles ne constituent pas un jeu métier relu par les agents.
+
+Le moteur de recherche et l'assistant ont été interrogés en boucle locale sur le serveur de production. Dix objets MinIO de l'échantillon n'ont pas pu être copiés (clé absente ou chemin en base distinct de l'objet réel) ; ces absences limitent un rejeu OCR local, sans empêcher l'évaluation de l'extraction et de la recherche sur le reste du test.
+
+Les paramètres retenus (tableau~\ref{tab:params-rag-realisation}) confirment, en exploitation, les valeurs de conception du tableau~\ref{tab:params-rag-conception} et de l'équation~\eqref{eq:rrf}. Ils ne prétendent pas à un optimum théorique, ni à une généricité hors de ce contexte.
 
 \begin{table}[htbp]
 \centering
-\caption{Paramètres de travail du prototype (recherche et indexation)}
+\caption{Paramètres de travail de la solution déployée (recherche et indexation)}
 \label{tab:params-rag-realisation}
 \small
 \renewcommand{\arraystretch}{1.45}
@@ -198,46 +201,161 @@ Les paramètres retenus (tableau~\ref{tab:params-rag-realisation}) décrivent la
 \midrule
 Taille d'un segment de contenu & environ 2000 caractères \\
 Chevauchement & 400 caractères \\
-Segments métier & objet, expéditeur, type, destinataire, numéro interne \\
+Champs métier exploités & objet, expéditeur, type, destinataire, numéro interne \\
 Modèle d'embeddings (local) & MiniLM multilingue, 384 dimensions \\
-Fusion & RRF, $k=60$ \\
+Fusion & RRF, $k=60$ (non calibré sur le test) \\
 Nombre d'extraits (chat) & 8 \\
 Statuts du corpus RAG par défaut & VALIDATED (hors DRAFT et corbeille) \\
-Passe élargie si vide & seuils abaissés, voisins, reformulation possible \\
+Passe élargie si vide & implémentée, non isolée dans l'évaluation \\
 \bottomrule
 \end{tabularx}
 \endgroup
 \end{table}
 
-\subsection{OCR, métadonnées, classement et doublons}
+\subsection{Qualité du traitement}
 
-À titre d'observations qualitatives issues des expérimentations, la qualité de l'OCR a d'abord paru liée à celle du scan, comme dans l'existant. Sur les courriers contrastés examinés, Tesseract a souvent produit un texte exploitable ; sur des pages sombres, tamponnées ou manuscrites, le texte s'est révélé trop pauvre ou inexploitable. Ces écarts n'ont pas été quantifiés. Le garde-fou heuristique (longueur, lettres, ratio alphanumérique) évite de transmettre ce bruit au classifieur. Un repli vers un modèle de vision a, dans certains cas observés, amélioré la transcription, au prix d'un temps et d'un coût supérieurs, là encore sans mesure systématique. Whisper a restitué l'essentiel d'un enregistrement audio testé, sans remplacer un procès-verbal validé. Sur les fichiers bureautiques déjà numériques (Word), l'extracteur adapté au format a évité l'OCR. Les PDF, même textuels, sont passés par Tesseract.
+Le tableau de bord de production, au 26~août~2026, décrit l'échelle du fonds déjà archivé : 35\,007 documents. Sur ce stock, les trois étapes automatiques (OCR, extraction, analyse par modèle de langage) ont été menées à terme ; environ 92,7~\% des pièces sont validées (32\,452 selon la vue d'ensemble) et près de 7~\% restent en file humaine (2\,555 documents). Ce compteur ne doit pas être lu comme un taux d'échec nul du pipeline. En exploitation, sur le flux de traitement, le taux d'échec moyen observé est d'environ 5~\% : texte OCR inexploitable, timeout du modèle de langage, copie objet refusée, fichier isolé dans le répertoire d'erreur, nécessité d'un retraitement. Le harnais, calculé sur 300 documents déjà en statut \texttt{done}, ne capture pas ces échecs d'entrée ; il décrit la robustesse une fois la chaîne achevée, non le taux d'échec du flux réel.
 
-Lorsque le texte était lisible, les métadonnées proposées (expéditeur, objet, type) se sont révélées, \textbf{lors des essais}, exploitables : le validateur corrigeait plutôt qu'il ne ressaisissait l'ensemble des champs. Il ne s'agit pas d'un taux de précision calculé. Les numéros internes absents du document sont tombés à \texttt{0000}. Les erreurs rencontrées lors des expérimentations portent notamment sur des organismes aux libellés proches, sur une source mal tranchée (entrant / sortant) et sur des dates ambiguës. Ces cas justifient le maintien de la validation : une erreur d'expéditeur ou de période suffirait encore à égarer la pièce.
+Ces chiffres mesurent le fonctionnement technique du pipeline, non la justesse des métadonnées. Ils répondent toutefois à un besoin central du chapitre~\ref{ch:existant} : un volume annuel de l'ordre de 10\,000 dossiers ne peut plus reposer sur une saisie unitaire si la chaîne casse trop souvent. Un taux d'échec moyen d'environ 5~\%, avec reprise prévue (répertoire d'erreur, \texttt{reprocess}), reste compatible avec une exploitation interne ; il n'autorise pas à parler d'une chaîne sans défaillance.
 
-Le classement calculé à partir des métadonnées acceptées a reproduit le chemin attendu sur les exemples traités. Le gain observé n'est pas que le modèle identifie seul le bon dossier ; c'est que deux validateurs, à partir des mêmes champs, obtiennent le même emplacement. La détection de doublons par SHA-256 a identifié, dans les essais, les copies binaires exactes (renvoi d'un même scan, pièce jointe déjà versée). Elle n'a pas vocation à détecter une version légèrement retouchée, ni un second scan du même papier : c'est la limite d'une empreinte cryptographique, assumée dès la conception.
+Le tableau de bord fournit aussi un \textbf{taux de complétude} des métadonnées, distinct d'un taux de précision. Les propositions de l'IA atteignent une complétude moyenne d'environ 99~\% (100~\% sur les documents déjà validés). Le destinataire est le champ le plus souvent vide côté IA (97,8~\%). Un expéditeur faux mais renseigné compte comme complet : cet indicateur dit seulement si le champ est rempli.
 
-\subsection{Recherche, chunking, top-k et ressources}
+\subsection{Qualité de l'OCR, de la classification et de l'extraction}
 
-Sur les questions métier testées (retrouver un arrêté, une facture d'un organisme, un courriel par son objet), une comparaison \textbf{qualitative} des stratégies de récupération a indiqué un intérêt de l'hybride, sans ranking officiel ni métrique de rappel. Une recherche uniquement vectorielle a retrouvé des formulations proches, mais a pu manquer un numéro interne ou un nom d'organisme exact. Une recherche uniquement lexicale a présenté l'effet inverse. La fusion RRF, alimentée aussi par les métadonnées, a réduit ces angles morts \textbf{dans ce cadre d'essai}. Le chunking métier a aidé les requêtes courtes observées. Un top-k trop bas (trois extraits) a appauvri le contexte ; un top-k trop haut a dilué la génération. Huit extraits, avec une limite par document, ont constitué un compromis jugé raisonnable sur ce corpus d'essai, et non un optimum mesuré. Les seuils de cosinus trop stricts ont vidé la première passe ; la passe élargie a rattrapé une partie des silences, au risque d'introduire un passage moins pertinent, d'où l'intérêt des sources affichées.
+Sur le split de test ($n = 205$), le CER moyen et le WER moyen du texte déjà stocké valent 0, l'accuracy et le F1 macro de classification valent 1,0, et l'exactitude d'extraction vaut 1,0 sur les six champs examinés. Ces scores ne mesurent pas une performance métier. Le gold est le texte et les métadonnées produits par la production : le système est comparé à lui-même.
 
-Lors des expérimentations, les temps de traitement ont paru dominés par l'OCR des PDF longs et par l'appel au modèle de langage, surtout en local sur CPU. Aucune latence moyenne n'a été publiée ici : l'asynchronisme empêche ces durées de bloquer l'interface, mais elles restent visibles dans la file. Les incidents rencontrés n'ont pas été, pour l'essentiel, des pannes du bus, mais des textes inexploitables, des timeouts LLM et des copies MinIO refusées sur un nom trop long, depuis lors assaini. De même, les courriers et notes déjà numériques ont paru plus favorables que les archives anciennes mal contrastées ; cette hiérarchie est une impression de terrain, pas une statistique par type documentaire.
+Le test de reproductibilité donne ainsi une accuracy et un F1 macro de 1,0. Ce résultat ne permet toutefois pas d'estimer la performance réelle du classifieur, la référence étant issue des sorties de production. La même réserve vaut pour l'extraction et pour le CER/WER nuls. Ils peuvent servir de contrôle de non-régression (deux exécutions d'extraction sur le test donnent un écart nul), pas de preuve de qualité.
 
-Ces constats décrivent le prototype dans le contexte d'expérimentation. Ils ne chiffrent pas une performance moyenne du fonds ministériel.
+Un rejeu Tesseract sur cinq documents, confronté à l'OCR déjà en base, donne un CER moyen de 0,594 et un WER moyen de 0,699. Ce n'est pas davantage un score humain : il mesure l'écart entre un Tesseract local et le texte déjà stocké. Il montre surtout qu'un gold relu serait nécessaire pour calibrer le moteur. Les temps OCR retenus pour le choix de Tesseract restent des ordres de grandeur observés sur le matériel cible, de l'ordre de 0,8 à 1,5~s par page, et non un engagement de service.
 
-\subsection{Réponse aux besoins du chapitre~3}
+Tant qu'une annotation humaine du test n'est pas disponible, le tableau principal ne porte donc, pour cette dimension, que le taux de réussite technique de l'OCR, le temps moyen par page à titre indicatif, et la complétude des métadonnées. L'accuracy, le F1 macro et le F1 d'extraction n'y figureront qu'après relecture des références.
 
-Les observations qualitatives qui précèdent se relient aux besoins identifiés après l'analyse de l'existant. Le tableau~\ref{tab:besoins-realisation-ch5}, présenté dans la synthèse du chapitre, rassemble pour chaque besoin la réalisation correspondante et les constats issus du prototype. Quelques indicateurs de volume, également repris dans cette synthèse, complètent ces observations sans en faire une preuve statistique généralisable.
+Les observations de terrain restent utiles pour interpréter ces limites. La qualité de l'OCR paraît liée à celle du scan : un courrier contrasté donne souvent un texte exploitable ; une page sombre, tamponnée ou manuscrite peut produire un OCR pauvre. Le garde-fou heuristique évite de transmettre ce bruit au classifieur. Un repli vers un modèle de vision a, dans certains cas, amélioré la transcription, au prix d'un temps plus élevé. Les erreurs rencontrées lors des essais portent notamment sur des organismes aux libellés proches, une source mal tranchée et des dates ambiguës ; le tableau de bord signale d'ailleurs des millésimes aberrants à nettoyer. Ces cas justifient le maintien de la validation humaine.
 
-\section{Synthèse}
+\subsection{Qualité de la recherche}
 
-La conception présentée au chapitre~4 a été traduite en une plateforme fonctionnelle déployée en environnement interne. La solution assiste le traitement documentaire depuis l'acquisition jusqu'à la validation humaine, en combinant reconnaissance du contenu, extraction, analyse par intelligence artificielle, proposition de métadonnées, classement déterministe et indexation pour la recherche. Le modèle multi-composante est matérialisé par l'association du stockage objet et de la base de données relationnelle ; le pipeline asynchrone assure l'enchaînement des traitements ; le dispositif de recherche combine plusieurs modes de récupération avant de solliciter le modèle de langage. Les mécanismes de contrôle d'accès, de sensibilité, de journalisation et d'intégrité sont intégrés au fonctionnement de la plateforme.
+Ce volet est le plus crédible du lot : on compare des identifiants retournés par le service de recherche de production à l'identifiant du document pertinent, et non un champ à lui-même. Les 205 questions du split de test sont toutefois générées automatiquement (objet et expéditeur), ce qui borne l'interprétation.
 
-Le tableau~\ref{tab:besoins-realisation-ch5} relie les besoins identifiés au chapitre~3 à la réalisation et aux observations issues du prototype.
+Le rappel au rang~5 vaut 0,620 : environ 62~\% des questions ramènent le bon document dans les cinq premiers résultats. Le rappel au rang~10 est identique, ce qui indique que, lorsque le document est trouvé dans le haut de liste, il l'est déjà dans le top~5. Le MRR vaut 0,597 (le document pertinent se situe, en moyenne, vers le rang 1,7 lorsqu'il est trouvé). Le nDCG au rang~5 vaut 0,603. Ces trois métriques suffisent pour le tableau principal. La précision aux rangs~5 et~10 (0,124 et 0,062) est mathématiquement cohérente avec un seul document pertinent par requête, mais beaucoup moins intuitive pour le lecteur ; elle n'est pas reprise dans la synthèse.
+
+La latence du moteur, mesurée sur ces 205 requêtes, s'établit à 0,588~s en moyenne et 0,703~s au 95\textsuperscript{e}~percentile. Le maximum (1,342~s) est trop sensible à une requête exceptionnelle pour figurer dans le tableau principal. Pour un service interactif, le p95 sous la seconde est l'indicateur le plus utile.
+
+Ces mesures ne remplacent pas le constat qualitatif déjà formulé lors des essais : une recherche uniquement dense peut manquer un numéro interne, une recherche uniquement lexicale une formulation proche ; la fusion RRF, alimentée aussi par le plein texte et les métadonnées, réduit ces angles morts dans le cadre observé. Huit extraits, avec une limite par document, restent un compromis de configuration, non un optimum démontré.
+
+\subsection{Qualité du RAG}
+
+Le rappel du contexte récupéré, calculé selon le protocole RAGAS \citp{es2024}{Es et al., 2024} sur les 205 questions, vaut 0,838. Il mesure la couverture des passages par rapport à une référence de contexte, et non la \og qualité RAG\fg{} globale. Il ne se confond pas avec le rappel documentaire au rang~5 (0,620) : l'un porte sur des extraits, l'autre sur l'identifiant du document.
+
+La précision de contexte n'a pas pu être calculée (valeur non définie), faute de réponse de référence fournie au juge automatique. Ce n'est pas une métrique de performance ; c'est un état du protocole. De même, une mesure de similarité avec une réponse de référence telle que ROUGE-L \citp{lin2004}{Lin, 2004} et le taux d'ancrage des réponses dans les extraits récupérés (\textit{grounded rate}) n'ont pas été collés pour ce jeu de 205 questions, bien que l'assistant de production ait été la cible des appels. Ils manquent au tableau principal. Une latence de génération moyenne et au p95 compléterait ce volet ; elle n'est pas reportée ici faute de série transmise.
+
+L'assistant reste donc évalué, à ce stade, par la couverture du contexte récupéré, par les sources affichées dans l'interface, et par la consigne de ne pas compléter une réponse hors extraits. Ce n'est pas encore une mesure de la qualité des réponses générées.
+
+\subsection{Choix des briques OCR et modèle de langage}
+\label{sec:eval-choix-briques}
+
+Une comparaison interne a permis de figer le moteur d'OCR et le modèle de langage local. Les temps indiqués sont des ordres de grandeur observés sur le matériel cible, non des engagements de service. Aucune note qualitative par étoiles n'est retenue : le critère déterminant est l'alignement avec un déploiement local, un coût nul à la page, et une latence compatible avec l'usage interactif.
 
 \begin{table}[htbp]
 \centering
-\caption{Besoins identifiés, réalisation et observations sur le prototype}
+\caption{Comparaison des moteurs d'OCR examinés (ordres de grandeur)}
+\label{tab:choix-ocr}
+\small
+\renewcommand{\arraystretch}{1.40}
+\begingroup
+\rowcolors{2}{black!3}{white}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}L{3.4cm}YYY@{}}
+\toprule
+\rowcolor{black!12}
+\tableheader{Solution} &
+\tableheader{Temps moyen} &
+\tableheader{Déploiement} &
+\tableheader{Coût} \\
+\midrule
+Tesseract~5 & $\sim$0,8--1,5~s/page & local & gratuit \\
+EasyOCR & $\sim$3--8~s/page & local & gratuit \\
+Moteurs cloud examinés & $\sim$1--4~s/page & distant & payant \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table}
+
+Les moteurs cloud examinés (Google Cloud Vision, Azure AI Document Intelligence, AWS Textract) sont en général plus précis sur les scans difficiles, mais imposent un coût à la page, une sortie des documents hors du SI et une dépendance réseau. EasyOCR reste local, au prix d'un débit nettement inférieur pour un gain de précision limité dans le cadre observé. Tesseract~5 a été retenu : local, gratuit, de l'ordre d'une seconde par page, ressources faibles, cohérent avec un fonds de 35\,000 documents. Le rejeu CER/WER sur cinq pages n'invalide pas ce choix ; il rappelle seulement qu'un gold relu resterait nécessaire pour juger la précision réelle.
+
+\begin{table}[htbp]
+\centering
+\caption{Comparaison des modèles de langage locaux examinés (Ollama)}
+\label{tab:choix-llm}
+\small
+\renewcommand{\arraystretch}{1.40}
+\begingroup
+\rowcolors{2}{black!3}{white}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}L{3.6cm}YYYY@{}}
+\toprule
+\rowcolor{black!12}
+\tableheader{Modèle} &
+\tableheader{Contexte} &
+\tableheader{Temps moyen} &
+\tableheader{Ressources} &
+\tableheader{Local} \\
+\midrule
+Llama~3 (8B) & 8K & $\sim$1--3~s & faibles & oui \\
+Mistral~7B & 32K & $\sim$2--4~s & faibles & oui \\
+GPT-OSS~20B & 128K & $\sim$8--15~s & élevées & oui \\
+Qwen3-Coder~30B & 256K & $\sim$17--23~s & élevées & oui \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table}
+
+Llama~3 est plus léger, mais le contexte de 8K et un ancrage administratif plus limité pèsent pour l'extraction et le chat sur dossiers. GPT-OSS et Qwen3-Coder raisonnent mieux et tiennent de plus longs contextes, au prix d'une latence incompatible avec le chat interactif et d'une empreinte mémoire trop haute pour le serveur disponible. Mistral~7B tient le compromis retenu : 32K de contexte, quelques secondes par appel, ressources faibles, déploiement entièrement local.
+
+\subsection{Réponse aux besoins du chapitre~\ref{ch:existant}}
+
+Les quatre dimensions se relient aux besoins identifiés après l'analyse de l'existant. Le tableau~\ref{tab:besoins-realisation-ch5}, présenté dans la synthèse du chapitre, rassemble pour chaque besoin la réalisation correspondante et les constats issus de l'évaluation. Le tableau~\ref{tab:eval-systeme} en extrait les métriques conservées dans le résultat principal.
+
+\section{Synthèse}
+
+La conception présentée au chapitre~\ref{ch:conception} a été traduite en une plateforme fonctionnelle déployée en environnement interne. La solution assiste le traitement documentaire depuis l'acquisition jusqu'à la validation humaine, en combinant reconnaissance du contenu, extraction, analyse par intelligence artificielle, proposition de métadonnées, classement déterministe et indexation pour la recherche. Le modèle multi-composante est matérialisé par l'association du stockage objet et de la base de données relationnelle ; le pipeline asynchrone assure l'enchaînement des traitements ; le dispositif de recherche combine plusieurs modes de récupération avant de solliciter le modèle de langage. Les mécanismes de contrôle d'accès, de sensibilité, de journalisation et d'intégrité sont intégrés au fonctionnement de la plateforme.
+
+Le tableau~\ref{tab:eval-systeme} rassemble les métriques dont la lecture est défendable dans l'état actuel du gold et des logs. Il n'inclut ni les scores d'exactitude égaux à 1,0 obtenus contre les sorties de production, ni la précision au rang~$k$, ni une latence maximale, ni des indicateurs RAG non calculés.
+
+\begin{table}[htbp]
+\centering
+\caption{Évaluation du système : métriques retenues pour le résultat principal}
+\label{tab:eval-systeme}
+\small
+\renewcommand{\arraystretch}{1.40}
+\begingroup
+\rowcolors{2}{black!3}{white}
+\begin{tabularx}{\textwidth}{@{}L{3.3cm}Y>{\raggedleft\arraybackslash}p{2.7cm}@{}}
+\toprule
+\rowcolor{black!12}
+\tableheader{Dimension} &
+\tableheader{Métrique} &
+\tableheader{Résultat} \\
+\midrule
+Robustesse & Documents traités & 35\,007 \\
+ & Taux d'échec moyen (exploitation) & $\approx$~5~\% \\
+OCR & Temps moyen par page & $\sim$0,8--1,5~s \\
+Extraction & Complétude moyenne (propositions IA) & 99~\% \\
+Recherche & MRR & 0,597 \\
+ & Rappel au rang~5 & 0,620 \\
+ & nDCG au rang~5 & 0,603 \\
+ & Latence moyenne & 0,588~s \\
+ & Latence p95 & 0,703~s \\
+RAG & Rappel du contexte récupéré & 0,838 \\
+\bottomrule
+\end{tabularx}
+\endgroup
+\end{table}
+
+N'entrent pas dans ce tableau, faute de gold indépendant ou de série transmise : le CER et le WER de qualité, l'accuracy et le F1 macro de classification, le F1 d'extraction, ROUGE-L, le taux d'ancrage des réponses générées, et la latence de l'assistant. Ce n'est pas un vide de protocole : c'est la limite honnête de ce qui peut être affirmé aujourd'hui.
+
+Le tableau~\ref{tab:besoins-realisation-ch5} relie ensuite ces résultats aux besoins du chapitre~\ref{ch:existant}.
+
+\begin{table}[htbp]
+\centering
+\caption{Besoins identifiés, réalisation et observations issues de l'évaluation}
 \label{tab:besoins-realisation-ch5}
 \small
 \renewcommand{\arraystretch}{1.45}
@@ -246,25 +364,25 @@ Le tableau~\ref{tab:besoins-realisation-ch5} relie les besoins identifiés au ch
 \begin{tabularx}{\textwidth}{@{}>{\bfseries}Y Y Y@{}}
 \toprule
 \rowcolor{black!12}
-\tableheader{Besoin identifié au chapitre~3} &
+\tableheader{Besoin identifié au chapitre~\ref{ch:existant}} &
 \tableheader{Réalisation} &
-\tableheader{Observation sur le prototype} \\
+\tableheader{Observation} \\
 \midrule
 Réduire le traitement manuel &
 Proposition automatique de métadonnées et de classification ; traitement asynchrone &
-La saisie initiale est allégée, mais une correction humaine reste nécessaire avant validation \\
+35\,007 documents traités ; taux d'échec moyen d'environ 5~\% en exploitation ; complétude IA d'environ 99~\% ; une correction humaine reste nécessaire avant validation \\
 Fiabiliser le classement &
 Construction du chemin à partir des métadonnées validées et de règles déterministes &
 Le classement ne dépend pas d'un chemin librement généré par le modèle de langage \\
 Conserver le contrôle humain &
 États \texttt{DRAFT} et \texttt{VALIDATED} ; validation par un agent &
-Les documents restent soumis à une décision humaine avant leur intégration au corpus confirmé \\
+Environ 92,7~\% du fonds est validé ; près de 7~\% reste en file humaine \\
 Faciliter la recherche &
-Recherche lexicale, vectorielle et hybride ; RRF ; assistance conversationnelle sourcée &
-Les documents peuvent être retrouvés par leur contenu et non uniquement par le parcours de l'arborescence \\
+Recherche lexicale, dense et hybride ; RRF ; assistance conversationnelle sourcée &
+Rappel au rang~5 de 0,620 et MRR de 0,597 sur 205 questions ; latence p95 de 0,703~s \\
 Adapter la structure documentaire &
 Référentiels administrables et racines Entrants, Sortants et Internes &
-La structure peut être adaptée sans modifier le principe général du modèle documentaire \\
+115 types et 13\,244 expéditeurs actifs ; la structure peut être adaptée sans modifier le principe du modèle \\
 Sécuriser les archives &
 RBAC, ACL, sensibilité, Keycloak et Vault ; filtrage avant récupération &
 Le périmètre d'accès est pris en compte avant l'alimentation du contexte destiné au RAG \\
@@ -276,14 +394,6 @@ Les propositions automatiques peuvent être distinguées des décisions et actio
 \endgroup
 \end{table}
 
-Les premiers résultats quantitatifs permettent de compléter ces observations. Sur la période considérée, 48 documents ont été traités par la chaîne documentaire. L'acquisition, l'OCR, l'extraction et l'analyse par intelligence artificielle ont été menés à terme pour ces documents, sans échec enregistré au niveau de l'OCR ou de l'extraction. Parmi les 48 documents, 46 ont reçu un type documentaire, soit 95,8~\% des documents traités.
+Au-delà des indicateurs, la solution déployée change le mode de traitement. L'agent n'a plus à renseigner systématiquement l'ensemble des informations avant de classer une pièce : il examine et corrige des propositions. Le classement est ensuite construit à partir des métadonnées retenues et de règles explicites. La recherche interroge le contenu, sous contrainte des droits, avec un rappel au rang~5 de 62~\% sur le jeu automatique du test. Ce n'est pas encore une preuve de qualité des types, des champs ou des réponses générées.
 
-Ce taux ne constitue toutefois pas une mesure de précision de la classification. Il indique uniquement la proportion de documents pour lesquels une valeur de type a été produite, qu'elle provienne d'une proposition de l'IA ou d'une saisie. L'évaluation de la qualité des prédictions nécessite de comparer ces propositions aux décisions prises lors de la validation humaine. Or, au moment de l'observation, 47 documents étaient encore en attente de validation et un seul avait été validé. Les taux d'acceptation, de modification et de rejet des propositions ne peuvent donc pas encore être estimés de manière représentative.
-
-Les autres indicateurs doivent également être interprétés dans le contexte du prototype. Deux documents apparaissent sans objet renseigné et treize ne disposent pas encore d'une empreinte d'intégrité calculée au moment de l'observation. Ces éléments ne remettent pas en cause l'architecture générale, mais mettent en évidence des traitements restant à compléter ou des cas particuliers à prendre en compte dans la poursuite des expérimentations. De même, le délai affiché entre l'acquisition et la validation doit être interprété avec prudence compte tenu du faible nombre de documents effectivement validés.
-
-Au-delà des indicateurs quantitatifs, le prototype permet d'observer un changement dans le mode de traitement documentaire. L'agent n'a plus à renseigner systématiquement l'ensemble des informations avant de pouvoir classer une pièce : il peut examiner et corriger les propositions produites par le système. Le classement est ensuite construit à partir des métadonnées retenues et de règles explicites. La recherche peut, quant à elle, exploiter le contenu des documents et leurs représentations sémantiques, tout en maintenant les contraintes d'accès avant la récupération destinée à l'assistance intelligente.
-
-Ces résultats restent cependant limités au corpus et aux conditions expérimentales étudiés. Ils ne permettent pas de généraliser les taux observés à l'ensemble des archives administratives togolaises. Certaines limites demeurent notamment liées à la qualité variable des documents numérisés, aux coûts de calcul des modèles utilisés localement et au nombre encore limité de validations humaines disponibles pour mesurer précisément la qualité des propositions de l'IA. Ces limites définissent le périmètre actuel de l'expérimentation plutôt qu'elles ne remettent en cause les principes de conception retenus.
-
-Ainsi, la réalisation permet de répondre de manière opérationnelle aux principaux besoins identifiés au chapitre~3 : réduire la saisie manuelle, fiabiliser le classement, maintenir la validation humaine, faciliter la recherche et intégrer les exigences de sécurité et de traçabilité. L'évaluation montre toutefois que certaines dimensions, en particulier la mesure de la qualité des propositions de l'IA, nécessitent un corpus de validations plus important pour être caractérisées quantitativement. Le bilan de la solution doit donc être compris comme celui d'un prototype fonctionnel évalué dans un environnement maîtrisé, et non comme une mesure généralisable de performance.
+Ces résultats restent limités aux conditions d'exploitation internes et au protocole décrit. Ils ne permettent pas de généraliser un niveau de précision de l'OCR, de la classification ou de l'extraction à l'ensemble des archives administratives togolaises. Le chapitre suivant discute cette portée, les limites du gold et les perspectives d'une annotation humaine du split de test.
