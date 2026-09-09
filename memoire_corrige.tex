@@ -35,11 +35,11 @@
 \usepackage{fancyhdr}
 \setlength{\headheight}{28pt}
 % Réglages fancyhdr 3.10 (TeX Live 2019). Activés par \pagestyle{fancy} dans le corps.
-\fancyhf{}
+  \fancyhf{}
 \fancyhead[L]{\itshape\leftmark}
-\fancyfoot[C]{\thepage}
-\renewcommand{\headrulewidth}{0.4pt}
-\renewcommand{\footrulewidth}{0pt}
+  \fancyfoot[C]{\thepage}
+  \renewcommand{\headrulewidth}{0.4pt}
+  \renewcommand{\footrulewidth}{0pt}
 % Pages de titre (partie, chapitre) : numéro de page uniquement, sans en-tête.
 \fancypagestyle{plain}{%
   \fancyhf{}%
@@ -102,6 +102,7 @@
 \newcommand{\typeDocument}{Mémoire pour le diplôme de}
 \newcommand{\diplome}{Master professionnel en Systèmes d'Information}
 \newcommand{\formation}{Master Systèmes d’Information}
+\newcommand{\filiere}{Génie Logiciel}
 \newcommand{\universite}{LBS}
 \newcommand{\nomEcole}{Lomé Business School}
 \newcommand{\anneeAcademique}{2023--2025}
@@ -124,46 +125,9 @@
 \hypersetup{pdftitle={\rapportTitre}, pdfauthor={\auteurNom}}
 
 \begin{document}
-% Page de garde (mise en page contrôlée, évite les débordements)
-\begin{titlepage}
-  \thispagestyle{empty}
-  \centering
-  \vspace*{1cm}
-  {\Large \nomEcole\par}
-  \vspace{1.5cm}
-
-  {\large \typeDocument\par}
-  \vspace{0.2cm}
-  {\large \diplome}\par
-  \vspace{1.6cm}
-
-  {\LARGE\bfseries
-    Conception et réalisation d'une plateforme\\
-    d'archivage numérique multimodale\\
-    intégrant des techniques d'intelligence artificielle
-  \par}
-  \vspace{0.5cm}
-  {\large\bfseries
-    Cas du Ministère de l'Efficacité
-    du Service Public et de la\\
-    Transformation Numérique
-  \par}
-  \vspace{1.8cm}
-
-  {\large Présenté par\par}
-  \vspace{0.2cm}
-  {\large \textbf{\auteurNom}\par}
-  \vspace{1.5cm}
-
-  {\large Directeur de mémoire\par}
-  \vspace{0.3cm}
-  {\directeurNom\par}
-  {\directeurFonction\par}
-  \vspace{0.8cm}
-
-  \vfill
-  {Année universitaire \anneeAcademique\par}
-\end{titlepage}
+% Page de garde : 1 = sobre actuelle, 2 = composition type mémoire (en-tête, sujet encadré).
+\newcommand{\versionPageGarde}{2}
+\input{pages/garde_v\versionPageGarde}
 
 % Préliminaires (numérotation romaine)
 % Ordre guide LBS : Remerciements → Dédicace → figures/tableaux → abréviations → résumé/abstract → TOC
@@ -176,11 +140,11 @@
 \setstretch{1.15}
 \setlength{\parskip}{0.45em}
 \vspace{-0.6em}
-Je tiens tout d'abord à exprimer ma profonde gratitude au Ministère de l'Efficacité du Service Public et de la Transformation Numérique (MESPTN), au sein duquel j'exerce mes fonctions, pour le cadre professionnel, les ressources et la confiance qui m'ont permis de mener à bien ce projet et la rédaction de ce mémoire. Je remercie également l'ensemble de mes collègues pour leur disponibilité, leurs retours d'expérience et la qualité des échanges qui ont permis d'affiner les besoins, les règles de gestion documentaire et les choix de conception, en particulier M.~Songuimpale Koumbogle pour son soutien constant et ses précieux conseils tout au long du projet.
+Je tiens tout d'abord à exprimer ma profonde gratitude au Ministère de l'Efficacité du Service Public et de la Transformation Numérique (MESPTN), au sein duquel j'exerce mes fonctions, pour le cadre professionnel, les ressources et la confiance qui m'ont permis de mener à bien ce projet et la rédaction de ce mémoire. Je remercie également l'ensemble de mes collègues pour leur disponibilité, leurs retours d'expérience et la qualité des échanges qui ont permis d'affiner les besoins, les règles de gestion documentaire et les choix de conception, en particulier M.~Songuimpale KOUMBOGLE pour son soutien constant et ses précieux conseils tout au long du projet.
 
 J'adresse mes sincères remerciements à M.~Morlé KOUDEKA pour son encadrement, sa disponibilité et ses conseils relatifs aux enjeux métiers de l'archivage numérique. Son expertise et ses orientations ont largement contribué à la conception et à la réalisation de la solution proposée.
 
-Je remercie également M.~KONAN Arnaud, mon directeur de mémoire, pour la qualité de son accompagnement, la rigueur de ses observations et ses conseils sur les aspects techniques et méthodologiques liés à l'intelligence artificielle. Ses recommandations ont constitué un appui essentiel dans le développement du système et dans la rédaction de ce mémoire.
+Je remercie également M.~Arnaud KONAN, mon directeur de mémoire, pour la qualité de son accompagnement, la rigueur de ses observations et ses conseils sur les aspects techniques et méthodologiques liés à l'intelligence artificielle. Ses recommandations ont constitué un appui essentiel dans le développement du système et dans la rédaction de ce mémoire.
 
 Je remercie Lomé Business School ainsi que l'ensemble du corps enseignant du Master professionnel en Systèmes d'Information pour la qualité de la formation dispensée et l'accompagnement méthodologique qui ont constitué un socle indispensable à ce travail.
 
@@ -245,27 +209,38 @@ Le présent travail s'inscrit pleinement dans cette logique. Il a été réalis�
 \clearpage
 \chapter*{Résumé}
 \addcontentsline{toc}{chapter}{Résumé}
-Un document scanné n'est pas encore une archive. Au \nomMinistere{}, le traitement documentaire reposait encore largement sur des opérations manuelles, sur la séparation entre un serveur de fichiers et un index Excel, et sur une recherche trop dépendante du parcours des dossiers. Le fonds est principalement constitué de documents papier numérisés et de PDF, auxquels s'ajoutent d'autres formats produits par l'activité administrative.
+\begingroup
+\setstretch{1.12}
+\setlength{\parskip}{0.38em}
+\vspace{-1.1em}
+\textbf{Un document scanné n'est pas encore une archive.} Au \nomMinistere{}, la gestion documentaire reposait encore largement sur des opérations manuelles, sur la dissociation entre un serveur de fichiers et un index Excel, ainsi que sur une recherche fortement dépendante de la connaissance du classement des dossiers. Le fonds est principalement constitué de documents papier numérisés et de fichiers PDF, auxquels s'ajoutent différents formats issus de l'activité administrative.
 
-Ce mémoire présente la conception et la réalisation d'une plateforme d'archivage numérique déployée en environnement interne. La chaîne assiste l'acquisition, la reconnaissance du contenu, la proposition de métadonnées, le renommage et le classement. Un agent valide ou corrige ces propositions avant toute intégration définitive au corpus. La recherche hybride et un assistant conversationnel permettent d'interroger les documents à partir de leur contenu, sous contrainte des droits d'accès.
+Ce mémoire présente la \textbf{conception et la réalisation d'une plateforme d'archivage numérique intelligente}, déployée en environnement interne, visant à assister les agents dans les principales étapes du traitement documentaire. La chaîne développée couvre l'acquisition, l'extraction et la reconnaissance du contenu, la proposition de métadonnées, le renommage, le classement et la recherche. Les propositions générées par les modèles d'intelligence artificielle sont soumises à une \textbf{validation humaine avant leur intégration définitive au corpus}. Une recherche hybride combinant plusieurs modes de représentation de l'information ainsi qu'un assistant conversationnel permettent également d'interroger les documents à partir de leur contenu, dans le respect des droits d'accès.
 
-L'intelligence artificielle n'y est pas une autorité de décision. Elle prépare une description et un classement ; la responsabilité reste humaine. L'architecture modulaire permet de faire évoluer un moteur d'OCR, un modèle d'embeddings ou un modèle de langage sans reconstruire l'ensemble du système.
+L'intelligence artificielle est ainsi conçue comme un \textbf{mécanisme d'assistance et non comme une autorité de décision} : elle prépare, suggère et facilite, tandis que la responsabilité de la validation demeure humaine. L'architecture modulaire retenue permet en outre de faire évoluer indépendamment les composants d'OCR, d'embeddings ou de génération de langage, sans remettre en cause l'ensemble de la plateforme.
 
-L'évaluation menée sur le fonds de production (35\,007 documents ; taux d'échec moyen d'environ 5~\% en exploitation) et sur un échantillon de test de 205 documents montre que la chaîne tient à l'échelle interne. La recherche ramène le document pertinent dans les cinq premiers résultats pour 62~\% des questions du test (MRR de 0,597). Ces chiffres décrivent un fonds distinct du flux annuel d'environ 10\,000 dossiers et du fonds historique. Ils ne permettent pas d'affirmer une précision métier de l'OCR, de la classification ou de l'extraction : le gold du harnais recopie encore les sorties de production. La qualité des scans, un référentiel relu par les agents et la qualité des réponses générées restent des facteurs à approfondir.
+L'évaluation réalisée sur le fonds de production, comprenant \textbf{35\,007 documents} à ce jour (les traitements se poursuivant), ainsi que sur un échantillon de test de \textbf{205 documents}, montre la capacité de la chaîne à fonctionner à l'échelle du fonds interne. La recherche retrouve le document pertinent parmi les cinq premiers résultats pour \textbf{62~\% des questions du test}, avec un \textbf{MRR de 0,597}. Ces résultats doivent toutefois être interprétés avec prudence : le jeu de référence utilisé pour certaines évaluations n'a pas encore fait l'objet d'une validation humaine systématique. La mesure de la qualité métier de l'OCR, de la classification, de l'extraction des métadonnées et des réponses générées constitue ainsi une perspective majeure, de même que l'amélioration continue de la qualité des documents numérisés et du référentiel de référence.
 
-\noindent\textbf{Mots-clés :} archivage numérique ; intelligence artificielle ; GED ; OCR ; RAG ; administration publique.
+\noindent\textbf{Mots-clés :} archivage numérique ; intelligence artificielle ; gestion électronique des documents ; OCR ; recherche augmentée par génération ; administration publique.
+\endgroup
+\clearpage
 
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-A scanned document is not yet an archive. At the \nomMinistere{}, document processing still relied largely on manual operations, on the separation between a file server and an Excel index, and on retrieval that depended too heavily on browsing folders. The holdings consist mainly of digitized paper documents and PDFs, together with other formats produced by administrative activity.
+\begingroup
+\setstretch{1.12}
+\setlength{\parskip}{0.38em}
+\vspace{-1.1em}
+\textbf{A scanned document is not yet an archive.} At the \nomMinistere{}, document management still relied largely on manual operations, on the split between a file server and an Excel index, and on retrieval that depended heavily on knowing how folders were classified. The holdings consist mainly of digitized paper documents and PDF files, together with other formats produced by administrative activity.
 
-This thesis presents the design and implementation of a digital archiving platform deployed in an internal environment. The pipeline supports acquisition, content recognition, metadata suggestion, renaming and classification. An officer validates or corrects these suggestions before any document is permanently added to the corpus. Hybrid search and a conversational assistant make it possible to query documents from their content, subject to access-control constraints.
+This thesis presents the \textbf{design and implementation of an intelligent digital archiving platform}, deployed in an internal environment, intended to assist officers through the main stages of document processing. The pipeline covers acquisition, content extraction and recognition, metadata suggestion, renaming, classification and search. Suggestions generated by artificial-intelligence models are submitted to \textbf{human validation before any document is permanently added to the corpus}. Hybrid search, combining several representations of the information, and a conversational assistant also make it possible to query documents from their content, subject to access-control constraints.
 
-Artificial intelligence is not treated as a decision-making authority. It prepares a description and a filing proposal; responsibility remains with the human officer. The modular architecture allows an OCR engine, an embedding model or a language model to be replaced without rebuilding the whole system.
+Artificial intelligence is thus designed as an \textbf{assistance mechanism rather than a decision-making authority}: it prepares, suggests and facilitates, while responsibility for validation remains human. The modular architecture further allows OCR, embedding or language-generation components to be evolved independently without rebuilding the whole platform.
 
-Evaluation on the production holdings (35,007 documents; average operational failure rate of about 5\%) and on a test sample of 205 documents shows that the pipeline holds at internal scale. Search returns the relevant document in the top five results for 62\% of the test questions (MRR of 0.597). These figures describe holdings distinct from the annual flow of about 10,000 files and from the historical fonds. They do not support claims of OCR, classification or extraction accuracy: the evaluation gold still copies production outputs. Scan quality, a human-reviewed reference set and the quality of generated answers remain to be investigated further.
+Evaluation on the production holdings, comprising \textbf{35,007 documents} as of this date (processing is still ongoing), and on a test sample of \textbf{205 documents} shows that the pipeline can operate at the scale of the internal fonds. Search returns the relevant document among the top five results for \textbf{62\% of the test questions}, with an \textbf{MRR of 0.597}. These results should nevertheless be interpreted with caution: the reference set used for some evaluations has not yet undergone systematic human validation. Measuring the operational quality of OCR, classification, metadata extraction and generated answers is therefore a major perspective, together with the continuous improvement of digitized-document quality and of the reference vocabulary.
 
-\noindent\textbf{Keywords:} digital archiving; artificial intelligence; EDM; OCR; RAG; public administration.
+\noindent\textbf{Keywords:} digital archiving; artificial intelligence; electronic document management; OCR; retrieval-augmented generation; public administration.
+\endgroup
 
 \clearpage
 \tableofcontents
@@ -777,19 +752,19 @@ Ce mémoire avait pour objectif de répondre à une problématique issue d'une d
 \textbf{\problematiqueMemoire}
 \end{quote}
 
-L'étude de l'existant a montré que le traitement documentaire reposait encore largement sur des opérations manuelles, sur la séparation entre les fichiers stockés et leur indexation, ainsi que sur un parcours des dossiers peu adapté à une recherche fondée sur le contenu. Ces contraintes devenaient d'autant plus importantes que les volumes documentaires augmentaient et que les sources de documents se diversifiaient.
+L'étude de l'existant a montré que la gestion documentaire reposait encore largement sur des opérations manuelles, sur la dissociation entre un serveur de fichiers et un index Excel, ainsi que sur une recherche fortement dépendante de la connaissance du classement des dossiers. Le fonds est principalement constitué de documents papier numérisés et de fichiers PDF, auxquels s'ajoutent différents formats issus de l'activité administrative.
 
-Pour répondre à ces difficultés, une plateforme d'archivage numérique a été conçue et réalisée. La solution développée assiste une partie de la chaîne de traitement, depuis l'acquisition du document, principalement un scan ou un PDF, jusqu'à l'extraction de son contenu, la proposition de métadonnées, le classement et l'indexation. D'autres formats peuvent entrer dans la même chaîne. Elle intègre également une recherche hybride et un assistant permettant d'interroger le fonds à partir du contenu des documents. L'architecture modulaire retenue permet de faire évoluer les moteurs d'OCR, les modèles d'embeddings et les modèles de langage sans remettre en cause l'ensemble du système.
+Pour répondre à ces difficultés, une plateforme d'archivage numérique intelligente a été conçue et réalisée, puis déployée en environnement interne. La chaîne assiste les agents dans les principales étapes du traitement documentaire : acquisition, extraction et reconnaissance du contenu, proposition de métadonnées, renommage, classement et recherche. Les propositions générées par les modèles d'intelligence artificielle sont soumises à une validation humaine avant leur intégration définitive au corpus. Une recherche hybride combinant plusieurs modes de représentation de l'information, ainsi qu'un assistant conversationnel, permettent d'interroger les documents à partir de leur contenu, dans le respect des droits d'accès. L'architecture modulaire retenue permet de faire évoluer indépendamment les composants d'OCR, d'embeddings ou de génération de langage, sans remettre en cause l'ensemble de la plateforme.
 
-L'un des choix essentiels du projet a été de ne pas considérer l'intelligence artificielle comme une autorité de décision. Les propositions produites par les modèles restent soumises à une validation humaine avant leur intégration définitive au corpus documentaire. Cette approche permet de bénéficier de l'automatisation tout en maintenant la responsabilité des agents sur les décisions sensibles. Les mécanismes de contrôle d'accès, de gestion de la sensibilité, de journalisation et de filtrage des informations avant leur transmission à l'assistant complètent ce principe d'assistance contrôlée.
+L'intelligence artificielle y est conçue comme un mécanisme d'assistance et non comme une autorité de décision : elle prépare, suggère et facilite, tandis que la responsabilité de la validation demeure humaine. Les mécanismes de contrôle d'accès, de gestion de la sensibilité, de journalisation et de filtrage des informations avant leur transmission à l'assistant complètent ce principe.
 
-La réalisation et l'exploitation de la solution montrent que cette approche est opérationnelle à l'échelle du fonds de production : 35\,007 documents traités, un taux d'échec moyen d'environ 5~\% en exploitation, un rappel au rang~5 de 62~\% sur le split de test. La recherche par contenu et l'assistance conversationnelle permettent d'aller au-delà du simple parcours de l'arborescence. Toutefois, les scores d'exactitude obtenus contre les sorties de production ne mesurent pas la qualité métier de l'OCR, de la classification ou de l'extraction. Un gold relu, ainsi que des mesures de génération (ROUGE-L, taux d'ancrage), restent nécessaires avant d'affirmer un niveau de performance généralisable.
+L'évaluation réalisée sur le fonds de production, comprenant 35\,007 documents à ce jour (les traitements se poursuivant), ainsi que sur un échantillon de test de 205 documents, montre la capacité de la chaîne à fonctionner à l'échelle du fonds interne. La recherche retrouve le document pertinent parmi les cinq premiers résultats pour 62~\% des questions du test, avec un MRR de 0,597. Ces résultats doivent toutefois être interprétés avec prudence : le jeu de référence utilisé pour certaines évaluations n'a pas encore fait l'objet d'une validation humaine systématique. Ils ne permettent pas d'affirmer une qualité métier de l'OCR, de la classification, de l'extraction des métadonnées ou des réponses générées.
 
 Le travail met ainsi en évidence qu'une plateforme documentaire intelligente ne peut être réduite à l'intégration d'un modèle de langage. Sa pertinence repose sur l'ensemble de la chaîne : qualité des données, extraction du contenu, structuration des métadonnées, règles de classement, recherche, contrôle des accès, supervision humaine et traçabilité. L'intelligence artificielle constitue une composante de cette chaîne, et non son unique fondement.
 
-Enfin, les perspectives développées au chapitre~\ref{ch:bilan} visent d'abord à amplifier le gain de temps pour les secrétaires et les agents d'archivage. Un module de connecteurs, le Model Context Protocol et des alertes intelligentes sont envisagés comme leviers de cette orientation ; ils ne font pas partie de la solution réalisée. Ces évolutions devront rester soumises aux mêmes exigences de sécurité, de contrôle des accès et de supervision humaine.
+Les perspectives développées au chapitre~\ref{ch:bilan} portent d'abord sur la mesure de cette qualité métier, ainsi que sur l'amélioration continue de la qualité des documents numérisés et du référentiel de référence. Un module de connecteurs, le Model Context Protocol et des alertes intelligentes sont également envisagés pour amplifier le gain de temps des secrétaires et des agents d'archivage ; ils ne font pas partie de la solution réalisée. Ces évolutions devront rester soumises aux mêmes exigences de sécurité, de contrôle des accès et de supervision humaine.
 
-Au terme de ce travail, la solution réalisée constitue ainsi une première réponse concrète à la problématique posée. Elle ne cherche pas à supprimer l'intervention humaine, mais à la repositionner sur les tâches où son jugement apporte le plus de valeur. La plateforme fournit ainsi un cadre permettant de rendre le traitement documentaire plus structuré, plus accessible et davantage assisté par l'intelligence artificielle, tout en conservant les exigences de contrôle nécessaires à la gestion des archives administratives.
+Au terme de ce travail, la solution réalisée constitue une première réponse concrète à la problématique posée. Elle ne cherche pas à supprimer l'intervention humaine, mais à la repositionner sur les tâches où son jugement apporte le plus de valeur. La plateforme fournit ainsi un cadre permettant de rendre la gestion documentaire plus structurée, plus accessible et davantage assistée par l'intelligence artificielle, tout en conservant les exigences de contrôle nécessaires aux archives administratives.
 
 \chapter*{Références}
 \addcontentsline{toc}{chapter}{Références}

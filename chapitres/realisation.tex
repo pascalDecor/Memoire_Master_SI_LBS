@@ -179,7 +179,7 @@ L'évaluation ne vise pas à multiplier les indicateurs. Elle les organise autou
 
 Quatre ensembles doivent être distingués. Le \textbf{fonds historique} du ministère n'est pas mesuré ici dans son intégralité. Le \textbf{flux annuel} est estimé, d'après l'observation du service, à environ 10\,000 dossiers. Le \textbf{fonds accessible en production}, lu sur le tableau de bord le 26~août~2026, compte 35\,007 documents archivés. L'\textbf{échantillon d'évaluation} est un tirage stratifié de 300 documents parmi 34\,917 pièces éligibles (statut technique \texttt{done}, texte OCR ou segments disponibles), avec une graine fixée (\texttt{seed = 42}). Les métriques finales du harnais sont calculées sur le seul split de test ($n = 205$). Les 34\,917 pièces ne remplacent pas le fonds : elles en sont le sous-ensemble éligible au harnais (35\,007 $-$ 34\,917 $=$ 90 documents exclus par le filtre).
 
-Le gold du harnais recopie les propositions déjà présentes en production. Les 300 documents ont été marqués comme validés pour le protocole, \textbf{sans relecture humaine des champs ni du texte OCR}. Les scores d'extraction, de type documentaire et d'OCR obtenus contre ce gold comparent donc le système à ses propres sorties. Ils ne sont pas reportés comme résultats : ils ne mesurent pas une performance métier. Les questions de recherche, une par document, ont été générées automatiquement à partir de l'objet et de l'expéditeur ; elles ne constituent pas un jeu métier relu par les agents. Un gold plus fourni, relu par les agents sur le split de test (type, champs et extrait OCR), est prévu pour une campagne de mesures plus complète ; il n'est pas utilisé dans le présent mémoire.
+Le jeu de données de référence recopie les propositions déjà présentes en production. Les 300 documents ont été marqués comme validés pour le protocole, \textbf{sans relecture humaine des champs ni du texte OCR}. Les scores d'extraction, de type documentaire et d'OCR obtenus contre ce jeu de données de référence comparent donc le système à ses propres sorties. Ils ne sont pas reportés comme résultats : ils ne mesurent pas une performance métier. Les questions de recherche, une par document, ont été générées automatiquement à partir de l'objet et de l'expéditeur ; elles ne constituent pas un jeu métier relu par les agents. Un jeu de données de référence validé par des experts, plus fourni, sur le split de test (type, champs et extrait OCR), est prévu pour une campagne de mesures plus complète ; il n'est pas utilisé dans le présent mémoire.
 
 Le moteur de recherche et l'assistant ont été interrogés en boucle locale sur le serveur de production. Dix objets MinIO de l'échantillon n'ont pas pu être copiés (clé absente ou chemin en base distinct de l'objet réel) ; ces absences limitent un rejeu OCR local, sans empêcher l'évaluation de l'extraction et de la recherche sur le reste du test.
 
@@ -222,9 +222,9 @@ Le tableau de bord fournit aussi un \textbf{taux de complétude} des métadonné
 
 \subsection{Qualité de l'OCR, de la classification et de l'extraction}
 
-Sur le split de test ($n = 205$), le harnais a bien comparé le texte OCR, le type documentaire et les champs extraits aux valeurs déjà stockées en production. Comme le gold recopie ces sorties, le système est comparé à lui-même. Aucun score d'accuracy, de F1 ou de CER/WER n'est donc publié pour cette dimension : un chiffre, même imparfait, y serait lu comme une performance.
+Sur le split de test ($n = 205$), le harnais a bien comparé le texte OCR, le type documentaire et les champs extraits aux valeurs déjà stockées en production. Comme le jeu de données de référence recopie ces sorties, le système est comparé à lui-même. Aucun score d'accuracy, de F1 ou de CER/WER n'est donc publié pour cette dimension : un chiffre, même imparfait, y serait lu comme une performance.
 
-Un rejeu Tesseract sur cinq documents, confronté à l'OCR déjà en base, donne un CER moyen de 0,594 et un WER moyen de 0,699. Ce n'est pas un score humain : il mesure l'écart entre un Tesseract local et le texte déjà stocké. Il montre surtout qu'un gold relu serait nécessaire pour calibrer le moteur. Les temps OCR retenus pour le choix de Tesseract restent des ordres de grandeur observés sur le matériel cible, de l'ordre de 0,8 à 1,5~s par page, et non un engagement de service.
+Un rejeu Tesseract sur cinq documents, confronté à l'OCR déjà en base, donne un CER moyen de 0,594 et un WER moyen de 0,699. Ce n'est pas un score humain : il mesure l'écart entre un Tesseract local et le texte déjà stocké. Il montre surtout qu'un jeu de données de référence validé par des experts serait nécessaire pour calibrer le moteur. Les temps OCR retenus pour le choix de Tesseract restent des ordres de grandeur observés sur le matériel cible, de l'ordre de 0,8 à 1,5~s par page, et non un engagement de service.
 
 Tant qu'une annotation humaine du test n'est pas disponible, le tableau principal ne porte donc, pour cette dimension, que le temps moyen par page à titre indicatif et la complétude des métadonnées. L'accuracy, le F1 macro, le F1 d'extraction et le CER/WER de qualité n'y figureront qu'après relecture des références.
 
@@ -277,7 +277,7 @@ Moteurs cloud examinés & $\sim$1--4~s/page & distant & payant \\
 \endgroup
 \end{table}
 
-Les moteurs cloud examinés (Google Cloud Vision, Azure AI Document Intelligence, AWS Textract) sont en général plus précis sur les scans difficiles, mais imposent un coût à la page, une sortie des documents hors du SI et une dépendance réseau. EasyOCR reste local, au prix d'un débit nettement inférieur pour un gain de précision limité dans le cadre observé. Tesseract~5 a été retenu : local, gratuit, de l'ordre d'une seconde par page, ressources faibles, cohérent avec un fonds de 35\,007 documents. Le rejeu CER/WER sur cinq pages n'invalide pas ce choix ; il rappelle seulement qu'un gold relu resterait nécessaire pour juger la précision réelle.
+Les moteurs cloud examinés (Google Cloud Vision, Azure AI Document Intelligence, AWS Textract) sont en général plus précis sur les scans difficiles, mais imposent un coût à la page, une sortie des documents hors du SI et une dépendance réseau. EasyOCR reste local, au prix d'un débit nettement inférieur pour un gain de précision limité dans le cadre observé. Tesseract~5 a été retenu : local, gratuit, de l'ordre d'une seconde par page, ressources faibles, cohérent avec un fonds de 35\,007 documents. Le rejeu CER/WER sur cinq pages n'invalide pas ce choix ; il rappelle seulement qu'un jeu de données de référence validé par des experts resterait nécessaire pour juger la précision réelle.
 
 \begin{table}[htbp]
 \centering
@@ -315,7 +315,7 @@ Les quatre dimensions se relient aux besoins identifiés après l'analyse de l'e
 
 La conception présentée au chapitre~\ref{ch:conception} a été traduite en une plateforme fonctionnelle déployée en environnement interne. La solution assiste le traitement documentaire depuis l'acquisition jusqu'à la validation humaine, en combinant reconnaissance du contenu, extraction, analyse par intelligence artificielle, proposition de métadonnées, classement déterministe et indexation pour la recherche. Le modèle multi-composante est matérialisé par l'association du stockage objet et de la base de données relationnelle ; le pipeline asynchrone assure l'enchaînement des traitements ; le dispositif de recherche combine plusieurs modes de récupération avant de solliciter le modèle de langage. Les mécanismes de contrôle d'accès, de sensibilité, de journalisation et d'intégrité sont intégrés au fonctionnement de la plateforme.
 
-Le tableau~\ref{tab:eval-systeme} rassemble les métriques dont la lecture est défendable dans l'état actuel du gold et des logs. Il n'inclut ni les scores d'exactitude obtenus contre les sorties de production, ni la précision au rang~$k$, ni une latence maximale, ni des indicateurs RAG non calculés.
+Le tableau~\ref{tab:eval-systeme} rassemble les métriques dont la lecture est défendable dans l'état actuel du jeu de référence et des logs. Il n'inclut ni les scores d'exactitude obtenus contre les sorties de production, ni la précision au rang~$k$, ni une latence maximale, ni des indicateurs RAG non calculés.
 
 \begin{table}[htbp]
 \centering
@@ -347,7 +347,7 @@ RAG & Rappel du contexte récupéré & 0,838 \\
 \endgroup
 \end{table}
 
-N'entrent pas dans ce tableau, faute de gold indépendant ou de série transmise : le CER et le WER de qualité, l'accuracy et le F1 macro de classification, le F1 d'extraction, ROUGE-L, le taux d'ancrage des réponses générées, et la latence de l'assistant. Ce n'est pas un vide de protocole : c'est la limite honnête de ce qui peut être affirmé aujourd'hui.
+N'entrent pas dans ce tableau, faute de vérité terrain validée par des experts ou de série transmise : le CER et le WER de qualité, l'accuracy et le F1 macro de classification, le F1 d'extraction, ROUGE-L, le taux d'ancrage des réponses générées, et la latence de l'assistant. Ce n'est pas un vide de protocole : c'est la limite honnête de ce qui peut être affirmé aujourd'hui.
 
 Le tableau~\ref{tab:besoins-realisation-ch5} relie ensuite ces résultats aux besoins du chapitre~\ref{ch:existant}.
 
@@ -394,4 +394,4 @@ Les propositions automatiques peuvent être distinguées des décisions et actio
 
 Au-delà des indicateurs, la solution déployée change le mode de traitement. L'agent n'a plus à renseigner systématiquement l'ensemble des informations avant de classer une pièce : il examine et corrige des propositions. Le classement est ensuite construit à partir des métadonnées retenues et de règles explicites. La recherche interroge le contenu, sous contrainte des droits, avec un rappel au rang~5 de 62~\% sur le jeu automatique du test. Ce n'est pas encore une preuve de qualité des types, des champs ou des réponses générées.
 
-Ces résultats restent limités aux conditions d'exploitation internes et au protocole décrit. Ils ne permettent pas de généraliser un niveau de précision de l'OCR, de la classification ou de l'extraction à l'ensemble des archives administratives togolaises. Le chapitre suivant discute cette portée, les limites du gold et les perspectives d'une annotation humaine du split de test.
+Ces résultats restent limités aux conditions d'exploitation internes et au protocole décrit. Ils ne permettent pas de généraliser un niveau de précision de l'OCR, de la classification ou de l'extraction à l'ensemble des archives administratives togolaises. Le chapitre suivant discute cette portée, les limites du jeu de référence et les perspectives d'une annotation humaine du split de test.
